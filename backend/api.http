@@ -1,0 +1,19 @@
+### 로그인 요청
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "user0",
+  "password": "1234"
+}
+
+###JWT 인증확인
+GET http://localhost:8080/api/security/member
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyMCIsImlhdCI6MTc4Mjg4MTE4NiwiZXhwIjoxNzgyODgxNDg2fQ.QTt_u77k6D4AxnePN4iKR7-aduZaXCHWFT1zfbEUS7LlQTE5FjF6X4_FqlZ6gH-7
+
+
+###
+GET localhost:8080/api/member/checkusername/admin
+
+###
+GET localhost:8080/api/member/checkusername/user100
