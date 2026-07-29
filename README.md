@@ -59,7 +59,7 @@ KB IT's Your Life 7기 종합실무 파이널 프로젝트 · 팀 **SAFA**
 </tr>
 <tr>
 <td><b>Database</b></td>
-<td>MySQL · MongoDB</td>
+<td>MySQL</td>
 </tr>
 <tr>
 <td><b>View</b></td>
