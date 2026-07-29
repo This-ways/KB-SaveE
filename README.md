@@ -117,7 +117,6 @@ backend/
    └─ test/java/org/scoula/       도메인별 테스트 코드
 ```
 
-> 도메인(user / savings / transaction / notification) 단위로 패키지를 나눠, 팀원별 담당 영역과 1:1로 매칭되도록 구성했습니다.
 
 ---
 
