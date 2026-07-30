@@ -9,7 +9,8 @@
     </settings>
 
     <typeAliases>
-        <typeAlias type="org.scoula.board.domain.BoardVO" alias="BoardVO" />
+        <typeAlias alias="PeerStatVO" type="org.scoula.peerstat.domain.PeerStatVO" />
+        <typeAlias alias="CategoryCompareDTO" type="org.scoula.peerstat.dto.CategoryCompareDTO" />
     </typeAliases>
 
 
