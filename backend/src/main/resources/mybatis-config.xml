@@ -8,9 +8,9 @@
         <setting name="mapUnderscoreToCamelCase" value="true" />
     </settings>
 
-    <typeAliases>
-        <typeAlias type="org.scoula.board.domain.BoardVO" alias="BoardVO" />
-    </typeAliases>
+<!--    <typeAliases>-->
+<!--        <typeAlias type="org.scoula.board.domain.BoardVO" alias="BoardVO" />-->
+<!--    </typeAliases>-->
 
 
 
