@@ -9,7 +9,9 @@
     </settings>
 
     <typeAliases>
-        <typeAlias type="org.scoula.board.domain.BoardVO" alias="BoardVO" />
+        <typeAlias alias="CategoryVO" type="org.scoula.category.domain.CategoryVO" />
+        <typeAlias alias="TransactionVO" type="org.scoula.transaction.domain.TransactionVO" />
+        <typeAlias alias="CategoryAmountDTO" type="org.scoula.transaction.dto.CategoryAmountDTO" />
     </typeAliases>
 
 
