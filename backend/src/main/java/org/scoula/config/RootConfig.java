@@ -20,8 +20,8 @@ import javax.sql.DataSource;
 
 @Configuration
 @PropertySource({"classpath:/application.properties"})
-@MapperScan(basePackages = {"org.scoula.security.account.mapper", "org.scoula.member.mapper", "org.scoula.category.mapper", "org.scoula.transaction.mapper", "org.scoula.savings.mapper", "org.scoula.peerstat.mapper", "org.scoula.report.mapper"})
-@ComponentScan(basePackages = {"org.scoula.security", "org.scoula.member.service", "org.scoula.category.service", "org.scoula.transaction.service", "org.scoula.savings", "org.scoula.peerstat.service", "org.scoula.report.service"})
+@MapperScan(basePackages = {"org.scoula.security.account.mapper", "org.scoula.member.mapper", "org.scoula.category.mapper", "org.scoula.transaction.mapper", "org.scoula.savings.mapper", "org.scoula.peerstat.mapper", "org.scoula.report.mapper", "org.scoula.user.mapper"})
+@ComponentScan(basePackages = {"org.scoula.security", "org.scoula.member.service", "org.scoula.category.service", "org.scoula.transaction.service", "org.scoula.savings", "org.scoula.peerstat.service", "org.scoula.report.service", "org.scoula.user.service", "org.scoula.common"})
 @EnableTransactionManagement
 public class RootConfig {
     @Value("${jdbc.driver}") String driver;
