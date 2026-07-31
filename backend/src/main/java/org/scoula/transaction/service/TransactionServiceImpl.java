@@ -47,4 +47,15 @@ public class TransactionServiceImpl implements TransactionService {
 
         return new TransactionSummaryDTO(yearMonth, totalAmount, top5, remainder);
     }
+
+    @Override
+    public void updateCategory(Long txnId, Long userId, Long categoryId) {
+        int updated = mapper.updateCategory(txnId, userId, categoryId);
+        if (updated == 0) {
+            // 존재하지 않거나, 본인 거래가 아니거나, 수입 거래인 경우
+            throw new IllegalArgumentException(
+                    "카테고리를 수정할 수 없는 거래입니다. (존재하지 않거나, 본인 거래가 아니거나, 수입 거래입니다)"
+            );
+        }
+    }
 }

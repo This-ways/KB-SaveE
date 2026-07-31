@@ -5,12 +5,11 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.scoula.transaction.domain.TransactionVO;
+import org.scoula.transaction.dto.CategoryUpdateRequestDTO;
 import org.scoula.transaction.dto.TransactionSummaryDTO;
 import org.scoula.transaction.service.TransactionService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,5 +40,16 @@ public class TransactionController {
             @RequestParam String yearMonth
     ) {
         return service.getSummary(userId, yearMonth);
+    }
+
+    @PatchMapping("/{txnId}/category")
+    @ApiOperation(value = "거래내역 카테고리 수정")
+    public ResponseEntity<Void> updateCategory(
+            @PathVariable Long txnId,
+            @RequestParam Long userId,
+            @RequestBody CategoryUpdateRequestDTO request
+    ) {
+        service.updateCategory(txnId, userId, request.getCategoryId());
+        return ResponseEntity.noContent().build();
     }
 }

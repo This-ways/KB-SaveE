@@ -11,4 +11,7 @@ public interface TransactionService {
     List<TransactionVO> getList(Long userId, String yearMonth, Long categoryId);
 
     TransactionSummaryDTO getSummary(Long userId, String yearMonth);
+
+    // 성공하면 그냥 반환, 실패(수정 대상 아님)하면 예외 던짐
+    void updateCategory(Long txnId, Long userId, Long categoryId);
 }

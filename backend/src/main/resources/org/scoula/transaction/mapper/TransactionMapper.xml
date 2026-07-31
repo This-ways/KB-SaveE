@@ -42,4 +42,16 @@
         ORDER BY amount DESC
     </select>
 
+    <!-- 거래내역 카테고리 수정 -->
+    <!-- txn_type = 0 조건으로 수입 거래만 수정 대상에서 제외됨 -->
+    <!-- category_id가 원래 NULL이었던 고정지출(월세, 계좌이체 등)도 이제 카테고리 지정 가능 -->
+    <update id="updateCategory">
+        UPDATE transaction
+        SET category_id = #{categoryId},
+            fixed_at = NOW()
+        WHERE txn_id = #{txnId}
+          AND user_id = #{userId}
+          AND txn_type = 0
+    </update>
+
 </mapper>

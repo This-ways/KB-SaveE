@@ -20,4 +20,11 @@ public interface TransactionMapper {
             @Param("userId") Long userId,
             @Param("yearMonth") String yearMonth
     );
+
+    // 거래내역 카테고리 수정 (본인 거래 + 원래 카테고리가 있던 거래만 대상, 수정된 행 수 반환)
+    int updateCategory(
+            @Param("txnId") Long txnId,
+            @Param("userId") Long userId,
+            @Param("categoryId") Long categoryId
+    );
 }
