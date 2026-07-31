@@ -15,6 +15,7 @@ import org.springframework.web.servlet.view.JstlView;
         "org.scoula.board.controller",
         "org.scoula.security",
         "org.scoula.member.controller",
+        "org.scoula.savings.controller"
 
 }) // Spring MVC용 컴포넌트 등록을 위한 스캔 패키지
 public class ServletConfig implements WebMvcConfigurer {
