@@ -1,19 +1,32 @@
-### 로그인 요청
+### ======================= SaveE 테스트 ========================
+
+### 카테고리 목록 조회 (인증 불필요)
+GET http://localhost:8080/api/categories
+
+### 로그인 (더미데이터 계정 - 응답의 token 값을 복사해서 아래 요청들에 붙여넣기)
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "user0",
-  "password": "1234"
+  "username": "mj0517",
+  "password": "pass1234"
 }
 
-###JWT 인증확인
-GET http://localhost:8080/api/security/member
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyMCIsImlhdCI6MTc4Mjg4MTE4NiwiZXhwIjoxNzgyODgxNDg2fQ.QTt_u77k6D4AxnePN4iKR7-aduZaXCHWFT1zfbEUS7LlQTE5FjF6X4_FqlZ6gH-7
+### 내 GOAL 목록 조회 (위에서 받은 token으로 교체 필요)
+GET http://localhost:8080/api/goals?yearMonth=2026-04
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJtajA1MTciLCJpYXQiOjE3ODU0Nzk3MTksImV4cCI6MTc4NTQ4MzMxOX0.1tICNXYTpM1keke_JgbHsC_3gs49fJ_75EzqcwuipHhdAoKshsuPaULYaJfwP79E
 
+### 내 예금계좌 조회 (token 교체 필요)
+GET http://localhost:8080/api/deposit-account
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJtajA1MTciLCJpYXQiOjE3ODU0Nzk3MTksImV4cCI6MTc4NTQ4MzMxOX0.1tICNXYTpM1keke_JgbHsC_3gs49fJ_75EzqcwuipHhdAoKshsuPaULYaJfwP79E
 
-###
-GET localhost:8080/api/member/checkusername/admin
+### 회원가입 테스트 (매번 실행하면 loginId 겹쳐서 에러나니 값 바꿔가며 테스트)
+POST http://localhost:8080/api/users/signup
+Content-Type: application/json
 
-###
-GET localhost:8080/api/member/checkusername/user100
+{
+  "loginId": "testuser02",
+  "password": "1234",
+  "userName": "테스트유저",
+  "birthDate": "2000-01-01"
+}
