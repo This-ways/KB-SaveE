@@ -62,9 +62,5 @@ public class RootConfig {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
-
-
-
 }
 
