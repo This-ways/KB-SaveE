@@ -58,6 +58,11 @@ public class RootConfig {
         return manager;
     }
 
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
 
 
 
