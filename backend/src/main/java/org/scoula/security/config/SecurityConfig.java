@@ -163,9 +163,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/api/board/**").authenticated()
                 .antMatchers(HttpMethod.PUT, "/api/board/**").authenticated()
                 .antMatchers(HttpMethod.DELETE, "/api/board/**").authenticated()
-                .antMatchers(HttpMethod.POST, "/api/users/signup").permitAll()   // 회원가입은 로그인 전 접근
-                .antMatchers("/api/goals/**").authenticated()
-                .antMatchers("/api/deposit-account/**").authenticated()
                 .anyRequest().permitAll();
 
 
