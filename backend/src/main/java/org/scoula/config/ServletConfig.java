@@ -60,7 +60,6 @@ public class ServletConfig implements WebMvcConfigurer {
     }
 
     // LocalDate/LocalDateTime을 JSON으로 주고받기 위해 JavaTimeModule 등록 (SignupRequestDTO.birthDate 등)
-    // extendMessageConverters를 써서 기본 컨버터 목록은 그대로 두고, 이미 있는 Jackson 컨버터의 ObjectMapper만 보강
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         for (HttpMessageConverter<?> converter : converters) {
@@ -92,6 +91,3 @@ public class ServletConfig implements WebMvcConfigurer {
 
 
 }
-
-
-
