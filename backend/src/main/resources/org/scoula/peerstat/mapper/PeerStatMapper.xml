@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.scoula.peerstat.mapper.PeerStatMapper">
+
+    <!-- 연령대 계산용 생년월일 조회 -->
+    <select id="getBirthDate" resultType="string">
+        SELECT DATE_FORMAT(birth_date, '%Y-%m-%d')
+        FROM `user`
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 카테고리별 내 소비 vs 연령별 평균 소비 Top3 (지출만, 내 소비 큰 순) -->
+    <!-- JOIN(INNER)이라 월세처럼 category_id가 NULL인 거래는 자동으로 제외됨 -->
+    <select id="compareCategories" resultType="CategoryCompareDTO">
+        SELECT
+            t.category_id AS categoryId,
+            c.name        AS categoryName,
+            SUM(t.amount) AS myAmount,
+            ps.avg_amount AS peerAmount
+        FROM transaction t
+        JOIN category c ON t.category_id = c.category_id
+        LEFT JOIN peer_stat ps
+            ON ps.category_id = t.category_id
+           AND ps.age_group = #{ageGroup}
+        WHERE t.user_id = #{userId}
+          AND t.txn_type = 0
+          AND DATE_FORMAT(t.txn_date, '%Y-%m') = #{yearMonth}
+        GROUP BY t.category_id, c.name, ps.avg_amount
+        ORDER BY myAmount DESC
+        LIMIT 3
+    </select>
+
+</mapper>

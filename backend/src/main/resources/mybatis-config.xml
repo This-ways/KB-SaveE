@@ -12,8 +12,9 @@
         <typeAlias alias="CategoryVO" type="org.scoula.category.domain.CategoryVO" />
         <typeAlias alias="TransactionVO" type="org.scoula.transaction.domain.TransactionVO" />
         <typeAlias alias="CategoryAmountDTO" type="org.scoula.transaction.dto.CategoryAmountDTO" />
+        <typeAlias alias="PeerStatVO" type="org.scoula.peerstat.domain.PeerStatVO" />
+        <typeAlias alias="CategoryCompareDTO" type="org.scoula.peerstat.dto.CategoryCompareDTO" />
     </typeAliases>
-
 
 
 

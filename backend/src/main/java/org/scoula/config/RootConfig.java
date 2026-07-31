@@ -20,8 +20,8 @@ import javax.sql.DataSource;
 
 @Configuration
 @PropertySource({"classpath:/application.properties"})
-@MapperScan(basePackages = {"org.scoula.security.account.mapper", "org.scoula.member.mapper", "org.scoula.category.mapper", "org.scoula.transaction.mapper", "org.scoula.savings.mapper"})
-@ComponentScan(basePackages = {"org.scoula.security", "org.scoula.member.service", "org.scoula.category.service", "org.scoula.transaction.service", "org.scoula.savings"})
+@MapperScan(basePackages = {"org.scoula.security.account.mapper", "org.scoula.member.mapper", "org.scoula.category.mapper", "org.scoula.transaction.mapper", "org.scoula.savings.mapper", "org.scoula.peerstat.mapper"})
+@ComponentScan(basePackages = {"org.scoula.security", "org.scoula.member.service", "org.scoula.category.service", "org.scoula.transaction.service", "org.scoula.savings", "org.scoula.peerstat.service"})
 @EnableTransactionManagement
 public class RootConfig {
     @Value("${jdbc.driver}") String driver;
@@ -56,11 +56,6 @@ public class RootConfig {
     public DataSourceTransactionManager transactionManager(){
         DataSourceTransactionManager manager = new DataSourceTransactionManager(dataSource());
         return manager;
-    }
-
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
     }
 
 

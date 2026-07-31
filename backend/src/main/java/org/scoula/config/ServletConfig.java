@@ -14,6 +14,7 @@ import org.springframework.web.servlet.view.JstlView;
         "org.scoula.controller",
         "org.scoula.security",
         "org.scoula.member.controller",
+        "org.scoula.peerstat.controller",
         "org.scoula.category.controller",
         "org.scoula.transaction.controller",
         "org.scoula.savings.controller"
