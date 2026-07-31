@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.scoula.user.mapper.UserMapper">
+
+    <insert id="insert" parameterType="org.scoula.user.domain.UserVO" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO `user` (login_id, password, user_name, birth_date, push_enabled)
+        VALUES (#{loginId}, #{password}, #{userName}, #{birthDate}, #{pushEnabled})
+    </insert>
+
+    <select id="existsByLoginId" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM `user` WHERE login_id = #{loginId}
+    </select>
+
+</mapper>

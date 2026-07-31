@@ -2,7 +2,7 @@ package org.scoula.controller;
 
 import lombok.extern.log4j.Log4j2;
 import org.scoula.security.account.domain.CustomUser;
-import org.scoula.security.account.domain.MemberVO;
+import org.scoula.user.domain.UserVO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,8 +28,8 @@ public class SecurityController {
         return ResponseEntity.ok(userDetails.getUsername()); }
 
     @GetMapping("/admin")
-    public ResponseEntity<MemberVO> doAdmin(@AuthenticationPrincipal CustomUser customUser) {
-        MemberVO member = customUser.getMember();
+    public ResponseEntity<UserVO> doAdmin(@AuthenticationPrincipal CustomUser customUser) {
+        UserVO member = customUser.getUserVO();
         log.info("username = " + member);
         return ResponseEntity.ok(member); }
 
@@ -81,4 +81,3 @@ public class SecurityController {
 
 
 }
-
