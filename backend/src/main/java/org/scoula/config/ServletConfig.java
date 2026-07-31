@@ -19,9 +19,10 @@ import java.util.List;
 @ComponentScan(basePackages = {
         "org.scoula.exception",
         "org.scoula.controller",
-        "org.scoula.board.controller",
         "org.scoula.security",
         "org.scoula.member.controller",
+        "org.scoula.category.controller",
+        "org.scoula.transaction.controller",
         "org.scoula.savings.controller",
         "org.scoula.user.controller"
 
@@ -91,3 +92,6 @@ public class ServletConfig implements WebMvcConfigurer {
 
 
 }
+
+
+
