@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 💡 namespace는 새로 생성한 AccountMapper.java의 실제 패키지 경로로 맞춰주세요 -->
+<mapper namespace="org.scoula.savings.mapper.AccountMapper">
+
+    <!-- 1. 출금용 예금 계좌번호 조회 (문자열 반환) -->
+    <select id="selectAccountNoByUserId" resultType="java.lang.String">
+        SELECT deposit_no
+        FROM deposit_account
+        WHERE user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <!-- 2. 예금 계좌 PK 조회 (Long 반환) -->
+    <select id="selectDepositIdByUserId" resultType="java.lang.Long">
+        SELECT deposit_id
+        FROM deposit_account
+        WHERE user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <!-- 예금 계좌 잔액 조회 -->
+    <select id="selectBalanceByDepositId" resultType="java.lang.Long">
+        SELECT balance
+        FROM deposit_account
+        WHERE deposit_id = #{depositId}
+    </select>
+
+    <!-- 예금 계좌 잔액 차감 (출금) -->
+    <update id="withdrawBalance">
+        UPDATE deposit_account
+        SET balance = balance - #{amount},
+            updated_at = NOW()
+        WHERE deposit_id = #{depositId}
+    </update>
+
+</mapper>
