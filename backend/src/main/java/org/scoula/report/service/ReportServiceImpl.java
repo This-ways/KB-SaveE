@@ -24,14 +24,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
 
-    // TODO: OpenAI 연동 전까지 정적 문구로 대체
-    private static final String MOCK_AI_SUMMARY =
-            "배달/간식 지출이 조금씩 늘었어요. 다음 달엔 조금 더 줄여보는 건 어떨까요?";
-
     private final ReportMapper mapper;
     private final PeerStatService peerStatService;
     private final GoalService goalService;
     private final TransactionMapper transactionMapper;
+    private final AiSummaryService aiSummaryService;
 
     @Override
     public ReportDTO getReport(Long userId, String yearMonth) {
@@ -62,6 +59,9 @@ public class ReportServiceImpl implements ReportService {
         // SUBSCRIPTION/PAYMENT(C팀 담당 테이블, Service는 아직 없어서 테이블 직접 조회) - 이번 달 납입액 실제 계산
         int savingPayment = mapper.getMonthlyPaymentAmount(userId, yearMonth);
 
+        // AI 요약 - 캐시 확인 후 없으면 OpenAI로 생성 (더 이상 목업 아님)
+        String aiSummary = aiSummaryService.getOrGenerateSummary(userId, yearMonth, income, expense, topCategories);
+
         log.debug("report userId={} yearMonth={} prevBalance={} income={} expense={} currentBalance={} saveAmount={} savingPayment={}",
                 userId, yearMonth, prevBalance, income, expense, currentBalance, saveAmount, savingPayment);
 
@@ -73,7 +73,7 @@ public class ReportServiceImpl implements ReportService {
                 weeklySpending,
                 weekdaySpending,
                 topCategories,
-                MOCK_AI_SUMMARY
+                aiSummary
         );
     }
 
