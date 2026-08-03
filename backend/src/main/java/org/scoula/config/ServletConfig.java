@@ -26,7 +26,8 @@ import java.util.List;
         "org.scoula.transaction.controller",
         "org.scoula.savings.controller",
         "org.scoula.report.controller",
-        "org.scoula.user.controller"
+        "org.scoula.user.controller",
+        "org.scoula.notification.controller"
 
 }) // Spring MVC용 컴포넌트 등록을 위한 스캔 패키지
 public class ServletConfig implements WebMvcConfigurer {

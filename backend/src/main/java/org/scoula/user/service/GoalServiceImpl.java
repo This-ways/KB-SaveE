@@ -114,3 +114,4 @@ public class GoalServiceImpl implements GoalService {
         log.debug("GOAL 이월 처리: userId={} {} -> {} ({}건)",
                 userId, mostRecentPrior.get(0).getYearMonth(), targetYearMonth, mostRecentPrior.size());
     }
+}

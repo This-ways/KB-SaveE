@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.scoula.notification.mapper.DeviceTokenMapper">
+
+    <!-- 기기토큰 저장 : 같은 fcm_token이면 user_id 갱신 -->
+    <insert id="insertOrUpdate">
+        INSERT INTO device_token (user_id, fcm_token)
+        VALUES (#{userId}, #{fcmToken})
+            ON DUPLICATE KEY UPDATE
+                                 user_id = VALUES(user_id),
+                                 created_at = NOW()
+    </insert>
+
+    <!-- 유저의 모든 기기토큰 조회 (멀티 디바이스) -->
+    <select id="selectTokensByUserId" resultType="string">
+        SELECT fcm_token FROM device_token WHERE user_id = #{userId}
+    </select>
+
+    <!-- 로그아웃 시 토큰 삭제 -->
+    <delete id="deleteByToken">
+        DELETE FROM device_token WHERE fcm_token = #{fcmToken}
+    </delete>
+
+</mapper>
