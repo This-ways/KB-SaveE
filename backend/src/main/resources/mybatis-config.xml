@@ -19,6 +19,8 @@
         <typeAlias alias="IncomeExpenseDTO" type="org.scoula.report.dto.IncomeExpenseDTO" />
         <typeAlias alias="WeeklyAmountDTO" type="org.scoula.report.dto.WeeklyAmountDTO" />
         <typeAlias alias="WeekdayAmountDTO" type="org.scoula.report.dto.WeekdayAmountDTO" />
+
+        <typeAlias alias="AiSummaryVO" type="org.scoula.report.domain.AiSummaryVO" />
     </typeAliases>
 
 
