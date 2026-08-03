@@ -28,6 +28,19 @@
           AND `year_month` = #{yearMonth}
     </select>
 
+    <!-- 이번 달 GOAL이 없을 때 이월용: user_id 기준, beforeYearMonth보다 과거인 것 중 가장 최근 달의 GOAL 전부 -->
+    <select id="findMostRecentPriorMonth" resultMap="goalMap">
+        SELECT goal_id, user_id, category_id, `year_month`, target_amount
+        FROM `goal`
+        WHERE user_id = #{userId}
+          AND `year_month` = (
+            SELECT MAX(`year_month`)
+            FROM `goal`
+            WHERE user_id = #{userId}
+              AND `year_month` &lt; #{beforeYearMonth}
+        )
+    </select>
+
     <select id="findOne" resultMap="goalMap">
         SELECT goal_id, user_id, category_id, `year_month`, target_amount
         FROM `goal`
