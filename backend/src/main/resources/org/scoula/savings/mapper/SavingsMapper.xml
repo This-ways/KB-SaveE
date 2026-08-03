@@ -165,4 +165,41 @@
                  )
     </insert>
 
+    <!-- 총 납입 원금 합산 -->
+    <select id="selectTotalPrincipal" resultType="java.lang.Long">
+        SELECT SUM(amount)
+        FROM PAYMENT
+        WHERE subscription_id = #{subscriptionId}
+    </select>
+
+    <!-- 하단 차트용 월별 납입 데이터 추출 (연도 포함 및 정렬된 최종 버전) -->
+    <select id="selectMonthlyPayments" resultType="org.scoula.savings.dto.MonthlyPaymentDTO">
+        SELECT
+            CAST(SUBSTRING(CAST(paid_at AS CHAR), 1, 4) AS UNSIGNED) AS payYear,
+            CAST(SUBSTRING(CAST(paid_at AS CHAR), 5, 2) AS UNSIGNED) AS payMonth,
+            SUM(amount) AS amount
+        FROM PAYMENT
+        WHERE subscription_id = #{subscriptionId}
+        GROUP BY payYear, payMonth
+        ORDER BY payYear ASC, payMonth ASC
+    </select>
+
+    <!-- 마지막 납입일(가장 최근 결제일) 조회 -->
+    <select id="selectLastPaymentDate" resultType="java.lang.Integer">
+        SELECT MAX(paid_at)
+        FROM PAYMENT
+        WHERE subscription_id = #{subscriptionId}
+    </select>
+
+    <!-- 가입 내역 + 상품 정보 조인 조회 (상품명 매핑용) -->
+    <select id="selectSubscriptionWithProduct" resultType="org.scoula.savings.domain.SubscriptionVO">
+        SELECT
+            s.*,
+            p.product_name AS productName,
+            p.company_code AS companyCode
+        FROM SUBSCRIPTION s
+                 INNER JOIN SAVINGS_PRODUCT p ON s.product_id = p.product_id
+        WHERE s.subscription_id = #{subscriptionId}
+    </select>
+
 </mapper>
