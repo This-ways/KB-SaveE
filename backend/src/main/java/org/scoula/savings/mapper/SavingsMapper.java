@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
+import org.scoula.savings.domain.PaymentVO;
 import org.scoula.savings.domain.SavingsProductVO;
 import org.scoula.savings.domain.SavingsRateVO;
 import org.scoula.savings.domain.SubscriptionVO;
@@ -30,4 +31,6 @@ public interface SavingsMapper {
             @Param("productId") Long productId,
             @Param("saveTerm") int saveTerm
     );
+
+    void insertPayment(PaymentVO payment); //납입내역 저장
 }

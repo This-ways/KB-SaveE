@@ -21,4 +21,19 @@
         LIMIT 1
     </select>
 
+    <!-- 예금 계좌 잔액 조회 -->
+    <select id="selectBalanceByDepositId" resultType="java.lang.Long">
+        SELECT balance
+        FROM deposit_account
+        WHERE deposit_id = #{depositId}
+    </select>
+
+    <!-- 예금 계좌 잔액 차감 (출금) -->
+    <update id="withdrawBalance">
+        UPDATE deposit_account
+        SET balance = balance - #{amount},
+            updated_at = NOW()
+        WHERE deposit_id = #{depositId}
+    </update>
+
 </mapper>

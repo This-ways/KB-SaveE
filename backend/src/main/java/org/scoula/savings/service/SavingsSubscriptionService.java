@@ -2,6 +2,7 @@ package org.scoula.savings.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.scoula.savings.domain.PaymentVO;
 import org.scoula.savings.domain.SavingsProductVO;
 import org.scoula.savings.domain.SavingsRateVO;
 import org.scoula.savings.domain.SubscriptionVO;
@@ -22,7 +23,6 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class SavingsSubscriptionService {
 
-    // 💡 SubscriptionMapper 의존성 제거, SavingsMapper만 사용
     private final SavingsMapper savingsMapper;
     private final AccountMapper accountMapper;
 
@@ -72,6 +72,15 @@ public class SavingsSubscriptionService {
         Long depositId = accountMapper.selectDepositIdByUserId(req.getUserId());
         if (depositId == null) throw new IllegalArgumentException("해당 사용자의 예금 계좌를 찾을 수 없습니다.");
 
+        // ==========================================
+        // 잔액 확인 및 예금 계좌 출금 처리
+        // ==========================================
+        Long currentBalance = accountMapper.selectBalanceByDepositId(depositId);
+        if (currentBalance == null || currentBalance < req.getDepositAmount()) {
+            throw new IllegalArgumentException("출금할 예금 계좌의 잔액이 부족합니다.");
+        }
+        accountMapper.withdrawBalance(depositId, req.getDepositAmount()); //예금 출금 > 적금
+
         String finalSaveType = determineSaveType(product.getProductType(), req.getSaveType());
 
         LocalDate startLocalDate = LocalDate.now();
@@ -95,8 +104,20 @@ public class SavingsSubscriptionService {
                 .paymentDay(req.getPaymentDay())
                 .build();
 
-        // savingsMapper를 통해 INSERT 호출
+        // 적금 가입 정보 INSERT
         savingsMapper.insertSubscription(subscription);
+
+        // ==========================================
+        // 1회차 납입 내역 (Payment) 기록
+        // ==========================================
+        PaymentVO payment = PaymentVO.builder()
+                .subscriptionId(subscription.getSubscriptionId()) // 생성된 적금 PK
+                .roundNo(1)                                  // 1회차
+                .amount(Long.valueOf(req.getDepositAmount()))            // 1회차 납입금액
+                .paidAt(startDateInt)                        // 납입일 (오늘)
+                .build();
+
+        savingsMapper.insertPayment(payment);
 
         return SavingsSubscribeResDTO.builder()
                 .endDate(endLocalDate)

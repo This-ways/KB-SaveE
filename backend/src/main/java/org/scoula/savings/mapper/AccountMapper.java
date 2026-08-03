@@ -11,4 +11,10 @@ public interface AccountMapper {
 
     // 2. 최종 가입(Output 2) 시 DB에 넣을 예금계좌 PK(deposit_id) 조회
     Long selectDepositIdByUserId(@Param("userId") Long userId);
+
+    // 예금 계좌 잔액 조회
+    Long selectBalanceByDepositId(@Param("depositId") Long depositId);
+
+    // 예금 계좌 잔액 차감 (출금)
+    int withdrawBalance(@Param("depositId") Long depositId, @Param("amount") long amount);
 }

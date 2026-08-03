@@ -147,4 +147,22 @@
         LIMIT 1
     </select>
 
+    <!-- 납입 내역(Payment) INSERT -->
+    <insert id="insertPayment" parameterType="org.scoula.savings.domain.PaymentVO"
+            useGeneratedKeys="true" keyProperty="paymentId">
+        INSERT INTO PAYMENT (
+            subscription_id,
+            round_no,
+            amount,
+            paid_at,
+            created_at
+        ) VALUES (
+                     #{subscriptionId},
+                     #{roundNo},
+                     #{amount},
+                     #{paidAt},
+                     NOW()
+                 )
+    </insert>
+
 </mapper>
