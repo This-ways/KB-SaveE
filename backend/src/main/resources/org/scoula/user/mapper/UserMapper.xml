@@ -17,4 +17,8 @@
         WHERE user_id = #{userId}
     </update>
 
+    <select id="findMydataConnected" resultType="boolean">
+        SELECT mydata_connected FROM `user` WHERE user_id = #{userId}
+    </select>
+
 </mapper>
