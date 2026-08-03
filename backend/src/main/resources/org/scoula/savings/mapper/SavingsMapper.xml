@@ -94,4 +94,57 @@
         ORDER BY save_term ASC
     </select>
 
+
+    <!--
+          사용자 적금 가입 정보 INSERT
+          useGeneratedKeys="true" : DB에서 자동 생성된 PK(AUTO_INCREMENT)를 가져옴
+          keyProperty="subscriptionId" : 삽입 후 VO의 subscriptionId 필드에 해당 PK 값을 채워줌
+        -->
+    <insert id="insertSubscription" parameterType="org.scoula.savings.domain.SubscriptionVO"
+            useGeneratedKeys="true" keyProperty="subscriptionId">
+        INSERT INTO subscription (
+            deposit_id,
+            product_id,
+            status,
+            start_date,
+            end_date,
+            account_no,
+            applied_rate,
+            monthly_amount,
+            user_save_term,
+            user_save_type,
+            payment_day,
+            created_at
+        ) VALUES (
+                     #{depositId},
+                     #{productId},
+                     #{status},
+                     #{startDate},
+                     #{endDate},
+                     #{accountNo},
+                     #{appliedRate},
+                     #{monthlyAmount},
+                     #{userSaveTerm},
+                     #{userSaveType},
+                     #{paymentDay},
+                     NOW()
+                 )
+    </insert>
+
+    <!-- 특정 상품의 특정 가입기간(개월)에 해당하는 단건 금리 조회 -->
+    <select id="selectRateByTerm" resultType="org.scoula.savings.domain.SavingsRateVO">
+        SELECT
+            rate_id AS rateId,
+            product_id AS productId,
+            save_term AS saveTerm,
+            min_rate AS minRate,
+            max_rate AS maxRate,
+            start_date AS startDate,
+            end_date AS endDate
+        FROM SAVINGS_RATE
+        WHERE product_id = #{productId}
+          AND save_term = #{saveTerm}
+        LIMIT 1
+    </select>
+
 </mapper>

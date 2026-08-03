@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Param;
 import org.scoula.savings.domain.SavingsProductVO;
 import org.scoula.savings.domain.SavingsRateVO;
+import org.scoula.savings.domain.SubscriptionVO;
 import org.scoula.savings.dto.SavingsRecommendDTO;
 
 
@@ -22,4 +23,11 @@ public interface SavingsMapper {
     );
     SavingsProductVO selectProductById(Long productId);
     List<SavingsRateVO> selectRatesByProductId(Long productId);
+
+    void insertSubscription(SubscriptionVO subscription); //적금 가입 시 insert
+
+    SavingsRateVO selectRateByTerm(
+            @Param("productId") Long productId,
+            @Param("saveTerm") int saveTerm
+    );
 }
