@@ -11,7 +11,11 @@ public interface GoalMapper {
     int update(GoalVO vo);   // goal_id 기준 target_amount 수정
 
     List<GoalVO> findByUserAndYearMonth(@Param("userId") Long userId,
-                                         @Param("yearMonth") String yearMonth);
+                                        @Param("yearMonth") String yearMonth);
+
+    /** 이번 달 GOAL이 없을 때 이월해올 "가장 최근 과거 달"의 GOAL 목록 */
+    List<GoalVO> findMostRecentPriorMonth(@Param("userId") Long userId,
+                                          @Param("beforeYearMonth") String beforeYearMonth);
 
     GoalVO findOne(@Param("userId") Long userId,
                    @Param("categoryId") Long categoryId,
