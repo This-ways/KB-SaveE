@@ -64,4 +64,16 @@
         ORDER BY FIELD(dayOfWeek, '월', '화', '수', '목', '금', '토', '일')
     </select>
 
+    <!-- 이번 달 납입한 적금 금액 합계 -->
+    <!-- payment.paid_at은 DATE가 아니라 INT(YYYYMMDD)라서 문자열 조합 후 숫자 범위 비교 -->
+    <select id="getMonthlyPaymentAmount" resultType="int">
+        SELECT COALESCE(SUM(p.amount), 0)
+        FROM PAYMENT p
+                 JOIN SUBSCRIPTION s ON p.subscription_id = s.subscription_id
+                 JOIN deposit_account d ON s.deposit_id = d.deposit_id
+        WHERE d.user_id = #{userId}
+          AND p.paid_at BETWEEN CAST(CONCAT(REPLACE(#{yearMonth}, '-', ''), '01') AS UNSIGNED)
+            AND CAST(CONCAT(REPLACE(#{yearMonth}, '-', ''), '31') AS UNSIGNED)
+    </select>
+
 </mapper>

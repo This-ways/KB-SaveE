@@ -35,4 +35,10 @@ public interface ReportMapper {
             @Param("userId") Long userId,
             @Param("yearMonth") String yearMonth
     );
+
+    // 이번 달 납입한 적금 금액 합계 (해지 여부 무관, 실제 납입된 것 전부 합산)
+    Integer getMonthlyPaymentAmount(
+            @Param("userId") Long userId,
+            @Param("yearMonth") String yearMonth
+    );
 }
