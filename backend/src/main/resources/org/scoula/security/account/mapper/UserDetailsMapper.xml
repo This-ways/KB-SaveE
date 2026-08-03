@@ -8,13 +8,14 @@
         <result property="userName" column="user_name" />
         <result property="birthDate" column="birth_date" />
         <result property="pushEnabled" column="push_enabled" />
+        <result property="mydataConnected" column="mydata_connected" />
         <result property="status" column="status" />
         <result property="createdAt" column="created_at" />
         <result property="updatedAt" column="updated_at" />
     </resultMap>
 
     <select id="get" resultMap="userMap">
-        SELECT user_id, login_id, password, user_name, birth_date, push_enabled, status, created_at, updated_at
+        SELECT user_id, login_id, password, user_name, birth_date, push_enabled, mydata_connected, status, created_at, updated_at
         FROM `user`
         WHERE login_id = #{loginId}
           AND status = 10

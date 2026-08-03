@@ -76,7 +76,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .antMatchers("/security/admin").access("hasRole('ROLE_ADMIN')")
 //                .antMatchers("/security/member").access("hasAnyRole('ROLE_MEMBER', 'ROLE_ADMIN')");
 //
-////        http.formLogin(); // form 기반 로그인 활성화, 나머지는 모두 디폴트
+    ////        http.formLogin(); // form 기반 로그인 활성화, 나머지는 모두 디폴트
 //        http.formLogin()
 //                .loginPage("/security/login") //get 로그인 시 지금 보여주는 페이지
 //                .loginProcessingUrl("/security/login") //post 아이디 패스워드 누르고 로그인 버튼 눌렀을때 처리해주는
@@ -134,7 +134,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "/*",
 //                "/api/member/**",
 // Swagger 관련 url은 보안에서 제외
-            "/swagger-ui.html", "/webjars/**", "/swagger-resources/**", "/v2/api-docs"
+                "/swagger-ui.html", "/webjars/**", "/swagger-resources/**", "/v2/api-docs"
         ); }
 
 
@@ -164,6 +164,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.PUT, "/api/board/**").authenticated()
                 .antMatchers(HttpMethod.DELETE, "/api/board/**").authenticated()
                 .antMatchers(HttpMethod.POST, "/api/users/signup").permitAll()   // 회원가입은 로그인 전 접근
+                .antMatchers("/api/users/mydata/**").authenticated()
                 .antMatchers("/api/goals/**").authenticated()
                 .antMatchers("/api/deposit-account/**").authenticated()
                 .anyRequest().permitAll();
@@ -176,7 +177,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 
 
-            http.httpBasic().disable() // 기본 HTTP 인증 비활성화
+        http.httpBasic().disable() // 기본 HTTP 인증 비활성화
                 .csrf().disable()       // CSRF 비활성화
                 .formLogin().disable()  // formLogin 비활성화 관련 필터 해제
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션 생성 모드 설정
