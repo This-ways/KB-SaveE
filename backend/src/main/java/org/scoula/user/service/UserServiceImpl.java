@@ -48,4 +48,11 @@ public class UserServiceImpl implements UserService {
 
         return user.getUserId();
     }
+
+    @Override
+    @Transactional
+    public void connectMydata(Long userId) {
+        userMapper.updateMydataConnected(userId, true);
+        log.debug("마이데이터 연결 처리 완료 userId={}", userId);
+    }
 }
