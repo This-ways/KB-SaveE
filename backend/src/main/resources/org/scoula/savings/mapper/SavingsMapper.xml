@@ -209,4 +209,33 @@
         WHERE subscription_id = #{subscriptionId}
     </select>
 
+    <!-- 적금 해지 처리 (상태 변경 및 수정일 기록) -->
+    <update id="updateSubscriptionCancelStatus">
+        UPDATE SUBSCRIPTION
+        SET
+            status = #{status},
+            updated_at = NOW()
+        WHERE subscription_id = #{subscriptionId}
+    </update>
+
+    <!-- 사용자 입출금 계좌에 실 수령액 입금 -->
+    <update id="updateAccountBalance">
+        UPDATE deposit_account
+        SET balance = balance + #{amount}
+        WHERE deposit_id = #{depositId}
+    </update>
+
+    <!-- 회차별 납입 원금 및 납입일 조회 -->
+    <select id="selectAllPayments" resultType="org.scoula.savings.domain.PaymentVO">
+        SELECT
+            payment_id AS paymentId,
+            subscription_id AS subscriptionId,
+            round_no AS roundNo,
+            amount,
+            paid_at AS paidAt
+        FROM PAYMENT
+        WHERE subscription_id = #{subscriptionId}
+        ORDER BY paid_at ASC
+    </select>
+
 </mapper>

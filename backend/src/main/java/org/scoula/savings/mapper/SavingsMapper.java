@@ -48,4 +48,13 @@ public interface SavingsMapper {
     Integer selectLastPaymentDate(@Param("subscriptionId") Long subscriptionId);
 
     Integer selectPaidRounds(@Param("subscriptionId") Long subscriptionId); //납입회차
+
+    //  적금 상태 업데이트 (해지 처리)
+    int updateSubscriptionCancelStatus(@Param("subscriptionId") Long subscriptionId, @Param("status") int status);
+
+    // 사용자의 입출금 계좌 잔액 업데이트 (실 수령액 입금)
+    int updateAccountBalance(@Param("depositId") Long depositId, @Param("amount") Long amount);
+
+    // 💡 [추가] 회차별 납입 상세 내역 조회 (건별 이자 계산용)
+    List<org.scoula.savings.domain.PaymentVO> selectAllPayments(@Param("subscriptionId") Long subscriptionId);
 }
