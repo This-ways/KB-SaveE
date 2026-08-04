@@ -41,3 +41,6 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Firebase 서비스 계정 키 (절대 커밋 금지) ###
+firebase-serviceAccountKey.json

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.scoula.notification.mapper.NotificationMapper">
+
+    <!-- 알림 기록 저장
+         INSERT IGNORE: UNIQUE(user_id, category_id, target_month, threshold_rate) 걸리면
+         예외 대신 0을 반환 -> 서비스에서 "이미 보낸 알림"으로 판단해 푸시를 건너뜀 -->
+    <insert id="insert" parameterType="org.scoula.notification.domain.NotificationVO"
+            useGeneratedKeys="true" keyProperty="notificationId">
+        INSERT IGNORE INTO notification
+            (user_id, category_id, type_code, target_month, threshold_rate, sent_at)
+        VALUES
+            (#{userId}, #{categoryId}, #{typeCode}, #{targetMonth}, #{thresholdRate}, NOW())
+    </insert>
+
+    <!-- 유저의 알림 전체 조회 (최신순) -->
+    <select id="selectByUserId" resultType="org.scoula.notification.domain.NotificationVO">
+        SELECT notification_id, user_id, category_id, type_code, target_month, threshold_rate, sent_at
+        FROM notification
+        WHERE user_id = #{userId}
+        ORDER BY sent_at DESC
+    </select>
+
+    <!-- 특정 월의 알림 조회 (최신순) -->
+    <select id="selectByUserIdAndMonth" resultType="org.scoula.notification.domain.NotificationVO">
+        SELECT notification_id, user_id, category_id, type_code, target_month, threshold_rate, sent_at
+        FROM notification
+        WHERE user_id = #{userId}
+          AND target_month = #{targetMonth}
+        ORDER BY sent_at DESC
+    </select>
+
+    <!-- 목표 변경 시 해당 월/카테고리 알림 삭제 (임계값 알림 재발송 허용) -->
+    <delete id="deleteByCategoryAndMonth">
+        DELETE FROM notification
+        WHERE user_id = #{userId}
+          AND category_id = #{categoryId}
+          AND target_month = #{targetMonth}
+    </delete>
+
+    <!-- 이번 달 이전 알림 전체 삭제 (예산 설정 시 호출)
+         target_month는 CHAR(7) 'YYYY-MM' 이라 문자열 비교로 이전 달 판별 가능
+         적금 알림 등 target_month가 NULL인 것도 함께 정리 (누적 방지) -->
+    <delete id="deleteBeforeMonth">
+        DELETE FROM notification
+        WHERE user_id = #{userId}
+          AND (target_month IS NULL OR target_month &lt; #{currentMonth})
+    </delete>
+
+    <!-- 푸시 수신 동의 여부 -->
+    <select id="selectPushEnabled" resultType="java.lang.Boolean">
+        SELECT push_enabled
+        FROM `user`
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 해당 월 카테고리 목표 금액 (year_month는 예약어라 백틱 필요) -->
+    <select id="selectGoalAmount" resultType="java.lang.Integer">
+        SELECT target_amount
+        FROM goal
+        WHERE user_id = #{userId}
+          AND category_id = #{categoryId}
+          AND `year_month` = #{targetMonth}
+    </select>
+
+    <!-- 해당 월 카테고리 누적 지출액
+         txn_type = FALSE 가 지출 (TRUE는 수입)
+         거래가 없으면 SUM이 NULL이라 IFNULL로 0 처리 -->
+    <select id="selectMonthlySpending" resultType="java.lang.Integer">
+        SELECT IFNULL(SUM(amount), 0)
+        FROM `transaction`
+        WHERE user_id = #{userId}
+          AND category_id = #{categoryId}
+          AND txn_type = FALSE
+          AND DATE_FORMAT(txn_date, '%Y-%m') = #{targetMonth}
+    </select>
+
+</mapper>
