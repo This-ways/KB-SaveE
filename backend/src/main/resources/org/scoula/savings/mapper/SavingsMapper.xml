@@ -202,4 +202,11 @@
         WHERE s.subscription_id = #{subscriptionId}
     </select>
 
+    <!-- 현재까지 납입한 총 회차(건수) 조회 -->
+    <select id="selectPaidRounds" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM PAYMENT
+        WHERE subscription_id = #{subscriptionId}
+    </select>
+
 </mapper>

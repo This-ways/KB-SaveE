@@ -19,7 +19,7 @@ public class SavingsStatusService {
     private final SavingsMapper savingsMapper;
 
     public SavingsStatusResDTO getSavingsStatus(Long subscriptionId) {
-        // 1. 가입 정보 및 상품 정보 조인 조회
+        // 가입 정보 및 상품 정보 조인 조회
         SubscriptionVO sub = savingsMapper.selectSubscriptionWithProduct(subscriptionId);
 
         // 날짜 변환 (DB의 int 20260724 -> LocalDate)
@@ -27,18 +27,31 @@ public class SavingsStatusService {
         LocalDate endDate = parseDate(sub.getEndDate());
         LocalDate today = LocalDate.now();
 
-        // [핵심] 기간 기반 목표 달성률 계산 로직
-        long totalDays = ChronoUnit.DAYS.between(startDate, endDate);
-        long passedDays = ChronoUnit.DAYS.between(startDate, today);
-
-        int achievementRate = (int) (((double) passedDays / totalDays) * 100);
-        // 달성률 예외 처리 (0% 미만이나 100% 초과 방지)
-        achievementRate = Math.max(0, Math.min(100, achievementRate));
-
+        // ==========================================
         // 총 납입 원금 및 월별 납입 내역 (차트용) 조회
+        // ==========================================
         Long totalPrincipal = savingsMapper.selectTotalPrincipal(subscriptionId);
         if (totalPrincipal == null) {
             totalPrincipal = 0L;
+        }
+
+        // ==========================================
+        // 실제 납입 회차 기반 목표 달성률 계산
+        // ==========================================
+        // DB에서 직접 납입 횟수(COUNT)를 가져옵니다.
+        Integer paidRounds = savingsMapper.selectPaidRounds(subscriptionId);
+        if (paidRounds == null) paidRounds = 0;
+
+        int achievementRate = 0;
+        if (sub.getUserSaveTerm() > 0) {
+            // 전체 목표 횟수 = 가입 개월 수
+            int totalRounds = sub.getUserSaveTerm();
+
+            // 달성률 계산: (현재 납입 횟수 / 전체 납입 횟수) * 100
+            achievementRate = (int) (((double) paidRounds / totalRounds) * 100);
+
+            // 달성률 예외 처리 (0% 미만이나 100% 초과 방지)
+            achievementRate = Math.max(0, Math.min(100, achievementRate));
         }
 
         List<MonthlyPaymentDTO> chartData = savingsMapper.selectMonthlyPayments(subscriptionId);

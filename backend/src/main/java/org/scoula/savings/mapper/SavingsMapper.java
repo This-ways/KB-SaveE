@@ -44,6 +44,8 @@ public interface SavingsMapper {
     // 가입 내역과 상품 정보(상품명 등)를 조인하여 조회
     SubscriptionVO selectSubscriptionWithProduct(@Param("subscriptionId") Long subscriptionId);
 
-    // 💡 [추가] 마지막 납입일(가장 최근 결제일) 조회
+    // 마지막 납입일(가장 최근 결제일) 조회
     Integer selectLastPaymentDate(@Param("subscriptionId") Long subscriptionId);
+
+    Integer selectPaidRounds(@Param("subscriptionId") Long subscriptionId); //납입회차
 }
