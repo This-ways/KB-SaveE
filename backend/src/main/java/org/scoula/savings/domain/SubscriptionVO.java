@@ -30,4 +30,6 @@ public class SubscriptionVO {
     // 상품 테이블(SAVINGS_PRODUCT)과 조인해서 가져올 상품명, 기업코드
     private String productName;
     private String companyCode;
+    private Long maxAmount;
+    private Long minAmount;
 }
