@@ -107,19 +107,21 @@ public class SavingsStatusService {
         return LocalDate.parse(String.valueOf(dateInt), DateTimeFormatter.ofPattern("yyyyMMdd"));
     }
 
-    // 단순 이자 계산기 (단리 기준)
+    // 이자 계산기 (단리 기준, 세후)
     private long calculateExpectedAmount(Long monthlyAmount, double rate, int term) {
         if (monthlyAmount == null || monthlyAmount == 0) return 0;
 
         // 1. 만기 시 총 납입 원금 = 월 납입액 * 가입 개월 수
         long totalExpectedPrincipal = monthlyAmount * term;
 
-        // 2. 총 이자 = 월 납입액 * (연이율 / 100) * (개월수 * (개월수 + 1) / 2) / 12
-        // (첫 달부터 마지막 달까지 은행에 돈이 예치된 기간에 비례하여 이자를 합산하는 공식)
-        double totalInterest = monthlyAmount * (rate / 100) * (term * (term + 1)) / 24.0;
+        // 2. 세전 총 이자 (비과세 기준)
+        double preTaxInterest = monthlyAmount * (rate / 100) * (term * (term + 1)) / 24.0;
 
-        // 3. 최종 예상 수령액 = 총 원금 + 총 이자
-        return totalExpectedPrincipal + (long) totalInterest;
+        // 3. 이자소득세 15.4% 차감 (세후 이자)
+        double afterTaxInterest = preTaxInterest * (1 - 0.154);
+
+        // 4. 최종 예상 수령액 = 총 원금 + 세후 이자 (소수점 이하는 버림)
+        return totalExpectedPrincipal + (long) afterTaxInterest;
     }
 
     // ==========================================
