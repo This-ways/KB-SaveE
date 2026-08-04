@@ -1,12 +1,13 @@
 -- =====================================================
 -- 알림 기능 테스트용 데이터
--- user_id = 1 (minji), 2026-07 식비(category_id = 1) 기준
--- 해당 월 실제 지출: 213,200원
+-- user_id = 5 (yj0130 / 정유진), 2026-08 기준
+-- 해당 월 실제 지출 : 식비(1) 447,500원 / 패션·쇼핑(4) 0원
+-- 식비 목표(300,000)는 팀 더미에 이미 포함되어 있어 별도 등록이 필요 없습니다.
 -- =====================================================
 
--- 1) 목표 등록 : 소진율 50% (50% 알림 1건 발송)
+-- 1) 임계값 미달 케이스용 목표 등록 (지출이 없어 소진율 0% -> 알림 발생 안 함)
 INSERT INTO goal (user_id, category_id, `year_month`, target_amount)
-VALUES (1, 1, '2026-07', 426400);
+VALUES (5, 4, '2026-08', 150000);
 
 
 -- =====================================================
@@ -14,48 +15,59 @@ VALUES (1, 1, '2026-07', 426400);
 -- =====================================================
 -- 로그인해서 토큰 발급
 --   POST /api/auth/login
---   { "username": "minji", "password": "1234" }
+--   { "username": "yj0130", "password": "pass1234" }
 --
 -- 알림 발송 (소진율 계산 -> 임계값 판정 -> 기록/푸시)
---   POST /api/notifications/send?categoryId=1&targetMonth=2026-07
+--   POST /api/notifications/send?categoryId=1&targetMonth=2026-08
 --   Authorization: Bearer {토큰}
---   => 서버 로그에 소진율과 알림 문구가 출력됩니다.
+--   => 소진율 149% : 50/70/90 모두 기록되고 푸시는 90%만 발송됩니다.
+--      서버 로그에 소진율과 알림 문구가 출력됩니다.
 --
 -- 알림함 조회
---   GET /api/notifications?targetMonth=2026-07
+--   GET /api/notifications?targetMonth=2026-08
 --   Authorization: Bearer {토큰}
 
 
 -- =====================================================
--- 3) 임계값별 시나리오 : 목표 금액을 바꾼 뒤 알림 발송 API 재호출
+-- 3) 임계값 미달 확인
 -- =====================================================
--- 소진율 71% : 50/70 기록, 푸시는 70%만 발송
--- UPDATE goal SET target_amount = 300000
--- WHERE user_id = 1 AND category_id = 1 AND `year_month` = '2026-07';
-
--- 소진율 92% : 50/70/90 기록, 푸시는 90%만 발송 (동시 크로싱)
--- UPDATE goal SET target_amount = 230000
--- WHERE user_id = 1 AND category_id = 1 AND `year_month` = '2026-07';
+--   POST /api/notifications/send?categoryId=4&targetMonth=2026-08
+-- => 소진율 0%. 소진율 로그만 출력되고 알림은 기록되지 않습니다.
 
 
 -- =====================================================
 -- 4) 중복 차단 확인
 -- =====================================================
--- 알림 발송 API를 같은 조건으로 다시 호출하면
+-- 2)의 알림 발송 API를 같은 조건으로 다시 호출하면
 -- "이미 기록된 알림" 로그가 뜨고 아래 건수는 늘어나지 않습니다.
--- SELECT * FROM notification WHERE user_id = 1;
+-- SELECT * FROM notification WHERE user_id = 5;
 
 
 -- =====================================================
 -- 5) 재발송 확인 (목표 변경 시 알림 초기화)
 -- =====================================================
---   DELETE /api/notifications/budget?categoryId=1&targetMonth=2026-07
+--   DELETE /api/notifications/budget?categoryId=1&targetMonth=2026-08
 --   Authorization: Bearer {토큰}
 -- => 해당 월/카테고리 알림이 삭제되어 알림 발송 API 재호출 시 다시 기록됩니다.
 
 
 -- =====================================================
--- 6) 테스트 초기화
+-- 6) 푸시 수신 거부 확인 (push_enabled = FALSE)
 -- =====================================================
--- DELETE FROM notification WHERE user_id = 1;
--- DELETE FROM goal WHERE user_id = 1 AND `year_month` = '2026-07';
+-- UPDATE `user` SET push_enabled = FALSE WHERE user_id = 5;
+-- DELETE FROM notification WHERE user_id = 5;   -- 중복 차단에 걸리지 않도록 초기화
+-- COMMIT;
+--
+-- 이 상태에서 2)의 알림 발송 API를 호출하면
+-- "푸시 수신 거부 - 기록만 저장" 로그가 뜨고 FCM 발송은 건너뜁니다.
+-- notification 테이블에는 기록이 남아 알림함에서는 조회됩니다.
+--
+-- 확인 후 원복
+-- UPDATE `user` SET push_enabled = TRUE WHERE user_id = 5;
+
+
+-- =====================================================
+-- 7) 테스트 초기화
+-- =====================================================
+-- DELETE FROM notification WHERE user_id = 5;
+-- DELETE FROM goal WHERE user_id = 5 AND category_id = 4 AND `year_month` = '2026-08';
