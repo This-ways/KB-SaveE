@@ -3,6 +3,7 @@ package org.scoula.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.scoula.common.util.ClockService;
+import org.scoula.notification.service.NotificationService;
 import org.scoula.user.domain.GoalVO;
 import org.scoula.user.dto.CategoryAverageDTO;
 import org.scoula.user.dto.ExpectedSavingDTO;
@@ -29,6 +30,7 @@ public class GoalServiceImpl implements GoalService {
     private final ClockService clockService;
     private final UserMapper userMapper;
     private final TransactionStatMapper transactionStatMapper;
+    private final NotificationService notificationService; // 목표 설정/이월 시점에 지난달 알림 정리 요청용
 
     @Override
     @Transactional
@@ -64,6 +66,9 @@ public class GoalServiceImpl implements GoalService {
         } else {
             goalMapper.update(vo);
         }
+
+        // 예산 설정 시점 - 이번 달 이전 알림은 이제 철 지난 정보라 정리 요청
+        notificationService.deleteOldNotifications(userId, yearMonth);
 
         return GoalResponseDTO.of(vo);
     }
@@ -158,5 +163,8 @@ public class GoalServiceImpl implements GoalService {
         }
         log.debug("GOAL 이월 처리: userId={} {} -> {} ({}건)",
                 userId, mostRecentPrior.get(0).getYearMonth(), targetYearMonth, mostRecentPrior.size());
+
+        // 이월도 "목표가 새로 확정되는 시점"이라 동일하게 지난달 알림 정리
+        notificationService.deleteOldNotifications(userId, targetYearMonth);
     }
 }

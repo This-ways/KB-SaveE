@@ -17,4 +17,6 @@ public interface AccountMapper {
 
     // 예금 계좌 잔액 차감 (출금)
     int withdrawBalance(@Param("depositId") Long depositId, @Param("amount") long amount);
+
+    Long selectUserIdByDepositId(Long depositId);
 }

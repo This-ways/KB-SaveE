@@ -13,15 +13,17 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
 
 import javax.sql.DataSource;
 
 @Configuration
+// @EnableScheduling //적금 스케줄링에 필요
 @PropertySource({"classpath:/application.properties"})
 @MapperScan(basePackages = {"org.scoula.security.account.mapper", "org.scoula.member.mapper", "org.scoula.category.mapper", "org.scoula.transaction.mapper", "org.scoula.savings.mapper", "org.scoula.peerstat.mapper", "org.scoula.report.mapper", "org.scoula.user.mapper", "org.scoula.notification.mapper"})
-@ComponentScan(basePackages = {"org.scoula.security", "org.scoula.member.service", "org.scoula.category.service", "org.scoula.transaction.service", "org.scoula.savings", "org.scoula.peerstat.service", "org.scoula.report.service", "org.scoula.user.service", "org.scoula.common", "org.scoula.notification.service"})
+@ComponentScan(basePackages = {"org.scoula.security", "org.scoula.member.service", "org.scoula.category.service", "org.scoula.transaction.service", "org.scoula.savings", "org.scoula.peerstat.service", "org.scoula.report.service", "org.scoula.user.service", "org.scoula.common", "org.scoula.notification.service", "org.scoula.notification.config"})
 @EnableTransactionManagement
 public class RootConfig {
     @Value("${jdbc.driver}") String driver;

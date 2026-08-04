@@ -20,6 +20,8 @@ public class SavingsDetailDTO {
     private String bankName;           // 은행명 (예: KB국민은행)
     private Double maxRate;            // 최고 연이율 (예: 2.6)
 
+    private String rateStartDate; //금리 기준일?
+
     // 2. 중간 기본 정보 표 (DB 매핑)
     private String feature;            // 상품특징
     private String target;             // 가입대상
