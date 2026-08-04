@@ -48,7 +48,8 @@
         p.product_name AS productName,
         p.product_type AS productType,
         p.company_code AS companyCode,
-        r.max_rate     AS maxRate
+        r.max_rate     AS maxRate,
+        DATE_FORMAT(STR_TO_DATE(CAST(r.start_date AS CHAR), '%Y%m%d'), '%Y.%m.%d') AS rateStartDate
         FROM SAVINGS_PRODUCT p
         JOIN SAVINGS_RATE r ON p.product_id = r.product_id
         WHERE p.status = 10
