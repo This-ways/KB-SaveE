@@ -40,13 +40,17 @@
           AND target_month = #{targetMonth}
     </delete>
 
-    <!-- 이번 달 이전 알림 전체 삭제 (예산 설정 시 호출)
-         target_month는 CHAR(7) 'YYYY-MM' 이라 문자열 비교로 이전 달 판별 가능
-         적금 알림 등 target_month가 NULL인 것도 함께 정리 (누적 방지) -->
+    <!-- 오래된 알림 정리 (예산 설정 시 호출)
+         예산 알림(BUDGET) : 이번 달 이전은 모두 삭제 - 한 달 기준으로만 유지
+         그 외 알림(적금 등) : 발송 후 1개월이 지난 것만 삭제
+           -> 이체 실패 알림을 바로 지우면 사용자가 확인할 수 없으므로 유예 기간을 둠 -->
     <delete id="deleteBeforeMonth">
         DELETE FROM notification
         WHERE user_id = #{userId}
-          AND (target_month IS NULL OR target_month &lt; #{currentMonth})
+          AND (
+            (type_code = 'BUDGET' AND target_month &lt; #{currentMonth})
+                OR (type_code != 'BUDGET' AND sent_at &lt; DATE_SUB(NOW(), INTERVAL 1 MONTH))
+            )
     </delete>
 
     <!-- 푸시 수신 동의 여부 -->

@@ -3,7 +3,7 @@ package org.scoula.notification.util;
 import java.util.HashMap;
 import java.util.Map;
 
-// 예산 소진 알림 문구 모음
+// 알림 문구 모음
 // 문구를 DB에 저장하지 않는 구조라 발송/조회 양쪽에서 여기를 참조함
 // 카테고리명은 팀 DDL 기준 (식비, 카페/간식, 온라인쇼핑, 패션/쇼핑, 문화/여가,
 //                        술/유흥, 교통, 생활, 뷰티, 교육, 반려동물, 여행, 기타)
@@ -12,8 +12,12 @@ public class NotificationMessage {
     // 푸시 제목 - "식비 예산 50% 소진" 형태로 조립
     private static final Map<Long, String> CATEGORY_NAMES = new HashMap<>();
 
-    // 본문 - key: "카테고리ID:임계값" (예: "1:50")
+    // 예산 알림 본문 - key: "카테고리ID:임계값" (예: "1:50")
     private static final Map<String, String> MESSAGES = new HashMap<>();
+
+    // 적금 알림 제목/본문 - key: type_code (PAY_UPCOMING/PAY_SUCCESS/PAY_FAIL)
+    private static final Map<String, String> PAY_TITLE_MAP = new HashMap<>();
+    private static final Map<String, String> PAY_BODY_MAP = new HashMap<>();
 
     static {
         CATEGORY_NAMES.put(1L, "식비");
@@ -94,6 +98,15 @@ public class NotificationMessage {
         MESSAGES.put("13:50", "기타 지출 예산 50% 달성! 어디로 샜는지 지출 내역을 한번 쓱 둘러보세요");
         MESSAGES.put("13:70", "기타 예산 증가 중! 세어나가는 소액 결제가 없는지 확인해 볼까요?");
         MESSAGES.put("13:90", "기타 예산 바닥! 주머니 속 숨은 지출을 완벽하게 통제해 주세요");
+
+        // 적금 자동이체 알림
+        PAY_TITLE_MAP.put("PAY_UPCOMING", "오늘은 적금 자동 이체일이에요!");
+        PAY_TITLE_MAP.put("PAY_SUCCESS", "적금 자동이체가 성공했어요!");
+        PAY_TITLE_MAP.put("PAY_FAIL", "적금 자동이체가 실패했어요!");
+
+        PAY_BODY_MAP.put("PAY_UPCOMING", "오늘 오전 10시에 출금될 예정이에요.");
+        PAY_BODY_MAP.put("PAY_SUCCESS", "정상적으로 이체되었어요!");
+        PAY_BODY_MAP.put("PAY_FAIL", "잔액이 부족하여 이체되지 않았어요.");
     }
 
     // 푸시 제목 - "식비 예산 50% 소진"
@@ -110,6 +123,16 @@ public class NotificationMessage {
             return getTitle(categoryId, thresholdRate) + "! 지출 내역을 확인해 보세요";
         }
         return message;
+    }
+
+    // 적금 알림 제목 - 적금 도메인에서 processNotification 호출 시 사용
+    public static String getPaymentTitle(String typeCode) {
+        return PAY_TITLE_MAP.getOrDefault(typeCode, "적금 알림");
+    }
+
+    // 적금 알림 본문
+    public static String getPaymentBody(String typeCode) {
+        return PAY_BODY_MAP.getOrDefault(typeCode, "적금 알림입니다.");
     }
 
     // 카테고리명만 필요할 때
