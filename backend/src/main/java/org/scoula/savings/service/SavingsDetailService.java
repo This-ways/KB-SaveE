@@ -1,6 +1,7 @@
 package org.scoula.savings.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.scoula.savings.domain.SavingsProductVO;
 import org.scoula.savings.domain.SavingsRateVO;
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
+@Log4j2
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

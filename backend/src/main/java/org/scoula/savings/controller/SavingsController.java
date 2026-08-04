@@ -1,6 +1,7 @@
 package org.scoula.savings.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.scoula.savings.dto.*;
 import org.scoula.savings.service.*;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Log4j2
 @RestController
 @RequestMapping("/savings")
 @RequiredArgsConstructor
@@ -77,6 +79,27 @@ public class SavingsController {
     public ResponseEntity<String> cancelSubscription(@PathVariable Long subscriptionId) {
         cancelService.cancelSubscription(subscriptionId);
         return ResponseEntity.ok("ok.");
+    }
+
+    private final AutoTransferManageService manageService;
+
+    // 자동이체 금액 수정 API
+    @PutMapping(value = "/auto-transfer/{subscriptionId}/amount", produces = "application/json;charset=UTF-8")
+    public ResponseEntity<String> updateMonthlyAmount(
+            @PathVariable("subscriptionId") Long subscriptionId,
+            @RequestBody UpdateMonthlyAmountReqDTO request) {
+        try {
+            // 서비스 메서드 시그니처(Long, Long)에 맞게 각각 값을 넘겨줌
+            manageService.updateMonthlyAmount(subscriptionId, request.getNewAmount());
+
+            return ResponseEntity.ok("자동이체 금액이 성공적으로 변경되었습니다.");
+        } catch (IllegalArgumentException e) {
+            log.warn("자동이체 금액 변경 실패: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            log.error("자동이체 금액 변경 중 시스템 오류 발생", e);
+            return ResponseEntity.internalServerError().body("서버 오류로 인해 처리에 실패했습니다.");
+        }
     }
 }
 

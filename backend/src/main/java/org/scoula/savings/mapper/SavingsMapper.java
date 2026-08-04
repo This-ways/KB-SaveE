@@ -57,4 +57,14 @@ public interface SavingsMapper {
 
     // 회차별 납입 상세 내역 조회 (건별 이자 계산용)
     List<org.scoula.savings.domain.PaymentVO> selectAllPayments(@Param("subscriptionId") Long subscriptionId);
+
+    // 자동이체 대상자 목록 조회
+    List<SubscriptionVO> selectAutoTransferTargets(@Param("targetDays") List<Integer> targetDays);
+    // 현재까지 납입된 최고 회차 번호 조회
+    Integer selectMaxRoundNo(@Param("subscriptionId") Long subscriptionId);
+
+    // 이번 달 총 납입액 조회 (YYYYMM 포맷으로 검색)
+    Long selectTotalPaidThisMonth(@Param("subscriptionId") Long subscriptionId, @Param("yearMonth") String yearMonth);
+
+    int updateMonthlyAmount(@Param("subscriptionId") Long subscriptionId, @Param("newAmount") Long newAmount);
 }

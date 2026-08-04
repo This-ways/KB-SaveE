@@ -1,6 +1,7 @@
 package org.scoula.savings.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.scoula.savings.domain.PaymentVO;
 import org.scoula.savings.domain.SavingsProductVO;
@@ -18,7 +19,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
 
-@Slf4j
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class SavingsSubscriptionService {

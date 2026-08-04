@@ -195,11 +195,13 @@
     <!-- 가입 내역 + 상품 정보 조인 조회 (상품명 매핑용) -->
     <select id="selectSubscriptionWithProduct" resultType="org.scoula.savings.domain.SubscriptionVO">
         SELECT
-            s.*,
-            p.product_name AS productName,
-            p.company_code AS companyCode
+        s.*,
+        p.product_name AS productName,
+        p.company_code AS companyCode,
+        p.max_amount   AS maxAmount,
+        p.min_amount   AS minAmount
         FROM SUBSCRIPTION s
-                 INNER JOIN SAVINGS_PRODUCT p ON s.product_id = p.product_id
+        INNER JOIN SAVINGS_PRODUCT p ON s.product_id = p.product_id
         WHERE s.subscription_id = #{subscriptionId}
     </select>
 
@@ -238,5 +240,42 @@
         WHERE subscription_id = #{subscriptionId}
         ORDER BY paid_at ASC
     </select>
+
+
+    <!-- 자동이체(배치) 전용 쿼리 추가 -->
+
+    <!-- 오늘이 자동이체일인 활성(status=10) 적금 구독 목록 조회 -->
+    <!-- 오늘 및 밀린 자동이체일 대상자 한 번에 조회 -->
+    <select id="selectAutoTransferTargets" resultType="org.scoula.savings.domain.SubscriptionVO">
+        SELECT *
+        FROM SUBSCRIPTION
+        WHERE status = 10
+        AND payment_day IN
+        <foreach item="day" collection="targetDays" open="(" separator="," close=")">
+            #{day}
+        </foreach>
+    </select>
+    <!-- 해당 적금의 가장 최근 납입 회차 번호 조회 -->
+    <select id="selectMaxRoundNo" resultType="java.lang.Integer">
+        SELECT MAX(round_no)
+        FROM PAYMENT
+        WHERE subscription_id = #{subscriptionId}
+    </select>
+
+    <!-- 이번 달 총 납입액 합산 -->
+    <select id="selectTotalPaidThisMonth" resultType="java.lang.Long">
+        SELECT SUM(amount)
+        FROM PAYMENT
+        WHERE subscription_id = #{subscriptionId}
+          AND CAST(paid_at AS CHAR) LIKE CONCAT(#{yearMonth}, '%')
+    </select>
+
+    <!-- 자동이체 납입 금액 수정 -->
+    <update id="updateMonthlyAmount">
+        UPDATE SUBSCRIPTION
+        SET monthly_amount = #{newAmount},
+            updated_at = NOW()
+        WHERE subscription_id = #{subscriptionId}
+    </update>
 
 </mapper>
