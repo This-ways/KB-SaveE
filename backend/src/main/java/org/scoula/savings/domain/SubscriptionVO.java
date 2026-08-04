@@ -26,4 +26,8 @@ public class SubscriptionVO {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // 상품 테이블(SAVINGS_PRODUCT)과 조인해서 가져올 상품명
+    private String productName;
+    private String companyCode;
 }

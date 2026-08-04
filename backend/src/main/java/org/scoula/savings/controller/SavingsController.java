@@ -2,10 +2,7 @@ package org.scoula.savings.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.scoula.savings.dto.*;
-import org.scoula.savings.service.SavingsDetailService;
-import org.scoula.savings.service.SavingsRecommendService;
-import org.scoula.savings.service.SavingsService;
-import org.scoula.savings.service.SavingsSubscriptionService;
+import org.scoula.savings.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +19,8 @@ public class SavingsController {
     private final SavingsDetailService savingsDetailService;
 
     private final SavingsSubscriptionService savingsSubscriptionService;
+
+    private final SavingsStatusService savingsStatusService;
 
     @GetMapping("/api")
     public String testApi() { //http://localhost:8080/api/savings/test
@@ -55,6 +54,13 @@ public class SavingsController {
     public ResponseEntity<SavingsSubscribeResDTO> processSubscription(@RequestBody SavingsSubscribeReqDTO request) {
         SavingsSubscribeResDTO result = savingsSubscriptionService.processSubscription(request);
         return ResponseEntity.ok(result);
+    }
+
+    // 5. 적금 현황 API
+    @GetMapping("/status/{subscriptionId}")
+    public ResponseEntity<SavingsStatusResDTO> getSavingsStatus(@PathVariable Long subscriptionId) {
+        SavingsStatusResDTO status = savingsStatusService.getSavingsStatus(subscriptionId);
+        return ResponseEntity.ok(status);
     }
 }
 
