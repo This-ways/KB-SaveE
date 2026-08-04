@@ -2,6 +2,9 @@ package org.scoula.savings.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.scoula.notification.domain.NotificationVO;
+import org.scoula.notification.service.NotificationService;
+import org.scoula.notification.util.NotificationMessage;
 import org.scoula.savings.domain.PaymentVO;
 import org.scoula.savings.domain.SubscriptionVO;
 import org.scoula.savings.mapper.AccountMapper;
@@ -11,6 +14,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.scoula.notification.util.NotificationMessage;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
+
 @Log4j2
 @Service
 @RequiredArgsConstructor
@@ -26,6 +33,8 @@ public class AutoTransferBatchService {
 
     private final SavingsMapper savingsMapper;
     private final AccountMapper accountMapper;
+
+    private final NotificationService notificationService;
 
     @Value("${batch.auto-transfer.enabled:false}")
     private boolean isBatchEnabled;
@@ -94,10 +103,22 @@ public class AutoTransferBatchService {
         List<SubscriptionVO> targetList = savingsMapper.selectAutoTransferTargets(targetDayList);
 
         for (SubscriptionVO sub : targetList) {
+            // depositId로 userId 조회
+            Long userId = accountMapper.selectUserIdByDepositId(sub.getDepositId());
+
             try {
                 processSingleTransfer(sub);
+
+                // 성공 알림
+                sendPaymentNotification(userId, "PAY_SUCCESS");
+
                 log.info("자동이체 성공 - Subscription ID: {}", sub.getSubscriptionId());
+
             } catch (Exception e) {
+
+                // 실패 알림
+                sendPaymentNotification(userId, "PAY_FAIL");
+
                 log.error("자동이체 실패 - Subscription ID: {}, 사유: {}", sub.getSubscriptionId(), e.getMessage());
             }
         }
@@ -140,5 +161,26 @@ public class AutoTransferBatchService {
             return false;
         }
         return true;
+    }
+
+    private void sendPaymentNotification(Long userId, String typeCode) {
+
+        String title;
+        String body;
+
+        if ("PAY_SUCCESS".equals(typeCode)) {
+            title = "자동이체 완료";
+            body = "적금 자동이체가 정상적으로 완료되었습니다.";
+        } else {
+            title = "자동이체 실패";
+            body = "잔액 부족으로 적금 자동이체에 실패했습니다.";
+        }
+
+        NotificationVO vo = NotificationVO.builder()
+                .userId(userId)
+                .typeCode(typeCode)
+                .build();
+
+        notificationService.processNotification(vo, title, body);
     }
 }
