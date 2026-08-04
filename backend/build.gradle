@@ -43,6 +43,9 @@ dependencies {
     implementation("org.springframework.security:spring-security-core:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-taglibs:${springSecurityVersion}")
 
+    // FCM 푸시 발송 (Firebase Admin SDK)
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
+
     //데이터베이스
     implementation 'com.mysql:mysql-connector-j:8.1.0'
     implementation 'com.zaxxer:HikariCP:2.7.4'
