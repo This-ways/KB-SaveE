@@ -22,7 +22,7 @@ public interface NotificationMapper {
                                  @Param("categoryId") Long categoryId,
                                  @Param("targetMonth") String targetMonth);
 
-    // 이번 달 이전 알림 전체 삭제 (예산 설정 시 호출, 알림 무한 누적 방지)
+    // 오래된 알림 정리 (예산 설정 시 호출)
     int deleteBeforeMonth(@Param("userId") Long userId,
                           @Param("currentMonth") String currentMonth);
 
@@ -38,4 +38,8 @@ public interface NotificationMapper {
     int selectMonthlySpending(@Param("userId") Long userId,
                               @Param("categoryId") Long categoryId,
                               @Param("targetMonth") String targetMonth);
+
+    // 해당 월에 목표를 설정한 카테고리 목록 - 앱 진입 시 전체 체크용
+    List<Long> selectGoalCategoryIds(@Param("userId") Long userId,
+                                     @Param("targetMonth") String targetMonth);
 }
