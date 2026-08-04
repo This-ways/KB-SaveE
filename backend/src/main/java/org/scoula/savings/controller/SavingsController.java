@@ -22,6 +22,8 @@ public class SavingsController {
 
     private final SavingsStatusService savingsStatusService;
 
+    private final SavingsCancelService cancelService;
+
     @GetMapping("/api")
     public String testApi() { //http://localhost:8080/api/savings/test
         savingsService.printSavingsData();
@@ -61,6 +63,20 @@ public class SavingsController {
     public ResponseEntity<SavingsStatusResDTO> getSavingsStatus(@PathVariable Long subscriptionId) {
         SavingsStatusResDTO status = savingsStatusService.getSavingsStatus(subscriptionId);
         return ResponseEntity.ok(status);
+    }
+
+    // 6. 해지 예상 명세서 조회 (
+    @GetMapping("/{subscriptionId}/cancel/confirm")
+    public ResponseEntity<CancelPreviewResDTO> getCancelPreview(@PathVariable Long subscriptionId) {
+        CancelPreviewResDTO response = cancelService.getCancelPreview(subscriptionId);
+        return ResponseEntity.ok(response);
+    }
+
+    // 7. 실제 해지 처리
+    @PostMapping("/{subscriptionId}/cancel")
+    public ResponseEntity<String> cancelSubscription(@PathVariable Long subscriptionId) {
+        cancelService.cancelSubscription(subscriptionId);
+        return ResponseEntity.ok("ok.");
     }
 }
 
