@@ -20,5 +20,7 @@ public class SavingsRecommendDTO {
     private Long totalPrincipal;     // 총 원금 (예: 1,044,000원)
     private Long expectedInterest;   // 예상 세후 이자
     private Long finalReceiveAmount; // 최종 예상 수령액
+
+    private String rateStartDate; //금리 기준일?
 }
 
