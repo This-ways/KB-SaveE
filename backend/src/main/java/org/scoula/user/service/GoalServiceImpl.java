@@ -4,12 +4,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.scoula.common.util.ClockService;
 import org.scoula.user.domain.GoalVO;
+import org.scoula.user.dto.CategoryAverageDTO;
+import org.scoula.user.dto.ExpectedSavingDTO;
 import org.scoula.user.dto.GoalRequestDTO;
 import org.scoula.user.dto.GoalResponseDTO;
 import org.scoula.user.mapper.GoalMapper;
+import org.scoula.user.mapper.TransactionStatMapper;
+import org.scoula.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,8 +23,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GoalServiceImpl implements GoalService {
 
+    private static final int DEFAULT_AVG_MONTHS = 3;
+
     private final GoalMapper goalMapper;
     private final ClockService clockService;
+    private final UserMapper userMapper;
+    private final TransactionStatMapper transactionStatMapper;
 
     @Override
     @Transactional
@@ -83,6 +92,42 @@ public class GoalServiceImpl implements GoalService {
         return goalMapper.findByUserAndYearMonth(userId, target).stream()
                 .map(GoalResponseDTO::of)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CategoryAverageDTO> getCategoryAverages(Long userId, int monthsBack) {
+        // 마이데이터 미연결(false) 상태면 실제 거래내역이 있어도 아직 안 보여줘야 함 (연결 전/후 시나리오)
+        if (!Boolean.TRUE.equals(userMapper.findMydataConnected(userId))) {
+            return Collections.emptyList();
+        }
+        int months = monthsBack > 0 ? monthsBack : DEFAULT_AVG_MONTHS;
+        String referenceYearMonth = clockService.currentYearMonth().toString();
+        return transactionStatMapper.findCategoryAverages(userId, referenceYearMonth, months);
+    }
+
+    @Override
+    public ExpectedSavingDTO getExpectedSaving(Long userId, String yearMonth, int monthsBack) {
+        String target = (yearMonth == null || yearMonth.isBlank())
+                ? clockService.currentYearMonth().toString()
+                : yearMonth;
+
+        List<CategoryAverageDTO> averages = getCategoryAverages(userId, monthsBack);
+        if (averages.isEmpty()) {
+            return new ExpectedSavingDTO(0);
+        }
+
+        List<GoalVO> goals = goalMapper.findByUserAndYearMonth(userId, target);
+        int total = 0;
+        for (GoalVO goal : goals) {
+            for (CategoryAverageDTO avg : averages) {
+                if (avg.getCategoryId().equals(goal.getCategoryId())) {
+                    int diff = avg.getAvgAmount() - goal.getTargetAmount();
+                    total += Math.max(diff, 0); // 평균보다 목표를 더 높게 잡은 경우 0으로 처리
+                    break;
+                }
+            }
+        }
+        return new ExpectedSavingDTO(total);
     }
 
     /**

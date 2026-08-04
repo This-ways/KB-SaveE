@@ -1,5 +1,7 @@
 package org.scoula.user.service;
 
+import org.scoula.user.dto.CategoryAverageDTO;
+import org.scoula.user.dto.ExpectedSavingDTO;
 import org.scoula.user.dto.GoalRequestDTO;
 import org.scoula.user.dto.GoalResponseDTO;
 
@@ -13,4 +15,10 @@ public interface GoalService {
     List<GoalResponseDTO> saveAll(Long userId, List<GoalRequestDTO> dtos);
 
     List<GoalResponseDTO> findMine(Long userId, String yearMonth);
+
+    /** 카테고리 선택 화면용 - 카테고리별 최근 N개월 평균 지출. mydata_connected=false면 빈 리스트 */
+    List<CategoryAverageDTO> getCategoryAverages(Long userId, int monthsBack);
+
+    /** 완료 화면용 - 이번 달 설정된 GOAL 기준 예상 절약액 = Σ(평균 - 목표), 음수는 0 처리 */
+    ExpectedSavingDTO getExpectedSaving(Long userId, String yearMonth, int monthsBack);
 }
