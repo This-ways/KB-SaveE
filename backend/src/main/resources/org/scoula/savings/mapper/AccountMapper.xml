@@ -36,4 +36,10 @@
         WHERE deposit_id = #{depositId}
     </update>
 
+    <select id="selectUserIdByDepositId" resultType="long">
+        SELECT user_id
+        FROM deposit_account
+        WHERE deposit_id = #{depositId}
+    </select>
+
 </mapper>

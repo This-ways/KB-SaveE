@@ -2,6 +2,9 @@ package org.scoula.savings.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.scoula.notification.domain.NotificationVO;
+import org.scoula.notification.service.NotificationService;
+import org.scoula.notification.util.NotificationMessage;
 import org.scoula.savings.domain.PaymentVO;
 import org.scoula.savings.domain.SubscriptionVO;
 import org.scoula.savings.mapper.AccountMapper;
@@ -14,10 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Log4j2
 @Service
@@ -26,12 +26,14 @@ public class AutoTransferBatchService {
 
     private final SavingsMapper savingsMapper;
     private final AccountMapper accountMapper;
+    private final NotificationService notificationService;
 
     @Value("${batch.auto-transfer.enabled:false}")
     private boolean isBatchEnabled;
 
     // 공휴일 데이터 세팅
     private static final Set<LocalDate> HOLIDAYS = new HashSet<>();
+
     static {
         int year = LocalDate.now().getYear();
         HOLIDAYS.add(LocalDate.of(year, 1, 1));
@@ -43,42 +45,95 @@ public class AutoTransferBatchService {
         HOLIDAYS.add(LocalDate.of(year, 12, 25));
     }
 
-    //테스트할때 스케줄 바꾸기
-    @Scheduled(cron = "0 0 10 * * *")
-    public void executeDailyAutoTransfer() {
+    /**
+     * 오전 9시 - 오늘 자동이체 예정 알림
+     */
+    @Scheduled(cron = "0 0 9 * * *")
+    public void notifyUpcomingAutoTransfer() {
+
         if (!isBatchEnabled) {
-            log.info("자동이체 배치가 비활성화 상태이므로 실행하지 않습니다.");
             return;
         }
+
+        List<SubscriptionVO> targetList = getTodayAutoTransferTargets();
+
+        for (SubscriptionVO sub : targetList) {
+            Long userId = accountMapper.selectUserIdByDepositId(sub.getDepositId());
+            sendPaymentNotification(userId, "PAY_UPCOMING");
+        }
+
+        log.info("[자동이체 예정 알림] {}건 발송", targetList.size());
+    }
+
+    /**
+     * 오전 10시 - 자동이체 실행
+     */
+    @Scheduled(cron = "0 0 10 * * *")
+    public void executeDailyAutoTransfer() {
+
+        if (!isBatchEnabled) {
+            log.info("자동이체 배치가 비활성화 상태입니다.");
+            return;
+        }
+
+        List<SubscriptionVO> targetList = getTodayAutoTransferTargets();
+
+        log.info("[자동이체 배치 시작] 대상 {}건", targetList.size());
+
+        for (SubscriptionVO sub : targetList) {
+
+            Long userId = accountMapper.selectUserIdByDepositId(sub.getDepositId());
+
+            try {
+
+                processSingleTransfer(sub);
+
+                sendPaymentNotification(userId, "PAY_SUCCESS");
+
+                log.info("자동이체 성공 - Subscription ID: {}", sub.getSubscriptionId());
+
+            } catch (Exception e) {
+
+                sendPaymentNotification(userId, "PAY_FAIL");
+
+                log.error("자동이체 실패 - Subscription ID: {}, 사유: {}",
+                        sub.getSubscriptionId(), e.getMessage());
+            }
+        }
+
+        log.info("[자동이체 배치 종료] 총 {}건 처리", targetList.size());
+    }
+
+    /**
+     * 오늘 자동이체 대상 조회
+     * (공휴일 이월 + 말일 보정 포함)
+     */
+    private List<SubscriptionVO> getTodayAutoTransferTargets() {
 
         LocalDate today = LocalDate.now();
 
-        // 1. 오늘이 비영업일이면 이월을 위해 스킵
         if (!isBusinessDay(today)) {
-            log.info("[자동이체 배치 스킵] 오늘은 비영업일({}월 {}일)입니다.", today.getMonthValue(), today.getDayOfMonth());
-            return;
+            log.info("[자동이체] 오늘은 비영업일이므로 대상이 없습니다.");
+            return Collections.emptyList();
         }
 
-        // 2. 오늘 및 처리하지 못한 밀린 비영업일 날짜(LocalDate) 모두 수집
         List<LocalDate> coveredDates = new ArrayList<>();
         coveredDates.add(today);
 
         LocalDate prevDay = today.minusDays(1);
+
         while (!isBusinessDay(prevDay)) {
             coveredDates.add(prevDay);
             prevDay = prevDay.minusDays(1);
         }
 
-        // 3. 수집된 날짜들을 기반으로 납입일(payment_day) 추출 및 말일 보정
-        // 중복 방지를 위해 Set 사용 (예: 31일이 여러 번 들어가는 것 방지)
         Set<Integer> targetDaysSet = new HashSet<>();
 
         for (LocalDate date : coveredDates) {
+
             int day = date.getDayOfMonth();
             targetDaysSet.add(day);
 
-            // 말일 보정 로직: 해당 날짜가 '그 달의 마지막 날'인지 확인
-            // 맞다면, 설정 불가능한 뒤의 날짜들(예: 31일 설정자)을 모두 오늘 출금 대상에 포함!
             if (day == date.lengthOfMonth()) {
                 for (int i = day + 1; i <= 31; i++) {
                     targetDaysSet.add(i);
@@ -86,40 +141,35 @@ public class AutoTransferBatchService {
             }
         }
 
-        // Set을 List로 변환하여 MyBatis로 전달
         List<Integer> targetDayList = new ArrayList<>(targetDaysSet);
-        log.info("[자동이체 배치 시작] 기준일: {}, 처리 대상 납입일(말일/이월 포함): {}", today, targetDayList);
 
-        // 4. 대상자 목록 한 번에 조회 및 처리
-        List<SubscriptionVO> targetList = savingsMapper.selectAutoTransferTargets(targetDayList);
+        log.info("처리 대상 납입일 : {}", targetDayList);
 
-        for (SubscriptionVO sub : targetList) {
-            try {
-                processSingleTransfer(sub);
-                log.info("자동이체 성공 - Subscription ID: {}", sub.getSubscriptionId());
-            } catch (Exception e) {
-                log.error("자동이체 실패 - Subscription ID: {}, 사유: {}", sub.getSubscriptionId(), e.getMessage());
-            }
-        }
-
-        log.info("[자동이체 배치 종료] 총 {}건 처리 완료", targetList.size());
+        return savingsMapper.selectAutoTransferTargets(targetDayList);
     }
 
     @Transactional
     public void processSingleTransfer(SubscriptionVO sub) {
+
         Long amount = Long.valueOf(sub.getMonthlyAmount());
 
-        Long currentBalance = accountMapper.selectBalanceByDepositId(sub.getDepositId());
+        Long currentBalance =
+                accountMapper.selectBalanceByDepositId(sub.getDepositId());
+
         if (currentBalance == null || currentBalance < amount) {
-            throw new RuntimeException("출금 계좌 잔액 부족 (현재 잔액: " + currentBalance + ")");
+            throw new RuntimeException("출금 계좌 잔액 부족");
         }
 
         accountMapper.withdrawBalance(sub.getDepositId(), amount);
 
-        Integer maxRound = savingsMapper.selectMaxRoundNo(sub.getSubscriptionId());
+        Integer maxRound =
+                savingsMapper.selectMaxRoundNo(sub.getSubscriptionId());
+
         int nextRound = (maxRound != null ? maxRound : 0) + 1;
 
-        int todayDateInt = Integer.parseInt(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+        int todayDateInt = Integer.parseInt(
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        );
 
         PaymentVO paymentVO = PaymentVO.builder()
                 .subscriptionId(sub.getSubscriptionId())
@@ -132,13 +182,28 @@ public class AutoTransferBatchService {
     }
 
     private boolean isBusinessDay(LocalDate date) {
+
         DayOfWeek dayOfWeek = date.getDayOfWeek();
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+
+        if (dayOfWeek == DayOfWeek.SATURDAY ||
+                dayOfWeek == DayOfWeek.SUNDAY) {
             return false;
         }
-        if (HOLIDAYS.contains(date)) {
-            return false;
-        }
-        return true;
+
+        return !HOLIDAYS.contains(date);
+    }
+
+    private void sendPaymentNotification(Long userId, String typeCode) {
+
+        NotificationVO vo = NotificationVO.builder()
+                .userId(userId)
+                .typeCode(typeCode)
+                .build();
+
+        notificationService.processNotification(
+                vo,
+                NotificationMessage.getPaymentTitle(typeCode),
+                NotificationMessage.getPaymentBody(typeCode)
+        );
     }
 }
