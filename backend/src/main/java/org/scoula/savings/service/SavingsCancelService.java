@@ -22,6 +22,17 @@ public class SavingsCancelService {
     // 1. 해지 예상 명세서 데이터 조회
     public CancelPreviewResDTO getCancelPreview(Long subscriptionId) {
         SubscriptionVO sub = savingsMapper.selectSubscriptionWithProduct(subscriptionId);
+
+        // 계좌 존재 여부 검증
+        if (sub == null) {
+            throw new IllegalArgumentException("존재하지 않는 적금 계좌입니다.");
+        }
+
+        //  이미 해지된 계좌인지 상태값(status) 검증 (10: 정상, 90: 해지)
+        if (sub.getStatus() == 90) {
+            throw new IllegalArgumentException("이미 해지 처리된 적금 계좌입니다.");
+        }
+
         Long totalPrincipal = savingsMapper.selectTotalPrincipal(subscriptionId);
         if (totalPrincipal == null) totalPrincipal = 0L;
 

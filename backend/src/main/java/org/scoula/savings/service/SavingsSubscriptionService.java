@@ -40,9 +40,17 @@ public class SavingsSubscriptionService {
 
         String finalSaveType = determineSaveType(product.getProductType(), req.getSaveType());
 
-        String depositAccountNo = accountMapper.selectAccountNoByUserId(req.getUserId());
-        if (depositAccountNo == null) throw new IllegalArgumentException("출금할 예금 계좌가 존재하지 않습니다.");
+        // 계좌 ID 및 계좌번호 조회 (1인 1계좌 검증을 위해 DepositId도 가져옴)
+        Long depositId = accountMapper.selectDepositIdByUserId(req.getUserId());
+        if (depositId == null) throw new IllegalArgumentException("출금할 예금 계좌가 존재하지 않습니다.");
 
+        // 1인 1계좌 제한 검증
+        int activeCount = savingsMapper.countActiveSubscriptionByDepositId(depositId);
+        if (activeCount > 0) {
+            throw new IllegalArgumentException("이미 가입하여 유지 중인 적금 계좌가 존재합니다. (1인 1계좌만 가입 가능)");
+        }
+
+        String depositAccountNo = accountMapper.selectAccountNoByUserId(req.getUserId());
         LocalDate endDate = LocalDate.now().plusMonths(req.getSaveTerm());
 
         return SavingsConfirmResDTO.builder()
@@ -73,14 +81,22 @@ public class SavingsSubscriptionService {
         Long depositId = accountMapper.selectDepositIdByUserId(req.getUserId());
         if (depositId == null) throw new IllegalArgumentException("해당 사용자의 예금 계좌를 찾을 수 없습니다.");
 
+
+        // 1인 1계좌 검증
+        int activeCount = savingsMapper.countActiveSubscriptionByDepositId(depositId);
+        if (activeCount > 0) {
+            throw new IllegalArgumentException("이미 가입하여 유지 중인 적금 계좌가 존재합니다. (1인 1계좌만 가입 가능)");
+        }
+
         // ==========================================
         // 잔액 확인 및 예금 계좌 출금 처리
         // ==========================================
-        Long currentBalance = accountMapper.selectBalanceByDepositId(depositId);
-        if (currentBalance == null || currentBalance < req.getDepositAmount()) {
+        // 출금
+        int updatedCount = accountMapper.withdrawBalance(depositId, req.getDepositAmount());
+
+        if (updatedCount == 0) {
             throw new IllegalArgumentException("출금할 예금 계좌의 잔액이 부족합니다.");
         }
-        accountMapper.withdrawBalance(depositId, req.getDepositAmount()); //예금 출금 > 적금
 
         String finalSaveType = determineSaveType(product.getProductType(), req.getSaveType());
 

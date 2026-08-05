@@ -62,4 +62,20 @@ public class SavingsRecommendService {
 
         return result;
     }
+
+    public List<SavingsRecommendDTO> getProductsByType(String tabType) {
+        // 프론트에서 넘겨준 탭 이름에 따라 DB 조회용 키워드로 변환
+        String dbProductType;
+        if ("자유적금".equals(tabType) || "자유적립식".equals(tabType)) {
+            dbProductType = "자유적립식";
+        } else if ("정액적금".equals(tabType) || "정액적립식".equals(tabType)) {
+            dbProductType = "정액적립식";
+        } else {
+            throw new IllegalArgumentException("올바르지 않은 상품 타입입니다: " + tabType);
+        }
+
+        // 입력된 조건이 없으므로 계산 로직 없이 DB 목록만 그대로 반환
+        // image_92961c.png의 하단 리스트들처럼 상품명, 은행명, 최고 연이율만 표기됩니다.
+        return savingsMapper.selectProductsByType(dbProductType);
+    }
 }

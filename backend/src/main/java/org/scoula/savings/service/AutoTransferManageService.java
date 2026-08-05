@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Log4j2
 @Service
 @RequiredArgsConstructor
-public class AutoTransferManageService {
+public class AutoTransferManageService { //납입액 수정
 
     private final SavingsMapper savingsMapper;
 
