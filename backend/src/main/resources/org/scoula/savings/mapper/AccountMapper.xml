@@ -7,7 +7,7 @@
 
     <!-- 1. 출금용 예금 계좌번호 조회 (문자열 반환) -->
     <select id="selectAccountNoByUserId" resultType="java.lang.String">
-        SELECT deposit_no
+        SELECT account_no
         FROM deposit_account
         WHERE user_id = #{userId}
         LIMIT 1
@@ -34,6 +34,7 @@
         SET balance = balance - #{amount},
             updated_at = NOW()
         WHERE deposit_id = #{depositId}
+            AND balance >= #{amount}
     </update>
 
     <select id="selectUserIdByDepositId" resultType="long">
