@@ -2,7 +2,6 @@ package org.scoula.savings.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import lombok.extern.slf4j.Slf4j;
 import org.scoula.savings.domain.PaymentVO;
 import org.scoula.savings.domain.SavingsProductVO;
 import org.scoula.savings.domain.SavingsRateVO;
@@ -30,7 +29,7 @@ public class SavingsSubscriptionService {
     /**
      * [STEP 1] 가입 정보 확인 API (Output 1)
      */
-    public SavingsConfirmResDTO confirmSubscription(SavingsSubscribeReqDTO req) {
+    public SavingsConfirmResDTO confirmSubscription(Long userId, SavingsSubscribeReqDTO req) {
 
         SavingsProductVO product = savingsMapper.selectProductById(req.getProductId());
         if (product == null) throw new IllegalArgumentException("존재하지 않는 상품입니다.");
@@ -40,8 +39,8 @@ public class SavingsSubscriptionService {
 
         String finalSaveType = determineSaveType(product.getProductType(), req.getSaveType());
 
-        // 계좌 ID 및 계좌번호 조회 (1인 1계좌 검증을 위해 DepositId도 가져옴)
-        Long depositId = accountMapper.selectDepositIdByUserId(req.getUserId());
+        // 계좌 ID 및 계좌번호 조회 (req.getUserId() 대신 파라미터로 받은 userId 사용)
+        Long depositId = accountMapper.selectDepositIdByUserId(userId);
         if (depositId == null) throw new IllegalArgumentException("출금할 예금 계좌가 존재하지 않습니다.");
 
         // 1인 1계좌 제한 검증
@@ -50,7 +49,7 @@ public class SavingsSubscriptionService {
             throw new IllegalArgumentException("이미 가입하여 유지 중인 적금 계좌가 존재합니다. (1인 1계좌만 가입 가능)");
         }
 
-        String depositAccountNo = accountMapper.selectAccountNoByUserId(req.getUserId());
+        String depositAccountNo = accountMapper.selectAccountNoByUserId(userId);
         LocalDate endDate = LocalDate.now().plusMonths(req.getSaveTerm());
 
         return SavingsConfirmResDTO.builder()
@@ -70,7 +69,7 @@ public class SavingsSubscriptionService {
      * [STEP 2] 최종 적금 가입 처리 API (Output 2)
      */
     @Transactional
-    public SavingsSubscribeResDTO processSubscription(SavingsSubscribeReqDTO req) {
+    public SavingsSubscribeResDTO processSubscription(Long userId, SavingsSubscribeReqDTO req) {
 
         SavingsProductVO product = savingsMapper.selectProductById(req.getProductId());
         if (product == null) throw new IllegalArgumentException("존재하지 않는 상품입니다.");
@@ -78,9 +77,9 @@ public class SavingsSubscriptionService {
         SavingsRateVO rate = savingsMapper.selectRateByTerm(req.getProductId(), req.getSaveTerm());
         if (rate == null) throw new IllegalArgumentException("해당 가입기간의 금리 정보가 없습니다.");
 
-        Long depositId = accountMapper.selectDepositIdByUserId(req.getUserId());
+        // req.getUserId() 대신 파라미터로 받은 userId 사용
+        Long depositId = accountMapper.selectDepositIdByUserId(userId);
         if (depositId == null) throw new IllegalArgumentException("해당 사용자의 예금 계좌를 찾을 수 없습니다.");
-
 
         // 1인 1계좌 검증
         int activeCount = savingsMapper.countActiveSubscriptionByDepositId(depositId);
@@ -91,7 +90,6 @@ public class SavingsSubscriptionService {
         // ==========================================
         // 잔액 확인 및 예금 계좌 출금 처리
         // ==========================================
-        // 출금
         int updatedCount = accountMapper.withdrawBalance(depositId, req.getDepositAmount());
 
         if (updatedCount == 0) {
@@ -128,10 +126,10 @@ public class SavingsSubscriptionService {
         // 1회차 납입 내역 (Payment) 기록
         // ==========================================
         PaymentVO payment = PaymentVO.builder()
-                .subscriptionId(subscription.getSubscriptionId()) // 생성된 적금 PK
-                .roundNo(1)                                  // 1회차
-                .amount(Long.valueOf(req.getDepositAmount()))            // 1회차 납입금액
-                .paidAt(startDateInt)                        // 납입일 (오늘)
+                .subscriptionId(subscription.getSubscriptionId())
+                .roundNo(1)
+                .amount(Long.valueOf(req.getDepositAmount()))
+                .paidAt(startDateInt)
                 .build();
 
         savingsMapper.insertPayment(payment);

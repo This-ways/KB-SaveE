@@ -4,8 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.scoula.savings.dto.*;
 import org.scoula.savings.service.*;
+import org.scoula.security.account.domain.CustomUser;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 
 import java.util.List;
 
@@ -41,7 +44,7 @@ public class SavingsController {
 
     @GetMapping("/products")
     public ResponseEntity<List<SavingsRecommendDTO>> getProductsByType(@RequestParam("type") String type) {
-        // type 에는 "자유적금" 또는 "정액적금"이 들어옵니다.
+        // type 에는 "자유적금" 또는 "정액적금"이 들어옴.
         return ResponseEntity.ok(savingsRecommendService.getProductsByType(type));
     }
 
@@ -52,17 +55,21 @@ public class SavingsController {
         return ResponseEntity.ok(detail);
     }
 
-    // 3. 적금 가입 정보 확인 API (Output 1 시뮬레이션)
+    // 3. 적금 가입 정보 확인 API
     @PostMapping("/subscribe/confirm")
-    public ResponseEntity<SavingsConfirmResDTO> confirmSubscription(@RequestBody SavingsSubscribeReqDTO request) {
-        SavingsConfirmResDTO confirmData = savingsSubscriptionService.confirmSubscription(request);
+    public ResponseEntity<SavingsConfirmResDTO> confirmSubscription(
+            @AuthenticationPrincipal CustomUser user,
+            @RequestBody SavingsSubscribeReqDTO request) {
+        SavingsConfirmResDTO confirmData = savingsSubscriptionService.confirmSubscription(user.getUserId(), request);
         return ResponseEntity.ok(confirmData);
     }
 
-    // 4. 최종 적금 가입 처리 API (Output 2 실제 DB 저장)
+    // 4. 최종 적금 가입 처리 API
     @PostMapping("/subscribe")
-    public ResponseEntity<SavingsSubscribeResDTO> processSubscription(@RequestBody SavingsSubscribeReqDTO request) {
-        SavingsSubscribeResDTO result = savingsSubscriptionService.processSubscription(request);
+    public ResponseEntity<SavingsSubscribeResDTO> processSubscription(
+            @AuthenticationPrincipal CustomUser user,
+            @RequestBody SavingsSubscribeReqDTO request) {
+        SavingsSubscribeResDTO result = savingsSubscriptionService.processSubscription(user.getUserId(), request);
         return ResponseEntity.ok(result);
     }
 
