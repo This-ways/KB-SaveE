@@ -1,158 +1,181 @@
 <script setup>
-import { reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import authApi from '@/api/authApi';
+import userApi from '@/api/userApi';
 
 const router = useRouter();
-const avatar = ref(null);
-const checkError = ref('');
 
-const member = reactive({
-  // 테스트용 초기화
-  username: 'hong',
-  email: 'hong@gmail.com',
-  password: '12',
-  password2: '12',
-  avatar: null,
+const form = ref({
+  loginId: '',
+  password: '',
+  passwordCheck: '',
+  userName: '',
+  birthDate: '',
 });
+const agree = ref(false);
+const error = ref('');
+const submitting = ref(false);
 
-const disableSubmit = ref(true);
-// username 중복 체크
-const checkUsername = async () => {
-  if (!member.username) {
-    return alert('사용자 ID를 입력하세요.');
+const doJoin = async () => {
+  if (submitting.value) return;
+  error.value = '';
+
+  if (!form.value.loginId || !form.value.password || !form.value.userName || !form.value.birthDate) {
+    error.value = '모든 항목을 입력해 주세요.';
+    return;
+  }
+  if (form.value.password !== form.value.passwordCheck) {
+    error.value = '비밀번호가 일치하지 않습니다.';
+    return;
+  }
+  if (!agree.value) {
+    error.value = '약관에 동의해 주세요.';
+    return;
   }
 
-  disableSubmit.value = await authApi.checkUsername(member.username);
-  console.log(disableSubmit.value, typeof disableSubmit.value);
-  checkError.value = disableSubmit.value
-    ? '이미 사용중인 ID입니다.'
-    : '사용가능한 ID입니다.';
-};
-
-// username 입력 핸들러
-const changeUsername = () => {
-  disableSubmit.value = true;
-  if (member.username) {
-    checkError.value = 'ID 중복 체크를 하셔야 합니다.';
-  } else {
-    checkError.value = '';
-  }
-};
-
-const join = async () => {
-  if (member.password != member.password2) {
-    return alert('비밀번호가 일치하지 않습니다.');
-  }
-
-  if (avatar.value.files.length > 0) {
-    member.avatar = avatar.value.files[0];
-  }
-
+  submitting.value = true;
   try {
-    await authApi.create(member); // 회원가입
-    router.push({ name: 'home' }); // 회원 가입 성공 시, 첫 페이지로 이동 또는 로그인 페이지로 이동
+    await userApi.signup({
+      loginId: form.value.loginId,
+      password: form.value.password,
+      userName: form.value.userName,
+      birthDate: form.value.birthDate,
+    });
+    alert('회원가입이 완료되었습니다. 로그인해 주세요.');
+    router.push('/auth/login');
   } catch (e) {
-    console.error(e);
+    // 백엔드: 아이디 중복 시 400 (IllegalStateException 핸들러)
+    error.value = e?.response?.data || '회원가입에 실패했습니다.';
+  } finally {
+    submitting.value = false;
   }
 };
+
+const goLogin = () => router.push('/auth/login');
 </script>
 
 <template>
-  <div class="mt-5 mx-auto" style="width: 500px">
-    <h1 class="my-5">
-      <i class="fa-solid fa-user-plus"></i>
-      회원 가입
-    </h1>
+  <div class="join-page">
+    <div class="tabs">
+      <button class="tab" @click="goLogin">로그인</button>
+      <button class="tab active">회원가입</button>
+    </div>
 
-    <form @submit.prevent="join">
-      <div class="mb-3 mt-3">
-        <label for="username" class="form-label">
-          <i class="fa-solid fa-user"></i>
-          사용자 ID :
-          <button
-            type="button"
-            class="btn btn-success btn-sm py-0 me-2"
-            @click="checkUsername"
-          >
-            ID 중복 확인
-          </button>
-          <span :class="disableSubmit ? 'text-danger' : 'text-primary'">{{
-            checkError
-          }}</span>
-        </label>
-        <input
-          type="text"
-          class="form-control"
-          placeholder="사용자 ID"
-          id="username"
-          @input="changeUsername"
-          v-model="member.username"
-        />
-      </div>
+    <div class="form">
+      <label class="field">
+        <span class="label">아이디</span>
+        <input v-model="form.loginId" type="text" placeholder="아이디를 입력해 주세요" />
+      </label>
 
-      <div>
-        <label for="avatar" class="form-label">
-          <i class="fa-solid fa-user-astronaut"></i>
-          아바타 이미지:
-        </label>
-        <input
-          type="file"
-          class="form-control"
-          ref="avatar"
-          id="avatar"
-          accept="image/png, image/jpeg"
-        />
-      </div>
+      <label class="field">
+        <span class="label">비밀번호</span>
+        <input v-model="form.password" type="password" placeholder="비밀번호를 입력해 주세요" />
+      </label>
 
-      <div class="mb-3 mt-3">
-        <label for="email" class="form-label">
-          <i class="fa-solid fa-envelope"></i>
-          email
-        </label>
-        <input
-          type="email"
-          class="form-control"
-          placeholder="Email"
-          id="email"
-          v-model="member.email"
-        />
-      </div>
+      <label class="field">
+        <span class="label">비밀번호 확인</span>
+        <input v-model="form.passwordCheck" type="password" placeholder="비밀번호를 다시 입력해 주세요" />
+      </label>
 
-      <div class="mb-3">
-        <label for="password" class="form-label">
-          <i class="fa-solid fa-lock"></i> 비밀번호:
-        </label>
-        <input
-          type="password"
-          class="form-control"
-          placeholder="비밀번호"
-          id="password"
-          v-model="member.password"
-        />
-      </div>
+      <label class="field">
+        <span class="label">이름</span>
+        <input v-model="form.userName" type="text" placeholder="이름을 입력해 주세요" />
+      </label>
 
-      <div class="mb-3">
-        <label for="password" class="form-label">
-          <i class="fa-solid fa-lock"></i> 비밀번호 확인:
-        </label>
-        <input
-          type="password"
-          class="form-control"
-          placeholder="비밀번호 확인"
-          id="password2"
-          v-model="member.password2"
-        />
-      </div>
+      <label class="field">
+        <span class="label">생년월일</span>
+        <input v-model="form.birthDate" type="date" />
+      </label>
 
-      <button
-        type="submit"
-        class="btn btn-primary mt-4"
-        :disabled="disableSubmit"
-      >
-        <i class="fa-solid fa-user-plus"></i>
-        확인
+      <label class="agree">
+        <input v-model="agree" type="checkbox" />
+        <span>서비스 이용약관 및 개인정보처리방침에 동의합니다</span>
+      </label>
+
+      <p v-if="error" class="error">{{ error }}</p>
+
+      <button class="join-btn" :disabled="submitting" @click="doJoin">
+        {{ submitting ? '가입 중...' : '가입하기' }}
       </button>
-    </form>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.join-page {
+  padding: 20px;
+  min-height: 100vh;
+  background: #fff;
+}
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #f3f4f6;
+  margin: 20px 0 28px;
+}
+.tab {
+  flex: 1;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: #9ca3af;
+  cursor: pointer;
+}
+.tab.active {
+  color: #111;
+  font-weight: 600;
+  border-bottom: 2px solid #ffbc00;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+.field input {
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+}
+.field input:focus {
+  outline: none;
+  border-color: #ffbc00;
+}
+.agree {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  cursor: pointer;
+}
+.error {
+  color: #ef4444;
+  font-size: 13px;
+}
+.join-btn {
+  margin-top: 8px;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: #ffbc00;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.join-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+}
+</style>
