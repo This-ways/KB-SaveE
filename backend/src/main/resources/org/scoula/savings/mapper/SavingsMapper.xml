@@ -278,4 +278,23 @@
         WHERE subscription_id = #{subscriptionId}
     </update>
 
+    <!-- 타입별(자유/정액) 전체 상품 조회 (최고 금리순) -->
+    <select id="selectProductsByType" resultType="org.scoula.savings.dto.SavingsRecommendDTO">
+        SELECT
+            p.product_id   AS productId,
+            p.product_name AS productName,
+            p.product_type AS productType,
+            p.company_code AS companyCode,
+            MAX(r.max_rate) AS maxRate
+        FROM SAVINGS_PRODUCT p
+                 JOIN SAVINGS_RATE r ON p.product_id = r.product_id
+        WHERE p.status = 10
+          AND p.product_type LIKE CONCAT('%', #{productType}, '%')
+        GROUP BY
+            p.product_id,
+            p.product_name,
+            p.product_type,
+            p.company_code
+        ORDER BY maxRate DESC
+    </select>
 </mapper>

@@ -39,6 +39,12 @@ public class SavingsController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/products")
+    public ResponseEntity<List<SavingsRecommendDTO>> getProductsByType(@RequestParam("type") String type) {
+        // type 에는 "자유적금" 또는 "정액적금"이 들어옵니다.
+        return ResponseEntity.ok(savingsRecommendService.getProductsByType(type));
+    }
+
     // 2. 적금 상품 상세 정보 API
     @GetMapping("/products/{productId}")
     public ResponseEntity<SavingsDetailDTO> getSavingsDetail(@PathVariable Long productId) {

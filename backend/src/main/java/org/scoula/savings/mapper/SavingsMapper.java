@@ -67,4 +67,6 @@ public interface SavingsMapper {
     Long selectTotalPaidThisMonth(@Param("subscriptionId") Long subscriptionId, @Param("yearMonth") String yearMonth);
 
     int updateMonthlyAmount(@Param("subscriptionId") Long subscriptionId, @Param("newAmount") Long newAmount);
+
+    List<SavingsRecommendDTO> selectProductsByType(@Param("productType") String productType); //전체상품조회
 }
