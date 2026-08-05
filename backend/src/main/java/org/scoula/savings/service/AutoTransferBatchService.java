@@ -85,19 +85,26 @@ public class AutoTransferBatchService {
             Long userId = accountMapper.selectUserIdByDepositId(sub.getDepositId());
 
             try {
-
+                // 순수 출금 로직만 실행
                 processSingleTransfer(sub);
-
-                sendPaymentNotification(userId, "PAY_SUCCESS");
-
                 log.info("자동이체 성공 - Subscription ID: {}", sub.getSubscriptionId());
 
+                //  출금 성공 '후'에 알림 발송을 별도의 try-catch로 감싸서 실행
+                try {
+                    sendPaymentNotification(userId, "PAY_SUCCESS");
+                } catch (Exception ex) {
+                    log.warn("성공 알림 발송 실패 (출금은 정상 처리됨) - 기기 토큰이 없거나 테이블 오류");
+                }
+
             } catch (Exception e) {
+                //  진짜 잔액이 부족하거나 출금 중 에러가 났을 때
+                log.error("자동이체 실패 - Subscription ID: {}, 사유: {}", sub.getSubscriptionId(), e.getMessage());
 
-                sendPaymentNotification(userId, "PAY_FAIL");
-
-                log.error("자동이체 실패 - Subscription ID: {}, 사유: {}",
-                        sub.getSubscriptionId(), e.getMessage());
+                try {
+                    sendPaymentNotification(userId, "PAY_FAIL");
+                } catch (Exception ex) {
+                    log.warn("실패 알림 발송 실패");
+                }
             }
         }
 
