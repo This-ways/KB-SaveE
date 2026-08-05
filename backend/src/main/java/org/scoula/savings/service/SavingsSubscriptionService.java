@@ -91,11 +91,12 @@ public class SavingsSubscriptionService {
         // ==========================================
         // 잔액 확인 및 예금 계좌 출금 처리
         // ==========================================
-        Long currentBalance = accountMapper.selectBalanceByDepositId(depositId);
-        if (currentBalance == null || currentBalance < req.getDepositAmount()) {
+        // 출금
+        int updatedCount = accountMapper.withdrawBalance(depositId, req.getDepositAmount());
+
+        if (updatedCount == 0) {
             throw new IllegalArgumentException("출금할 예금 계좌의 잔액이 부족합니다.");
         }
-        accountMapper.withdrawBalance(depositId, req.getDepositAmount()); //예금 출금 > 적금
 
         String finalSaveType = determineSaveType(product.getProductType(), req.getSaveType());
 
