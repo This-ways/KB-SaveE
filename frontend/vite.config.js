@@ -19,7 +19,4 @@ export default defineConfig({
       },
     },
   },
-  build: {
-    outDir: 'D:/KB_Workspace/09_Spring+Vue/backend/src/main/webapp/resources',
-  },
 });
