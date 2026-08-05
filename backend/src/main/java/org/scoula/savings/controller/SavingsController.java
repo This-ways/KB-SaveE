@@ -80,17 +80,21 @@ public class SavingsController {
         return ResponseEntity.ok(status);
     }
 
-    // 6. 해지 예상 명세서 조회 (
+    // 6. 해지 예상 명세서 조회
     @GetMapping("/{subscriptionId}/cancel/confirm")
-    public ResponseEntity<CancelPreviewResDTO> getCancelPreview(@PathVariable Long subscriptionId) {
-        CancelPreviewResDTO response = cancelService.getCancelPreview(subscriptionId);
+    public ResponseEntity<CancelPreviewResDTO> getCancelPreview(
+            @AuthenticationPrincipal CustomUser user,
+            @PathVariable Long subscriptionId) {
+        CancelPreviewResDTO response = cancelService.getCancelPreview(user.getUserId(), subscriptionId);
         return ResponseEntity.ok(response);
     }
 
     // 7. 실제 해지 처리
     @PostMapping("/{subscriptionId}/cancel")
-    public ResponseEntity<String> cancelSubscription(@PathVariable Long subscriptionId) {
-        cancelService.cancelSubscription(subscriptionId);
+    public ResponseEntity<String> cancelSubscription(
+            @AuthenticationPrincipal CustomUser user,
+            @PathVariable Long subscriptionId) {
+        cancelService.cancelSubscription(user.getUserId(), subscriptionId);
         return ResponseEntity.ok("ok.");
     }
 
