@@ -297,4 +297,12 @@
             p.company_code
         ORDER BY maxRate DESC
     </select>
+
+    <!-- 1인 1계좌 검증용: 현재 활성화된 적금 개수 카운트 -->
+    <select id="countActiveSubscriptionByDepositId" resultType="int">
+        SELECT COUNT(*)
+        FROM SUBSCRIPTION
+        WHERE deposit_id = #{depositId}
+          AND status = 10
+    </select>
 </mapper>
