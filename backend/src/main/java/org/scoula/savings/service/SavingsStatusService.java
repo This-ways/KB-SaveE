@@ -22,6 +22,14 @@ public class SavingsStatusService {
         // 가입 정보 및 상품 정보 조인 조회
         SubscriptionVO sub = savingsMapper.selectSubscriptionWithProduct(subscriptionId);
 
+        // 계좌 존재 여부 및 해지 상태 검증
+        if (sub == null) {
+            throw new IllegalArgumentException("존재하지 않는 적금 계좌입니다.");
+        }
+        if (sub.getStatus() == 90) {
+            throw new IllegalArgumentException("이미 해지 처리된 적금 계좌입니다.");
+        }
+
         // 날짜 변환 (DB의 int 20260724 -> LocalDate)
         LocalDate startDate = parseDate(sub.getStartDate());
         LocalDate endDate = parseDate(sub.getEndDate());
