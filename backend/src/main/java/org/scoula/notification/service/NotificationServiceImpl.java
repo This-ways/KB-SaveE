@@ -80,6 +80,23 @@ public class NotificationServiceImpl implements NotificationService {
                 NotificationMessage.getBody(categoryId, highestNew));
     }
 
+    // 목표를 설정한 모든 카테고리를 한 번에 체크 (앱 진입 시 호출)
+    // 사용자가 선택한 카테고리만 goal에 들어있으므로 그 목록만 순회하면 됨
+    @Override
+    @Transactional
+    public void checkAllCategories(Long userId, String targetMonth) {
+        List<Long> categoryIds = notificationMapper.selectGoalCategoryIds(userId, targetMonth);
+
+        if (categoryIds.isEmpty()) {
+            log.info("설정된 목표 없음 - 전체 체크 스킵. userId: {}, {}", userId, targetMonth);
+            return;
+        }
+
+        for (Long categoryId : categoryIds) {
+            checkAndNotify(userId, categoryId, targetMonth);
+        }
+    }
+
     // 알림 기록 저장 + 푸시 발송 (적금 알림 등 단건 알림용)
     @Override
     @Transactional
