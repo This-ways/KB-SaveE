@@ -3,11 +3,19 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
 import transactionApi from '@/api/transactionApi';
+import goalApi from '@/api/goalApi';
+import moment from 'moment';
+import { useAuthStore } from '@/stores/auth'; // Auth Store import 추가
 
 const router = useRouter();
+const authStore = useAuthStore(); // Auth Store 객체 생성
 
 // 화면 단계 (1: 미개설 안내, 2: 조건 입력, 3: 추천 결과)
 const step = ref(1);
+
+// 현재 연월 및 유저 ID 설정 (메인 홈과 동일한 기준)
+const yearMonth = ref(moment().format('YYYY-MM'));
+const userId = computed(() => authStore.userId); // userId 컴퓨티드 변수 추가
 
 // 세이브 금액 및 입력 Form 데이터
 const saveAmount = ref(0);
@@ -16,27 +24,46 @@ const saveTerm = ref(12);
 
 const loadingSaveAmount = ref(true);
 
+// 목표 예산 - 실제 지출액 계산 (잔여 예산 = 세이브 금액)
 const fetchSaveAmount = async () => {
   try {
     loadingSaveAmount.value = true;
-    const summary = await transactionApi.getSummary();
 
-    if (summary) {
-      if (summary.remainder !== null && summary.remainder !== undefined) {
-        saveAmount.value = Math.max(summary.remainder, 0);
-      } else {
-        const target =
-          summary.targetAmount || summary.target || summary.budget || 0;
-        const spent = summary.totalAmount || 0;
-        const calculated = target - spent;
+    // userId와 yearMonth를 모두 포함하여 백엔드 API 호출
+    const [goals, txns] = await Promise.all([
+      goalApi.getMyGoals(yearMonth.value),
+      transactionApi.getList({
+        userId: userId.value,
+        yearMonth: yearMonth.value,
+      }),
+    ]);
 
-        saveAmount.value = calculated > 0 ? calculated : 0;
-      }
-    } else {
+    if (!goals || goals.length === 0) {
       saveAmount.value = 0;
+      monthlyAmount.value = 0;
+      return;
     }
+
+    // 카테고리별 실제 지출액 집계
+    const spendMap = {};
+    if (Array.isArray(txns)) {
+      txns.forEach((t) => {
+        if (t.categoryId) {
+          spendMap[t.categoryId] = (spendMap[t.categoryId] || 0) + t.amount;
+        }
+      });
+    }
+
+    // 카테고리별 잔여 예산(목표 - 실제지출) 합산
+    const totalRemaining = goals.reduce((sum, g) => {
+      const actualAmount = spendMap[g.categoryId] || 0;
+      return sum + (g.targetAmount - actualAmount);
+    }, 0);
+
+    // 잔여 예산이 0 이상인 경우 해당 금액을 세이브 금액으로 지정
+    saveAmount.value = totalRemaining > 0 ? totalRemaining : 0;
   } catch (error) {
-    console.error('세이브 금액 조회 실패:', error);
+    console.error('세이브 금액(잔여 예산) 조회 실패:', error);
     saveAmount.value = 0;
   } finally {
     monthlyAmount.value = saveAmount.value;
@@ -55,15 +82,15 @@ const displayList = ref([]);
 const activeFilter = ref('ALL');
 const loading = ref(false);
 
-// 🟢 현재 펼쳐진 카드의 productId 저장 (기본값: null)
+// 현재 펼쳐진 카드의 productId 저장
 const expandedProductId = ref(null);
 
-// 🟢 카드 클릭 시 토글 함수
+// 카드 클릭 시 토글 함수
 const toggleExpand = (productId) => {
   if (expandedProductId.value === productId) {
-    expandedProductId.value = null; // 이미 펼쳐진 상태에서 누르면 접음
+    expandedProductId.value = null;
   } else {
-    expandedProductId.value = productId; // 다른 항목 누르면 해당 항목 펼침
+    expandedProductId.value = productId;
   }
 };
 
@@ -97,7 +124,7 @@ const fetchRecommendations = async () => {
     recommendedList.value = res || [];
     displayList.value = res || [];
 
-    // 🟢 기본으로 첫 번째 상품 펼쳐두기
+    // 기본으로 첫 번째 상품 펼치기
     if (displayList.value.length > 0) {
       expandedProductId.value = displayList.value[0].productId;
     }
@@ -124,7 +151,6 @@ const selectFilter = async (filterType) => {
       const res = await savingsApi.getAllSavingsProducts(typeParam);
       displayList.value = res || [];
 
-      // 🟢 탭 이동 시에도 첫 번째 상품 자동 펼침
       if (displayList.value.length > 0) {
         expandedProductId.value = displayList.value[0].productId;
       }
@@ -147,7 +173,7 @@ const goToDetail = (productId) => {
     class="container py-3"
     style="max-width: 480px; background-color: #fff; min-height: 100vh"
   >
-    <!-- 상단 헤더, STEP 1, STEP 2 동일 -->
+    <!-- 상단 헤더 -->
     <div class="d-flex align-items-center mb-4">
       <i
         class="fa-solid fa-chevron-left fs-5 me-3"
@@ -161,7 +187,7 @@ const goToDetail = (productId) => {
       </h5>
     </div>
 
-    <!-- STEP 1 생략 -->
+    <!-- ================= STEP 1: 아직 개설한 적금이 없어요 ================= -->
     <div
       v-if="step === 1"
       class="d-flex flex-column align-items-center justify-content-center pt-5"
@@ -199,7 +225,7 @@ const goToDetail = (productId) => {
       </div>
     </div>
 
-    <!-- STEP 2 생략 -->
+    <!-- ================= STEP 2: 금액 / 기간 조건 입력 ================= -->
     <div v-else-if="step === 2" class="d-flex flex-column gap-4">
       <div
         class="bg-warning bg-opacity-10 p-3 rounded-4 d-flex justify-content-between align-items-center"
