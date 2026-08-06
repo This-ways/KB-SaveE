@@ -2,7 +2,10 @@
 import { ref, computed } from 'vue'
 import moment from 'moment'
 import reportApi from '@/api/reportApi'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
+const goHome = () => router.push({ name: 'home' })
 // TODO: 로그인 기능 붙으면 auth store에서 꺼내오는 걸로 교체
 const userId = ref(1)
 
@@ -114,17 +117,23 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
 </script>
 
 <template>
-  <div class="container mt-4" style="max-width: 480px">
-    <h1 class="h4 mb-3 fw-bold"><i class="fa-solid fa-chart-pie" style="color: #127f5f;"></i> 소비 리포트</h1>
+  <div style="padding: 20px 20px 100px">
+    <div class="d-flex align-items-center mb-3">
+  <button type="button" class="btn btn-sm p-0" @click="goHome" style="width: 24px">
+    <i class="fa-solid fa-chevron-left" style="color: #495057; font-size: 18px"></i>
+  </button>
+  <h1 class="h5 mb-0 fw-bold flex-grow-1 text-center">소비 리포트</h1>
+  <div style="width: 24px"></div>
+</div>
 
     <!-- 날짜 이동 -->
     <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
       <button type="button" class="btn btn-sm btn-light" @click="prevMonth">
-        <i class="fa-solid fa-chevron-left" style="color: #127f5f;"></i>
+        <i class="fa-solid fa-chevron-left" style="color: #495057;"></i>
       </button>
       <span class="fw-semibold">{{ monthLabel }}</span>
       <button type="button" class="btn btn-sm btn-light" @click="nextMonth">
-        <i class="fa-solid fa-chevron-right" style="color: #127f5f;"></i>
+        <i class="fa-solid fa-chevron-right" style="color: #495057;"></i>
       </button>
     </div>
 

@@ -46,7 +46,7 @@ const goToCategoryDetail = () => {
 </script>
 
 <template>
-  <div class="container mt-3" style="max-width: 480px">
+  <div style="padding: 20px 20px 100px">
     <!-- 상단 헤더 -->
     <div class="d-flex justify-content-between align-items-center mb-0">
       <img :src="logoImg" alt="SaveE" style="height: 100px" />
@@ -114,9 +114,9 @@ const goToCategoryDetail = () => {
     <!-- 하단 네비게이션 -->
     <nav class="d-flex justify-content-around align-items-center border-top mt-4 pt-3">
       <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" @click="refreshHome">
-        <i class="fa-solid fa-house" style="color: #127f5f; font-size: 18px"></i>
-        <span class="small" style="color: #127f5f">홈</span>
-      </button>
+  <i class="fa-solid fa-house" style="color: #ffd239; font-size: 18px"></i>
+  <span class="small" style="color: #ffd239">홈</span>
+</button>
       <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" @click="goToReport">
         <i class="fa-solid fa-chart-pie text-secondary" style="font-size: 18px"></i>
         <span class="small text-secondary">소비분석</span>
