@@ -1,35 +1,59 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
 import transactionApi from '@/api/transactionApi';
 import goalApi from '@/api/goalApi';
 import moment from 'moment';
-import { useAuthStore } from '@/stores/auth'; // Auth Store import 추가
+import { useAuthStore } from '@/stores/auth';
 
+const route = useRoute();
 const router = useRouter();
-const authStore = useAuthStore(); // Auth Store 객체 생성
+const authStore = useAuthStore();
 
-// 화면 단계 (1: 미개설 안내, 2: 조건 입력, 3: 추천 결과)
-const step = ref(1);
-
-// 현재 연월 및 유저 ID 설정 (메인 홈과 동일한 기준)
-const yearMonth = ref(moment().format('YYYY-MM'));
-const userId = computed(() => authStore.userId); // userId 컴퓨티드 변수 추가
-
-// 세이브 금액 및 입력 Form 데이터
+//  URL Query에서 step, monthlyAmount, saveTerm 복원 (상세페이지 다녀와도 유지되도록)
+const step = ref(Number(route.query.step) || 1);
 const saveAmount = ref(0);
-const monthlyAmount = ref(0);
-const saveTerm = ref(12);
+const monthlyAmount = ref(Number(route.query.monthlyAmount) || 0);
+const saveTerm = ref(Number(route.query.saveTerm) || 12);
 
+const yearMonth = ref(moment().format('YYYY-MM'));
+const userId = computed(() => authStore.userId);
 const loadingSaveAmount = ref(true);
 
-// 목표 예산 - 실제 지출액 계산 (잔여 예산 = 세이브 금액)
+// URL 쿼리 동기화 함수
+const updateQueryParams = (newStep) => {
+  step.value = newStep;
+  router.push({
+    query: {
+      ...route.query,
+      step: newStep,
+      monthlyAmount: monthlyAmount.value,
+      saveTerm: saveTerm.value,
+    },
+  });
+};
+
+// 브라우저 백/포워드 시 쿼리 변경 감지하여 화면 복원
+watch(
+  () => route.query,
+  (query) => {
+    if (query.step) step.value = Number(query.step);
+    if (query.monthlyAmount) monthlyAmount.value = Number(query.monthlyAmount);
+    if (query.saveTerm) saveTerm.value = Number(query.saveTerm);
+
+    // 상세페이지에서 백버튼으로 step 3 상태에 도착했을 때 추천 목록 재조회
+    if (step.value === 3 && recommendedList.value.length === 0) {
+      fetchRecommendations(false);
+    }
+  },
+  { deep: true },
+);
+
 const fetchSaveAmount = async () => {
   try {
     loadingSaveAmount.value = true;
 
-    // userId와 yearMonth를 모두 포함하여 백엔드 API 호출
     const [goals, txns] = await Promise.all([
       goalApi.getMyGoals(yearMonth.value),
       transactionApi.getList({
@@ -40,11 +64,10 @@ const fetchSaveAmount = async () => {
 
     if (!goals || goals.length === 0) {
       saveAmount.value = 0;
-      monthlyAmount.value = 0;
+      if (!route.query.monthlyAmount) monthlyAmount.value = 0;
       return;
     }
 
-    // 카테고리별 실제 지출액 집계
     const spendMap = {};
     if (Array.isArray(txns)) {
       txns.forEach((t) => {
@@ -54,25 +77,31 @@ const fetchSaveAmount = async () => {
       });
     }
 
-    // 카테고리별 잔여 예산(목표 - 실제지출) 합산
     const totalRemaining = goals.reduce((sum, g) => {
       const actualAmount = spendMap[g.categoryId] || 0;
       return sum + (g.targetAmount - actualAmount);
     }, 0);
 
-    // 잔여 예산이 0 이상인 경우 해당 금액을 세이브 금액으로 지정
     saveAmount.value = totalRemaining > 0 ? totalRemaining : 0;
+
+    // query에 이미 입력했던 값이 없으면 기본 세이브 금액 할당
+    if (!route.query.monthlyAmount) {
+      monthlyAmount.value = saveAmount.value;
+    }
   } catch (error) {
     console.error('세이브 금액(잔여 예산) 조회 실패:', error);
     saveAmount.value = 0;
   } finally {
-    monthlyAmount.value = saveAmount.value;
     loadingSaveAmount.value = false;
   }
 };
 
 onMounted(() => {
   fetchSaveAmount();
+  // 페이지 첫 진입 시 이미 step 3 쿼리가 있다면 바로 추천 API 호출
+  if (step.value === 3) {
+    fetchRecommendations(false);
+  }
 });
 
 const termOptions = [6, 12, 24, 36];
@@ -82,10 +111,8 @@ const displayList = ref([]);
 const activeFilter = ref('ALL');
 const loading = ref(false);
 
-// 현재 펼쳐진 카드의 productId 저장
 const expandedProductId = ref(null);
 
-// 카드 클릭 시 토글 함수
 const toggleExpand = (productId) => {
   if (expandedProductId.value === productId) {
     expandedProductId.value = null;
@@ -95,9 +122,11 @@ const toggleExpand = (productId) => {
 };
 
 const goBack = () => {
-  if (step.value > 1) {
-    step.value -= 1;
+  // step 3 (추천 결과 목록 화면)에서 백버튼 누르면 step 2 (조건 입력 화면)로 이동
+  if (step.value === 3) {
+    router.back();
   } else {
+    // step 2 (얼마씩 넣을까요? 화면) 또는 step 1에서는 바로 홈 화면으로 이동
     router.push('/home');
   }
 };
@@ -110,10 +139,12 @@ const addAmount = (val) => {
   }
 };
 
-const fetchRecommendations = async () => {
+const fetchRecommendations = async (shouldPushQuery = true) => {
   try {
     loading.value = true;
-    step.value = 3;
+    if (shouldPushQuery) {
+      updateQueryParams(3);
+    }
     activeFilter.value = 'ALL';
 
     const res = await savingsApi.getRecommendedSavings({
@@ -124,7 +155,6 @@ const fetchRecommendations = async () => {
     recommendedList.value = res || [];
     displayList.value = res || [];
 
-    // 기본으로 첫 번째 상품 펼치기
     if (displayList.value.length > 0) {
       expandedProductId.value = displayList.value[0].productId;
     }
@@ -187,7 +217,7 @@ const goToDetail = (productId) => {
       </h5>
     </div>
 
-    <!-- ================= STEP 1: 아직 개설한 적금이 없어요 ================= -->
+    <!-- STEP 1 -->
     <div
       v-if="step === 1"
       class="d-flex flex-column align-items-center justify-content-center pt-5"
@@ -206,7 +236,7 @@ const goToDetail = (productId) => {
 
       <button
         class="btn btn-warning w-100 py-3 fw-bold rounded-4 mb-4 text-dark"
-        @click="step = 2"
+        @click="updateQueryParams(2)"
       >
         적금 추천
       </button>
@@ -225,7 +255,7 @@ const goToDetail = (productId) => {
       </div>
     </div>
 
-    <!-- ================= STEP 2: 금액 / 기간 조건 입력 ================= -->
+    <!-- STEP 2 -->
     <div v-else-if="step === 2" class="d-flex flex-column gap-4">
       <div
         class="bg-warning bg-opacity-10 p-3 rounded-4 d-flex justify-content-between align-items-center"
@@ -323,15 +353,14 @@ const goToDetail = (productId) => {
 
       <button
         class="btn btn-warning w-100 py-3 fw-bold rounded-4 mt-3 text-dark"
-        @click="fetchRecommendations"
+        @click="fetchRecommendations(true)"
       >
         이 조건에 맞는 적금 보기 →
       </button>
     </div>
 
-    <!-- ================= STEP 3: 아코디언 적금 목록 ================= -->
+    <!-- STEP 3 -->
     <div v-else-if="step === 3">
-      <!-- 상단 선택 조건 요약 카드 -->
       <div
         class="bg-warning bg-opacity-10 p-3 rounded-4 d-flex justify-content-between align-items-center mb-3"
       >
@@ -348,13 +377,12 @@ const goToDetail = (productId) => {
         </div>
         <button
           class="btn btn-sm btn-outline-dark rounded-pill micro-text px-3"
-          @click="step = 2"
+          @click="updateQueryParams(2)"
         >
           조건 수정
         </button>
       </div>
 
-      <!-- 필터 탭 -->
       <div class="d-flex gap-2 mb-3">
         <button
           class="btn btn-sm rounded-pill px-3"
@@ -385,12 +413,10 @@ const goToDetail = (productId) => {
         </button>
       </div>
 
-      <!-- 로딩 상태 -->
       <div v-if="loading" class="text-center py-5 text-secondary">
         적금 상품을 불러오는 중입니다...
       </div>
 
-      <!-- 적금 아코디언 목록 -->
       <div v-else class="d-flex flex-column gap-3">
         <div
           v-for="(product, idx) in displayList"
@@ -402,7 +428,6 @@ const goToDetail = (productId) => {
           style="cursor: pointer; transition: all 0.2s ease"
           @click="toggleExpand(product.productId)"
         >
-          <!-- 추천 1위 태그 (추천 탭 첫 번째 상품만) -->
           <span
             v-if="activeFilter === 'ALL' && idx === 0"
             class="badge bg-warning text-dark position-absolute top-0 start-0 m-3 px-2 py-1"
@@ -410,7 +435,6 @@ const goToDetail = (productId) => {
             추천 1위
           </span>
 
-          <!-- 카드 헤더 -->
           <div
             class="d-flex justify-content-between align-items-center"
             :class="{ 'mt-4': activeFilter === 'ALL' && idx === 0 }"
@@ -423,7 +447,6 @@ const goToDetail = (productId) => {
               </div>
             </div>
 
-            <!-- 금리 & 화살표 아이콘 -->
             <div class="d-flex align-items-center gap-2">
               <div class="text-end">
                 <span class="fs-5 fw-bold text-dark">
@@ -442,13 +465,11 @@ const goToDetail = (productId) => {
             </div>
           </div>
 
-          <!-- 펼쳐지는 상세 영역 -->
           <div
             v-if="expandedProductId === product.productId"
             class="mt-3 pt-2 border-top"
             @click.stop
           >
-            <!-- 추천 탭('ALL')에서만 예상 수령액 정보 카드 노출 -->
             <div
               v-if="
                 activeFilter === 'ALL' &&
@@ -475,7 +496,6 @@ const goToDetail = (productId) => {
               </div>
             </div>
 
-            <!-- 가입하기 버튼 -->
             <button
               class="btn btn-warning w-100 fw-bold rounded-3 py-2 text-dark mt-2"
               @click="goToDetail(product.productId)"
@@ -485,7 +505,6 @@ const goToDetail = (productId) => {
           </div>
         </div>
 
-        <!-- 추천 탭('ALL')일 때만 안내 문구 노출 -->
         <div
           v-if="activeFilter === 'ALL'"
           class="text-center micro-text text-secondary my-2"

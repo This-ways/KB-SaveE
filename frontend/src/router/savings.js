@@ -15,10 +15,10 @@ export default [
     component: () => import('../pages/savings/SavingsRecommendPage.vue'),
   },
   //   // 3. 적금 상품 상세 페이지
-  //   {
-  //     path: '/savings/products/:productId',
-  //     name: 'savingsDetail',
-  //     component: () => import('../pages/savings/SavingsDetailPage.vue'),
-  //     props: true,
-  //   },
+  {
+    path: '/savings/products/:productId',
+    name: 'savingsDetail',
+    component: () => import('../pages/savings/SavingsDetailPage.vue'),
+    props: true,
+  },
 ];
