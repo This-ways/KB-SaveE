@@ -21,7 +21,7 @@ onMounted(async () => {
   }
 });
 
-const goMain = () => router.push('/');
+const goMain = () => router.push('/home');
 
 const formatMoney = (n) => Number(n).toLocaleString();
 </script>

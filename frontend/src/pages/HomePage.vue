@@ -1,14 +1,17 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import moment from 'moment'
 import transactionApi from '@/api/transactionApi'
 import logoImg from '@/assets/SaveE_logo.png'
 
 const router = useRouter()
 
-// TODO: 로그인 기능 붙으면 auth store에서 꺼내오는 걸로 교체
-const userId = ref(1)
+
+const authStore = useAuthStore()
+const userId = computed(() => authStore.userId)
+const userName = computed(() => authStore.userName)
 
 const yearMonth = ref(moment().format('YYYY-MM'))
 const summary = ref(null) // { totalAmount, categories: [...], remainder }
