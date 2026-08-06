@@ -35,7 +35,7 @@ const connect = async () => {
   }
 };
 
-const skip = () => router.push('/');
+const skip = () => router.push('/home'); // 연결 없이 넘어가면 메인으로
 </script>
 
 <template>
