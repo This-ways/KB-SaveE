@@ -26,7 +26,7 @@ const doLogin = async () => {
 
     // 마이데이터 연결 여부로 진입 화면 분기
     if (auth.isMydataConnected) {
-      router.push('/goal/category'); // TODO: 메인 화면 완성되면 '/main'으로 변경
+      router.push('/home'); // 이미 자산 연결된 기존 사용자는 메인으로
     } else {
       router.push('/mydata/connect');
     }
