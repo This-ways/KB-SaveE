@@ -40,7 +40,10 @@ const top2Categories = () =>
 
 // ===== 목표 예산 (설정한 카테고리별 목표금액 vs 실제지출) =====
 const totalBudget = computed(() =>
-  goalBudgets.value.reduce((sum, g) => sum + (g.targetAmount - g.actualAmount), 0)
+  goalBudgets.value.reduce(
+    (sum, g) => sum + (g.targetAmount - g.actualAmount),
+    0,
+  ),
 );
 
 const loadGoalBudget = async () => {
@@ -81,15 +84,15 @@ const loadGoalBudget = async () => {
 // ===== 내 적금 =====
 const loadMySubscription = async () => {
   try {
-    const { subscriptionId } = await savingsApi.getMySubscriptionId()   // ← 객체에서 꺼내기
+    const { subscriptionId } = await savingsApi.getMySubscriptionId(); // ← 객체에서 꺼내기
     if (!subscriptionId) {
-      mySubscription.value = null
-      return
+      mySubscription.value = null;
+      return;
     }
-    mySubscription.value = await savingsApi.getSavingsStatus(subscriptionId)   // ← 메서드명 변경
+    mySubscription.value = await savingsApi.getSavingsStatus(subscriptionId); // ← 메서드명 변경
   } catch (e) {
-    console.error('내 적금 조회 실패', e)
-    mySubscription.value = null
+    console.error('내 적금 조회 실패', e);
+    mySubscription.value = null;
   }
 };
 
@@ -142,18 +145,6 @@ const goToSavingsSubscribe = () => {
     <div class="d-flex justify-content-between align-items-center mb-0">
       <img :src="logoImg" alt="SaveE" style="height: 80px" />
       <div class="d-flex gap-3">
-<<<<<<< HEAD
-        <!-- TODO: 알림 기능 (B팀 담당), 지금은 자리만 -->
-        <i class="fa-solid fa-bell" style="color: #ced4da; font-size: 18px"></i>
-        <button
-          type="button"
-          class="btn p-0"
-          aria-label="메뉴"
-          @click="menuOpen = true"
-        >
-          <i class="fa-solid fa-bars" style="color: #6b7280; font-size: 18px"></i>
-        </button>
-=======
         <!-- 알림함 -->
         <button
           type="button"
@@ -161,11 +152,20 @@ const goToSavingsSubscribe = () => {
           @click="router.push('/notifications')"
           aria-label="알림"
         >
-          <i class="fa-solid fa-bell" style="color: #495057; font-size: 18px"></i>
+          <i
+            class="fa-solid fa-bell"
+            style="color: #495057; font-size: 18px"
+          ></i>
         </button>
         <!-- TODO: 메뉴/마이페이지 (다른 팀원 담당), 지금은 자리만 -->
-        <i class="fa-solid fa-bars" style="color: #ced4da; font-size: 18px"></i>
->>>>>>> b8a0baa2200259d79e588ab439f37d9c82f4304f
+        <button
+          type="button"
+          class="btn p-0 border-0 bg-transparent"
+          @click="menuOpen = true"
+          aria-label="메뉴"
+        >
+          <i class="fa-solid fa-bars" style="color: #495057; font-size: 18px"></i>
+        </button>
       </div>
     </div>
 
@@ -189,8 +189,8 @@ const goToSavingsSubscribe = () => {
         </div>
       </div>
 
-      <!-- 카테고리별 지출 (설정한 목표 카테고리별 목표금액 vs 실제지출) -->
-      <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+      <!-- 카테고리별 지출 Top2 (아이콘+색상 적용) -->
+      <div class="card mb-3">
         <div class="card-body">
           <div
             class="d-flex justify-content-between align-items-center mb-3"
@@ -200,10 +200,9 @@ const goToSavingsSubscribe = () => {
             <span class="fw-semibold">카테고리별 지출</span>
             <i class="fa-solid fa-chevron-right text-secondary"></i>
           </div>
-
           <div
-            v-for="g in goalBudgets"
-            :key="g.categoryId"
+            v-for="cat in top2Categories()"
+            :key="cat.categoryId"
             class="d-flex align-items-center gap-2 mb-3"
           >
             <div
@@ -211,65 +210,106 @@ const goToSavingsSubscribe = () => {
               :style="{
                 width: '32px',
                 height: '32px',
-                backgroundColor: getCategoryStyle(g.categoryId).color + '22',
+                backgroundColor: getCategoryStyle(cat.categoryId).color + '22',
               }"
             >
               <i
                 class="fa-solid"
-                :class="getCategoryStyle(g.categoryId).icon"
+                :class="getCategoryStyle(cat.categoryId).icon"
                 :style="{
-                  color: getCategoryStyle(g.categoryId).color,
+                  color: getCategoryStyle(cat.categoryId).color,
                   fontSize: '13px',
                 }"
               ></i>
             </div>
             <div class="flex-grow-1">
               <div class="d-flex justify-content-between small mb-1">
-                <span>{{ g.categoryName }}</span>
-                <span
-                  class="fw-semibold"
-                  :style="{
-                    color: g.actualAmount > g.targetAmount ? '#e8512b' : '',
-                  }"
-                >
-                  {{ formatAmount(g.actualAmount) }} /
-                  {{ formatAmount(g.targetAmount) }}
-                </span>
+                <span>{{ cat.categoryName }}</span>
+                <span class="fw-semibold">{{ formatAmount(cat.amount) }}</span>
               </div>
               <div class="progress" style="height: 6px">
                 <div
                   class="progress-bar"
                   :style="{
-                    width:
-                      Math.min((g.actualAmount / g.targetAmount) * 100, 100) +
-                      '%',
-                    backgroundColor:
-                      g.actualAmount > g.targetAmount
-                        ? '#e8512b'
-                        : getCategoryStyle(g.categoryId).color,
+                    width: (cat.amount / summary.totalAmount) * 100 + '%',
+                    backgroundColor: getCategoryStyle(cat.categoryId).color,
                   }"
                 ></div>
               </div>
             </div>
           </div>
-
-          <p v-if="goalBudgets.length === 0" class="text-secondary small mb-0">
-            설정한 목표 예산이 없어요.
-          </p>
         </div>
       </div>
     </template>
 
-    <!-- 잔여 예산 -->
-    <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+    <!-- 목표 예산 -->
+    <div class="card mb-3">
       <div class="card-body">
         <div class="text-secondary small mb-1">잔여 예산</div>
         <div
-          class="h5 fw-bold mb-0"
-          :style="{ color: goalBudgets.length > 0 && totalBudget < 0 ? '#e8512b' : '' }"
+          class="h5 fw-bold mb-3"
+          :style="{
+            color: goalBudgets.length > 0 && totalBudget < 0 ? '#e8512b' : '',
+          }"
         >
           {{ goalBudgets.length > 0 ? formatAmount(totalBudget) : '-' }}
         </div>
+
+        <div
+          v-for="g in goalBudgets"
+          :key="g.categoryId"
+          class="d-flex align-items-center gap-2 mb-3"
+        >
+          <div
+            class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+            :style="{
+              width: '28px',
+              height: '28px',
+              backgroundColor: getCategoryStyle(g.categoryId).color + '22',
+            }"
+          >
+            <i
+              class="fa-solid"
+              :class="getCategoryStyle(g.categoryId).icon"
+              :style="{
+                color: getCategoryStyle(g.categoryId).color,
+                fontSize: '12px',
+              }"
+            ></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between small mb-1">
+              <span>{{ g.categoryName }}</span>
+              <span
+                class="fw-semibold"
+                :style="{
+                  color: g.actualAmount > g.targetAmount ? '#e8512b' : '',
+                }"
+              >
+                {{ formatAmount(g.actualAmount) }} /
+                {{ formatAmount(g.targetAmount) }}
+              </span>
+            </div>
+            <div class="progress" style="height: 6px">
+              <div
+                class="progress-bar"
+                :style="{
+                  width:
+                    Math.min((g.actualAmount / g.targetAmount) * 100, 100) +
+                    '%',
+                  backgroundColor:
+                    g.actualAmount > g.targetAmount
+                      ? '#e8512b'
+                      : getCategoryStyle(g.categoryId).color,
+                }"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <p v-if="goalBudgets.length === 0" class="text-secondary small mb-0">
+          설정한 목표 예산이 없어요.
+        </p>
       </div>
     </div>
 

@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import savingsApi from '@/api/savingsApi';
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -19,6 +20,22 @@ const go = (to) => {
   router.push(to);
 };
 
+// 적금: 구독 ID를 조회해서 상세 페이지로 이동 (HomePage.vue의 goToSavings와 동일한 로직)
+const goToSavings = async () => {
+  emit('close');
+  try {
+    const res = await savingsApi.getMySubscriptionId();
+    const subId = res?.subscriptionId;
+    if (subId) {
+      router.push(`/savings/status/${subId}`);
+    } else {
+      alert('가입된 적금이 없습니다.');
+    }
+  } catch (error) {
+    console.error('적금 가입 정보 조회 실패:', error);
+  }
+};
+
 const logout = () => {
   emit('close');
   auth.logout();
@@ -26,13 +43,21 @@ const logout = () => {
 };
 
 const menus = [
-  { icon: 'fa-solid fa-chart-pie', label: '소비분석', to: { name: 'report' } },
-  { icon: 'fa-solid fa-piggy-bank', label: '내 적금', to: '/savings/status' },
-  { icon: 'fa-solid fa-wallet', label: '예산관리', to: '/goal/spending' },
   { icon: 'fa-solid fa-receipt', label: '지출내역', to: { name: 'transaction/list' } },
+  { icon: 'fa-solid fa-wallet', label: '예산관리', to: '/goal/spending' },
+  { icon: 'fa-solid fa-chart-pie', label: '소비분석', to: { name: 'report' } },
+  { icon: 'fa-solid fa-piggy-bank', label: '적금', action: 'savings' },
   { icon: 'fa-solid fa-user', label: '마이페이지', to: '/mypage' },
   { icon: 'fa-solid fa-circle-question', label: '도움말', to: '/mypage/help' },
 ];
+
+const onMenuClick = (m) => {
+  if (m.action === 'savings') {
+    goToSavings();
+  } else {
+    go(m.to);
+  }
+};
 </script>
 
 <template>
@@ -66,7 +91,7 @@ const menus = [
           v-for="m in menus"
           :key="m.label"
           class="menu-item"
-          @click="go(m.to)"
+          @click="onMenuClick(m)"
         >
           <i :class="m.icon" class="menu-icon"></i>
           <span class="menu-label">{{ m.label }}</span>
@@ -176,6 +201,7 @@ const menus = [
 .menu-item {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 14px;
   width: 100%;
   padding: 15px 20px;

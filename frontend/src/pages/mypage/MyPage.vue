@@ -29,28 +29,24 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
     </div>
 
     <!-- 프로필 -->
-    <button class="profile" @click="notReady('내 정보')">
+    <div class="profile">
       <span class="avatar"><i class="fa-solid fa-user"></i></span>
       <span class="profile-text">
         <strong>{{ userName }}님</strong>
         <span class="sub">{{ loginId }}</span>
       </span>
-      <i class="fa-solid fa-chevron-right arrow"></i>
-    </button>
+    </div>
 
     <!-- 계정 -->
     <p class="section-label">계정</p>
     <div class="group">
-      <button class="row" @click="notReady('내 정보')">
-        <i class="fa-solid fa-user row-icon"></i>
-        <span class="row-label">내 정보</span>
-        <i class="fa-solid fa-chevron-right arrow"></i>
-      </button>
-      <button class="row" @click="router.push('/mydata/connect')">
-        <i class="fa-solid fa-building-columns row-icon"></i>
-        <span class="row-label">계좌 연결</span>
-        <span class="row-value">
-          {{ auth.isMydataConnected ? '연결됨' : '미연결' }}
+      <button class="mypage-row" @click="router.push('/mydata/connect')">
+        <i class="fa-solid fa-building-columns mypage-row-icon"></i>
+        <span class="mypage-row-label">
+          계좌 연결
+          <span class="status-badge" :class="{ connected: auth.isMydataConnected }">
+            ({{ auth.isMydataConnected ? '연결됨' : '미연결' }})
+          </span>
         </span>
         <i class="fa-solid fa-chevron-right arrow"></i>
       </button>
@@ -59,9 +55,9 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
     <!-- 앱 설정 -->
     <p class="section-label">앱 설정</p>
     <div class="group">
-      <button class="row" @click="notReady('알림 설정')">
-        <i class="fa-solid fa-bell row-icon"></i>
-        <span class="row-label">알림 설정</span>
+      <button class="mypage-row" @click="notReady('알림 설정')">
+        <i class="fa-solid fa-bell mypage-row-icon"></i>
+        <span class="mypage-row-label">알림 설정</span>
         <i class="fa-solid fa-chevron-right arrow"></i>
       </button>
     </div>
@@ -69,25 +65,25 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
     <!-- 지원 및 정보 -->
     <p class="section-label">지원 및 정보</p>
     <div class="group">
-      <button class="row" @click="notReady('고객센터')">
-        <i class="fa-solid fa-headset row-icon"></i>
-        <span class="row-label">고객센터</span>
+      <button class="mypage-row" @click="notReady('고객센터')">
+        <i class="fa-solid fa-headset mypage-row-icon"></i>
+        <span class="mypage-row-label">고객센터</span>
         <i class="fa-solid fa-chevron-right arrow"></i>
       </button>
-      <button class="row" @click="router.push('/mypage/legal')">
-        <i class="fa-solid fa-file-lines row-icon"></i>
-        <span class="row-label">법적 정보</span>
-        <span class="row-value">개인정보 처리방침 등</span>
+      <button class="mypage-row" @click="router.push('/mypage/legal')">
+        <i class="fa-solid fa-file-lines mypage-row-icon"></i>
+        <span class="mypage-row-label">법적 정보</span>
+        <span class="mypage-row-value">개인정보 처리방침 등</span>
         <i class="fa-solid fa-chevron-right arrow"></i>
       </button>
-      <button class="row" @click="router.push('/mypage/help')">
-        <i class="fa-solid fa-circle-question row-icon"></i>
-        <span class="row-label">도움말</span>
+      <button class="mypage-row" @click="router.push('/mypage/help')">
+        <i class="fa-solid fa-circle-question mypage-row-icon"></i>
+        <span class="mypage-row-label">도움말</span>
         <i class="fa-solid fa-chevron-right arrow"></i>
       </button>
-      <button class="row" @click="logout">
-        <i class="fa-solid fa-right-from-bracket row-icon"></i>
-        <span class="row-label">로그아웃</span>
+      <button class="mypage-row" @click="logout">
+        <i class="fa-solid fa-right-from-bracket mypage-row-icon"></i>
+        <span class="mypage-row-label">로그아웃</span>
         <i class="fa-solid fa-chevron-right arrow"></i>
       </button>
     </div>
@@ -128,10 +124,8 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
   width: 100%;
   padding: 18px 16px;
   background: #fff;
-  border: none;
   border-radius: 14px;
   text-align: left;
-  cursor: pointer;
   margin-bottom: 24px;
 }
 .avatar {
@@ -174,9 +168,10 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
   overflow: hidden;
   margin-bottom: 24px;
 }
-.row {
+.mypage-row {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 12px;
   width: 100%;
   padding: 16px;
@@ -186,28 +181,40 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
   text-align: left;
   cursor: pointer;
 }
-.row:last-child {
+.mypage-row:last-child {
   border-bottom: none;
 }
-.row:hover {
+.mypage-row:hover {
   background: #fafafa;
 }
-.row-icon {
+.mypage-row-icon {
   width: 20px;
   text-align: center;
   font-size: 15px;
   color: #ffbc00;
   flex: 0 0 20px;
 }
-.row-label {
-  flex: 1 1 0;
+.mypage-row-label {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 14px;
   color: #111;
 }
-.row-value {
+.status-badge {
+  font-size: 12px;
+  font-weight: 400;
+  color: #9ca3af;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+.status-badge.connected {
+  color: #d99a00;
+}
+.mypage-row-value {
   font-size: 12px;
   color: #9ca3af;
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 .arrow {
   font-size: 12px;
