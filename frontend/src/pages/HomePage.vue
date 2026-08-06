@@ -139,8 +139,15 @@ const goToSavingsSubscribe = () => {
     <div class="d-flex justify-content-between align-items-center mb-2">
       <img :src="logoImg" alt="SaveE" style="height: 80px" />
       <div class="d-flex gap-3">
-        <!-- TODO: 알림 기능 (B팀 담당), 지금은 자리만 -->
-        <i class="fa-solid fa-bell" style="color: #ced4da; font-size: 18px"></i>
+        <!-- 알림함 -->
+        <button
+          type="button"
+          class="btn p-0 border-0 bg-transparent"
+          @click="router.push('/notifications')"
+          aria-label="알림"
+        >
+          <i class="fa-solid fa-bell" style="color: #495057; font-size: 18px"></i>
+        </button>
         <!-- TODO: 메뉴/마이페이지 (다른 팀원 담당), 지금은 자리만 -->
         <i class="fa-solid fa-bars" style="color: #ced4da; font-size: 18px"></i>
       </div>
