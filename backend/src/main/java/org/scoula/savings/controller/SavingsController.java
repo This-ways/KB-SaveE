@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Log4j2
 @RestController
@@ -119,6 +121,17 @@ public class SavingsController {
             log.error("자동이체 금액 변경 중 시스템 오류 발생", e);
             return ResponseEntity.internalServerError().body("서버 오류로 인해 처리에 실패했습니다.");
         }
+    }
+
+    // 내 가입 적금 ID 조회 API
+    @GetMapping("/my-subscription-id")
+    public ResponseEntity<Map<String, Long>> getMySubscriptionId(
+            @AuthenticationPrincipal CustomUser user) {
+        Long subscriptionId = savingsStatusService.getActiveSubscriptionId(user.getUserId());
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("subscriptionId", subscriptionId); // 적금 미가입 시 null 반환
+        return ResponseEntity.ok(response);
     }
 
 
