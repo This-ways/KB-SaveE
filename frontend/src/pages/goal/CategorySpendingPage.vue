@@ -49,11 +49,11 @@ const refresh = async () => {
   } catch (e) {
     console.error('새로고침 실패', e);
   } finally {
-    refreshing.value = false;
+    // 눌렀다는 게 보이도록 최소 회전 시간 확보
+    setTimeout(() => (refreshing.value = false), 500);
   }
 };
 
-// categoryId -> 목표금액
 const goalMap = computed(() =>
   goals.value.reduce((acc, g) => {
     acc[g.categoryId] = g.targetAmount;
@@ -61,7 +61,6 @@ const goalMap = computed(() =>
   }, {})
 );
 
-// 지출 + 목표 대비 소진율
 const rows = computed(() => {
   if (!summary.value?.categories) return [];
 
@@ -82,76 +81,64 @@ const rows = computed(() => {
   });
 });
 
-// 소진율에 따른 막대 색상
 const barColor = (rate) => {
-  if (rate == null) return '#e9ecef';
+  if (rate == null) return '#e5e7eb';
   if (rate >= 90) return '#ef4444';
   if (rate >= 70) return '#f97316';
-  return '#ffd239';
+  return '#ffbc00';
 };
 
 const goEditCategory = () => {
   if (!canEditCategory.value) return;
-  // 수정 모드로 진입 - 저장 후 완료 축하 화면 대신 이 화면으로 돌아옴
   router.push({ path: '/goal/category', query: { mode: 'edit' } });
 };
 
-const formatAmount = (n) => Number(n ?? 0).toLocaleString('ko-KR') + '원';
+const formatMoney = (n) => Number(n ?? 0).toLocaleString('ko-KR');
 </script>
 
 <template>
-  <div class="container mt-3" style="max-width: 480px">
-    <!-- 상단 -->
-    <div class="d-flex align-items-center mb-3">
-      <button type="button" class="btn p-0" @click="router.push('/home')">
-        <i class="fa-solid fa-chevron-left" style="font-size: 18px"></i>
+  <div class="spending-page">
+    <button class="back-btn" @click="router.push('/home')">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="head">
+      <h1 class="title">카테고리별 지출</h1>
+      <button
+        class="refresh-btn"
+        :class="{ spinning: refreshing }"
+        aria-label="새로고침"
+        @click="refresh"
+      >
+        <i class="fa-solid fa-rotate-right"></i>
       </button>
     </div>
+    <p class="subtitle">{{ yearMonth.replace('-', '년 ') }}월 지출 현황이에요</p>
 
-    <!-- 카테고리별 지출 -->
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <span class="fw-semibold">카테고리별 지출</span>
-          <button
-            type="button"
-            class="btn p-0 refresh-btn"
-            :class="{ spinning: refreshing }"
-            @click="refresh"
+    <p v-if="loading" class="state">불러오는 중...</p>
+    <p v-else-if="rows.length === 0" class="state">
+      이번 달 지출 내역이 없어요
+    </p>
+
+    <div v-else class="list">
+      <div v-for="row in rows" :key="row.categoryId" class="item">
+        <div class="item-row">
+          <span
+            class="cat-icon"
+            :style="{ backgroundColor: getCategoryStyle(row.categoryId).color }"
           >
-            <i class="fa-solid fa-rotate-right"></i>
-          </button>
-        </div>
+            <i :class="getCategoryStyle(row.categoryId).icon"></i>
+          </span>
 
-        <p v-if="loading" class="text-secondary text-center small my-4">
-          불러오는 중이에요...
-        </p>
-
-        <p
-          v-else-if="rows.length === 0"
-          class="text-secondary text-center small my-4"
-        >
-          이번 달 지출 내역이 없어요
-        </p>
-
-        <template v-else>
-          <div v-for="row in rows" :key="row.categoryId" class="mb-3">
-            <div class="d-flex align-items-center gap-2 mb-1">
-              <span
-                class="cat-icon"
-                :style="{
-                  backgroundColor: getCategoryStyle(row.categoryId).color,
-                }"
-              >
-                <i :class="getCategoryStyle(row.categoryId).icon"></i>
-              </span>
-              <span class="small flex-grow-1">{{ row.name }}</span>
-              <span class="fw-semibold small">{{ formatAmount(row.amount) }}</span>
+          <div class="info">
+            <div class="line">
+              <span class="name">{{ row.name }}</span>
+              <span class="amount">{{ formatMoney(row.amount) }}원</span>
             </div>
 
-            <div class="progress" style="height: 6px">
+            <div class="bar-bg">
               <div
-                class="progress-bar"
+                class="bar"
                 :style="{
                   width: (row.rate ?? 0) + '%',
                   backgroundColor: barColor(row.rate),
@@ -159,82 +146,206 @@ const formatAmount = (n) => Number(n ?? 0).toLocaleString('ko-KR') + '원';
               ></div>
             </div>
 
-            <div class="text-secondary mt-1" style="font-size: 11px">
-              <template v-if="row.target">
-                목표 {{ formatAmount(row.target) }} · {{ row.rate }}% 사용
-              </template>
-              <template v-else>목표 미설정</template>
+            <span v-if="row.target" class="target">
+              목표 {{ formatMoney(row.target) }}원 · {{ row.rate }}% 사용
+            </span>
+            <span v-else class="target no-goal">목표 미설정</span>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="summary?.remainder" class="item">
+        <div class="item-row">
+          <span class="cat-icon etc">
+            <i class="fa-solid fa-ellipsis"></i>
+          </span>
+          <div class="info">
+            <div class="line">
+              <span class="name">{{ summary.remainder.label }}</span>
+              <span class="amount">
+                {{ formatMoney(summary.remainder.amount) }}원
+              </span>
             </div>
           </div>
-
-          <!-- 6위 이하 합계 -->
-          <div v-if="summary?.remainder" class="d-flex align-items-center gap-2">
-            <span class="cat-icon" style="background-color: #ced4da">
-              <i class="fa-solid fa-ellipsis"></i>
-            </span>
-            <span class="small flex-grow-1">{{ summary.remainder.label }}</span>
-            <span class="fw-semibold small">
-              {{ formatAmount(summary.remainder.amount) }}
-            </span>
-          </div>
-        </template>
+        </div>
       </div>
     </div>
 
-    <!-- 수정 버튼 -->
-    <p
-      v-if="!canEditCategory"
-      class="text-secondary text-center mb-2"
-      style="font-size: 12px"
-    >
-      예산 카테고리는 매달 1일 ~ 7일에만 수정할 수 있어요
-    </p>
-    <button
-      type="button"
-      class="btn w-100 fw-bold py-3 edit-btn"
-      :disabled="!canEditCategory"
-      @click="goEditCategory"
-    >
-      예산 카테고리 수정하기
-    </button>
+    <div class="bottom">
+      <p v-if="!canEditCategory" class="notice">
+        예산 카테고리는 매달 1일 ~ 7일에만 수정할 수 있어요
+      </p>
+      <button
+        class="edit-btn"
+        :disabled="!canEditCategory"
+        @click="goEditCategory"
+      >
+        예산 카테고리 수정하기
+      </button>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.cat-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: inline-flex;
+.spending-page {
+  min-height: 100vh;
+  background: #fff;
+  padding: 20px 20px 140px;
+}
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  padding: 8px 0;
+  color: #111;
+}
+
+.head {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 12px;
-  flex: 0 0 28px;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
 }
 .refresh-btn {
-  color: #adb5bd;
-  font-size: 15px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 6px;
   transition: color 0.15s;
 }
 .refresh-btn:hover {
   color: #ffbc00;
 }
+.refresh-btn.spinning {
+  color: #ffbc00;
+}
 .refresh-btn.spinning i {
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
-.edit-btn {
-  background-color: #ffd239;
+.subtitle {
+  color: #9ca3af;
+  font-size: 13px;
+  margin-top: 10px;
+  margin-bottom: 32px;
+}
+
+.state {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+  padding: 60px 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.cat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 15px;
+  flex: 0 0 36px;
+  margin-top: 2px;
+}
+.cat-icon.etc {
+  background: #d1d5db;
+}
+.info {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.name {
+  font-size: 14px;
+  font-weight: 600;
   color: #111;
+}
+.amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  white-space: nowrap;
+}
+.bar-bg {
+  height: 7px;
+  border-radius: 999px;
+  background: #f1f2f4;
+  overflow: hidden;
+}
+.bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.target {
+  font-size: 11px;
+  color: #9ca3af;
+}
+.target.no-goal {
+  color: #d1d5db;
+}
+
+.bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 12px 20px 28px;
+  background: #fff;
+}
+.notice {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+}
+.edit-btn {
+  width: 100%;
+  padding: 17px;
+  border: none;
   border-radius: 12px;
+  background: #ffbc00;
+  color: #111;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
 }
 .edit-btn:disabled {
-  background-color: #e9ecef;
-  color: #adb5bd;
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 </style>

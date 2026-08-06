@@ -1,17 +1,63 @@
-import api from '@/api'; // 토큰 자동 첨부되는 axios 인스턴스
+import api from '@/api';
+import { useAuthStore } from '@/stores/auth';
 
 const BASE_URL = '/savings';
 
+// 헤더에 Authorization 토큰을 담는 공통 함수
+const getAuthHeader = () => {
+  const authStore = useAuthStore();
+  return {
+    headers: {
+      Authorization: `Bearer ${authStore.token}`,
+    },
+  };
+};
+
 export default {
-  // 내 가입 적금 ID 조회 (미가입 시 subscriptionId: null)
+  // 1. 내 가입 적금 ID 조회
   async getMySubscriptionId() {
-    const { data } = await api.get(`${BASE_URL}/my-subscription-id`);
-    return data.subscriptionId;
+    const { data } = await api.get(
+      `${BASE_URL}/my-subscription-id`,
+      getAuthHeader(),
+    );
+    return data;
   },
 
-  // 적금 상세 현황 (상품명/금리/누적납입액/달성률 등)
-  async getStatus(subscriptionId) {
-    const { data } = await api.get(`${BASE_URL}/status/${subscriptionId}`);
+  // 2. 적금 현황 상세 조회
+  async getSavingsStatus(subscriptionId) {
+    const { data } = await api.get(
+      `${BASE_URL}/status/${subscriptionId}`,
+      getAuthHeader(),
+    );
+    return data;
+  },
+
+  // 3. 적금 추천 목록 조회
+  async getRecommendedSavings(reqData) {
+    const { data } = await api.post(
+      `${BASE_URL}/recommend`,
+      reqData,
+      getAuthHeader(),
+    );
+    return data;
+  },
+
+  // 4. 상품 상세 정보 조회
+  async getSavingsDetail(productId) {
+    const { data } = await api.get(
+      `${BASE_URL}/products/${productId}`,
+      getAuthHeader(),
+    );
+    return data;
+  },
+
+  // 5. 자동이체 금액 수정
+  async updateMonthlyAmount(subscriptionId, newAmount) {
+    const { data } = await api.put(
+      `${BASE_URL}/auto-transfer/${subscriptionId}/amount`,
+      { newAmount },
+      getAuthHeader(),
+    );
     return data;
   },
 };

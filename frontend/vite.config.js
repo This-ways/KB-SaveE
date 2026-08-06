@@ -17,8 +17,15 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
       },
-      '/savings': {           // ← 이 블록 추가
-      target: 'http://localhost:8080',
+      '/savings': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        // 새로고침 시 브라우저의 HTML 요청은 백엔드로 보내지 않고 Vue 라우터가 처리하도록 설정
+        bypass(req) {
+          if (req.headers.accept && req.headers.accept.includes('html')) {
+            return '/index.html';
+          }
+        },
       },
     },
   },
