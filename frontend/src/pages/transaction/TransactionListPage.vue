@@ -5,14 +5,15 @@ import transactionApi from '@/api/transactionApi'
 import categoryApi from '@/api/categoryApi'
 import goalApi from '@/api/goalApi'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const goHome = () => router.push({ name: 'home' })
-// TODO: 로그인 기능 붙으면 auth store에서 꺼내오는 걸로 교체
-const userId = ref(4)
 
-// TODO: 나중에 월 선택 UI(달력)로 교체. 지금은 화살표로 앞뒤 월만 이동
-const yearMonth = ref('2026-07')
+const authStore = useAuthStore()
+const userId = computed(() => authStore.userId)
+
+const yearMonth = ref(moment().format('YYYY-MM'))
 
 // 선택된 카테고리 목록 (빈 배열 = 전체, 복수 선택 가능)
 const selectedCategoryIds = ref([])

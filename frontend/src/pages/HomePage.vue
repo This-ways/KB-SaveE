@@ -40,7 +40,7 @@ const top2Categories = () =>
 
 // ===== 목표 예산 (설정한 카테고리별 목표금액 vs 실제지출) =====
 const totalBudget = computed(() =>
-  goalBudgets.value.reduce((sum, g) => sum + g.targetAmount, 0),
+  goalBudgets.value.reduce((sum, g) => sum + (g.targetAmount - g.actualAmount), 0)
 );
 
 const loadGoalBudget = async () => {
@@ -81,17 +81,15 @@ const loadGoalBudget = async () => {
 // ===== 내 적금 =====
 const loadMySubscription = async () => {
   try {
-    const subscriptionId = await savingsApi.getMySubscriptionId();
-
+    const { subscriptionId } = await savingsApi.getMySubscriptionId()   // ← 객체에서 꺼내기
     if (!subscriptionId) {
-      mySubscription.value = null;
-      return;
+      mySubscription.value = null
+      return
     }
-
-    mySubscription.value = await savingsApi.getStatus(subscriptionId);
+    mySubscription.value = await savingsApi.getSavingsStatus(subscriptionId)   // ← 메서드명 변경
   } catch (e) {
-    console.error('내 적금 조회 실패', e);
-    mySubscription.value = null;
+    console.error('내 적금 조회 실패', e)
+    mySubscription.value = null
   }
 };
 
@@ -141,9 +139,10 @@ const goToSavingsSubscribe = () => {
 <template>
   <div style="padding: 20px 20px 100px">
     <!-- 상단 헤더 -->
-    <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="d-flex justify-content-between align-items-center mb-0">
       <img :src="logoImg" alt="SaveE" style="height: 80px" />
       <div class="d-flex gap-3">
+<<<<<<< HEAD
         <!-- TODO: 알림 기능 (B팀 담당), 지금은 자리만 -->
         <i class="fa-solid fa-bell" style="color: #ced4da; font-size: 18px"></i>
         <button
@@ -154,6 +153,19 @@ const goToSavingsSubscribe = () => {
         >
           <i class="fa-solid fa-bars" style="color: #6b7280; font-size: 18px"></i>
         </button>
+=======
+        <!-- 알림함 -->
+        <button
+          type="button"
+          class="btn p-0 border-0 bg-transparent"
+          @click="router.push('/notifications')"
+          aria-label="알림"
+        >
+          <i class="fa-solid fa-bell" style="color: #495057; font-size: 18px"></i>
+        </button>
+        <!-- TODO: 메뉴/마이페이지 (다른 팀원 담당), 지금은 자리만 -->
+        <i class="fa-solid fa-bars" style="color: #ced4da; font-size: 18px"></i>
+>>>>>>> b8a0baa2200259d79e588ab439f37d9c82f4304f
       </div>
     </div>
 
@@ -233,10 +245,13 @@ const goToSavingsSubscribe = () => {
     <!-- 목표 예산 -->
     <div class="card mb-3">
       <div class="card-body">
-        <div class="text-secondary small mb-1">목표 예산</div>
-        <div class="h5 fw-bold mb-3">
-          {{ goalBudgets.length > 0 ? formatAmount(totalBudget) : '-' }}
-        </div>
+        <div class="text-secondary small mb-1">잔여 예산</div>
+<div
+  class="h5 fw-bold mb-3"
+  :style="{ color: goalBudgets.length > 0 && totalBudget < 0 ? '#e8512b' : '' }"
+>
+  {{ goalBudgets.length > 0 ? formatAmount(totalBudget) : '-' }}
+</div>
 
         <div
           v-for="g in goalBudgets"
