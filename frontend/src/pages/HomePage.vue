@@ -132,10 +132,22 @@ const goToSavingsSubscribe = () => {
 </script>
 
 <template>
-  <div style="padding: 20px 20px 100px">
-    <!-- 상단 헤더 -->
-    <div class="d-flex justify-content-between align-items-center mb-0">
-      <img :src="logoImg" alt="SaveE" style="height: 80px" />
+  <div style="padding: 70px 20px 100px">
+    <!-- 상단 헤더 (고정) -->
+    <div
+      class="d-flex justify-content-between align-items-center bg-white"
+      style="
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 420px;
+        padding: 12px 20px;
+        z-index: 100;
+      "
+    >
+      <img :src="logoImg" alt="SaveE" style="height: 40px" />
       <div class="d-flex gap-3">
         <!-- 알림함 -->
         <button
@@ -282,7 +294,19 @@ const goToSavingsSubscribe = () => {
     </p>
 
     <!-- 하단 네비게이션 -->
-    <div class="d-flex align-items-center border-top mt-4 pt-3">
+    <div
+  class="d-flex align-items-center border-top bg-white"
+  style="
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 420px;
+    padding: 12px 20px;
+    z-index: 100;
+  "
+>
       <nav class="d-flex justify-content-around align-items-center flex-grow-1">
         <button
           type="button"
