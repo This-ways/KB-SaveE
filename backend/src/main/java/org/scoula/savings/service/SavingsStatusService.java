@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.scoula.savings.domain.SubscriptionVO;
 import org.scoula.savings.dto.MonthlyPaymentDTO;
 import org.scoula.savings.dto.SavingsStatusResDTO;
+import org.scoula.savings.mapper.AccountMapper;
 import org.scoula.savings.mapper.SavingsMapper;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,9 @@ import java.util.List;
 public class SavingsStatusService {
 
     private final SavingsMapper savingsMapper;
+    private final AccountMapper accountMapper;
 
-    public SavingsStatusResDTO getSavingsStatus(Long subscriptionId) {
+    public SavingsStatusResDTO getSavingsStatus(Long userId, Long subscriptionId) {
         // 가입 정보 및 상품 정보 조인 조회
         SubscriptionVO sub = savingsMapper.selectSubscriptionWithProduct(subscriptionId);
 
@@ -26,6 +28,14 @@ public class SavingsStatusService {
         if (sub == null) {
             throw new IllegalArgumentException("존재하지 않는 적금 계좌입니다.");
         }
+
+        // 본인 소유 계좌 검증
+        Long ownerId = accountMapper.selectUserIdByDepositId(sub.getDepositId());
+        if (ownerId == null || !ownerId.equals(userId)) {
+            throw new IllegalArgumentException("본인의 적금 계좌 현황만 조회할 수 있습니다.");
+        }
+
+        // 해지 계좌 검증
         if (sub.getStatus() == 90) {
             throw new IllegalArgumentException("이미 해지 처리된 적금 계좌입니다.");
         }

@@ -116,12 +116,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     }
 
-//    // 💡 1. 여기에 @Lazy 어노테이션을 추가합니다. (순환 참조 방지)
+//    // :전구: 1. 여기에 @Lazy 어노테이션을 추가합니다. (순환 참조 방지)
 //    @Autowired
 //    @Lazy
 //    private JwtUsernamePasswordAuthenticationFilter jwtUsernamePasswordAuthenticationFilter;
 
-    // 💡 2. 맨 아래나 적절한 위치에 이 메서드를 그대로 복사해서 붙여넣습니다. (매니저 빈 등록)
+    // :전구: 2. 맨 아래나 적절한 위치에 이 메서드를 그대로 복사해서 붙여넣습니다. (매니저 빈 등록)
     @Bean
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
@@ -163,10 +163,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/api/board/**").authenticated()
                 .antMatchers(HttpMethod.PUT, "/api/board/**").authenticated()
                 .antMatchers(HttpMethod.DELETE, "/api/board/**").authenticated()
-                .antMatchers(HttpMethod.POST, "/api/users/signup").permitAll()   // 회원가입은 로그인 전 접근
                 .antMatchers("/api/users/mydata/**").authenticated()
                 .antMatchers("/api/goals/**").authenticated()
                 .antMatchers("/api/deposit-account/**").authenticated()
+                .antMatchers("/api/savings/products").permitAll()   // 상품 카탈로그는 로그인 없이도 조회 가능해야 하니 먼저 명시
+                .antMatchers("/api/savings/**").authenticated()      // 나머지 적금 관련 전부 인증 필수
                 .anyRequest().permitAll();
 
 

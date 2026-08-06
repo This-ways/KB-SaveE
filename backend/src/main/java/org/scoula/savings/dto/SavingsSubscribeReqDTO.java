@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter @Setter
 public class SavingsSubscribeReqDTO {
-    private Long userId;             // 사용자 ID
+    //private Long userId;             // 사용자 ID
     private Long productId;          // 적금상품 ID
     private String saveType;         // 적립방식 (자유적립식 / 정액적립식)
     private Integer saveTerm;        // 가입기간 (개월)
