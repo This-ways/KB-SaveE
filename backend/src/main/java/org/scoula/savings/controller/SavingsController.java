@@ -75,8 +75,10 @@ public class SavingsController {
 
     // 5. 적금 현황 API
     @GetMapping("/status/{subscriptionId}")
-    public ResponseEntity<SavingsStatusResDTO> getSavingsStatus(@PathVariable Long subscriptionId) {
-        SavingsStatusResDTO status = savingsStatusService.getSavingsStatus(subscriptionId);
+    public ResponseEntity<SavingsStatusResDTO> getSavingsStatus(
+            @AuthenticationPrincipal CustomUser user,
+            @PathVariable Long subscriptionId) {
+        SavingsStatusResDTO status = savingsStatusService.getSavingsStatus(user.getUserId(), subscriptionId);
         return ResponseEntity.ok(status);
     }
 
