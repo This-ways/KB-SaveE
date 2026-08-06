@@ -126,9 +126,7 @@ loadAll();
 const goToTransactionList = () => router.push({ name: 'transaction/list' });
 const goToReport = () => router.push({ name: 'report' });
 const refreshHome = () => loadAll();
-const goToCategoryDetail = () => {
-  console.log('TODO: 카테고리별 지출 상세 화면 라우팅 (다른 팀원 담당)');
-};
+const goToCategoryDetail = () => router.push({ name: 'categorySpending' });
 // TODO: 적금 가입 화면 아직 없음 - 생기면 라우팅 연결
 const goToSavingsSubscribe = () => {
   console.log('TODO: 적금 가입 화면 라우팅 (C팀 담당)');
@@ -151,13 +149,11 @@ const goToSavingsSubscribe = () => {
     <template v-if="summary">
       <!-- 이번 달 총 지출 -->
       <div
-        class="card mb-3"
+        class="total-block mb-3"
         style="cursor: pointer"
         @click="goToTransactionList"
       >
-        <div
-          class="card-body d-flex justify-content-between align-items-center"
-        >
+        <div class="d-flex justify-content-between align-items-center">
           <div>
             <div class="text-secondary small mb-1">
               {{ moment(yearMonth, 'YYYY-MM').format('MM') }}월 나의 총 지출
@@ -368,3 +364,20 @@ const goToSavingsSubscribe = () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 카드 경계를 시안처럼 뚜렷하게 - Bootstrap 기본은 너무 흐릿함 */
+.card {
+  border: 1px solid #eceef1;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.card-body {
+  padding: 18px 16px;
+}
+
+/* 총 지출은 카드 없이 배경에 바로 표시 */
+.total-block {
+  padding: 4px 4px 0;
+}
+</style>
