@@ -3,14 +3,15 @@ import { ref, computed } from 'vue'
 import moment from 'moment'
 import reportApi from '@/api/reportApi'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const goHome = () => router.push({ name: 'home' })
-// TODO: 로그인 기능 붙으면 auth store에서 꺼내오는 걸로 교체
-const userId = ref(1)
 
-// TODO: 나중에 월 선택 UI(달력)로 교체. 지금은 화살표로 앞뒤 월만 이동
-const yearMonth = ref('2026-07')
+const authStore = useAuthStore()
+const userId = computed(() => authStore.userId)
+
+const yearMonth = ref(moment().format('YYYY-MM'))
 
 const report = ref(null) // 이번 달 리포트
 const prevSaveAmount = ref(null) // 전월 세이브 금액 (비교용)
