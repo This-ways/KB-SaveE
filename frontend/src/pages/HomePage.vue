@@ -104,8 +104,8 @@ const goToSavings = async () => {
       // 적금 번호를 뒤에 붙여 적금 현황 페이지로 이동
       router.push(`/savings/status/${subId}`);
     } else {
-      alert('가입된 적금이 없습니다.');
-      // router.push('/savings/recommend');
+      //alert('가입된 적금이 없습니다.');
+      router.push('/savings/recommend');
     }
   } catch (error) {
     console.error('적금 가입 정보 조회 실패:', error);

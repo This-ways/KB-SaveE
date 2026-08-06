@@ -60,4 +60,13 @@ export default {
     );
     return data;
   },
+
+  // 전체 적금 조회 (type: '자유적립' 또는 '정액적립')
+  async getAllSavingsProducts(type) {
+    const { data } = await api.get(`${BASE_URL}/products`, {
+      params: { type },
+      ...getAuthHeader(), // 헤더 토큰 전달 추가
+    });
+    return data;
+  },
 };

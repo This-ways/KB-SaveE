@@ -9,11 +9,11 @@ export default [
     props: true,
   },
   // 2. 적금 추천 페이지 (미가입 시 이동용)
-  //   {
-  //     path: '/savings/recommend',
-  //     name: 'savingsRecommend',
-  //     component: () => import('../pages/savings/SavingsRecommendPage.vue'),
-  //   },
+  {
+    path: '/savings/recommend',
+    name: 'savingsRecommend',
+    component: () => import('../pages/savings/SavingsRecommendPage.vue'),
+  },
   //   // 3. 적금 상품 상세 페이지
   //   {
   //     path: '/savings/products/:productId',
