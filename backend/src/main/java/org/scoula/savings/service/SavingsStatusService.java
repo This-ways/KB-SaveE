@@ -1,6 +1,7 @@
 package org.scoula.savings.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.scoula.savings.domain.SubscriptionVO;
 import org.scoula.savings.dto.MonthlyPaymentDTO;
 import org.scoula.savings.dto.SavingsStatusResDTO;
@@ -13,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class SavingsStatusService {
@@ -158,5 +160,10 @@ public class SavingsStatusService {
             default:
                 return "기타은행";
         }
+    }
+
+    public Long getActiveSubscriptionId(Long userId) {
+        log.info("유저 ID {}의 가입 적금 ID 조회", userId);
+        return savingsMapper.findActiveSubscriptionIdByUserId(userId);
     }
 }

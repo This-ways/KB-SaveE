@@ -71,4 +71,6 @@ public interface SavingsMapper {
     List<SavingsRecommendDTO> selectProductsByType(@Param("productType") String productType); //전체상품조회
 
     int countActiveSubscriptionByDepositId(Long depositId); //적금가입내역 개수 조회
+
+    Long findActiveSubscriptionIdByUserId(@Param("userId") Long userId); // 적금 id 조회
 }
