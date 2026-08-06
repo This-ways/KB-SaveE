@@ -9,6 +9,7 @@ import savingsApi from '@/api/savingsApi';
 import { useAuthStore } from '@/stores/auth';
 import { getCategoryStyle } from '@/constants/categories';
 import logoImg from '@/assets/SaveE_logo.png';
+import SideMenu from '@/components/SideMenu.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -127,6 +128,10 @@ const goToTransactionList = () => router.push({ name: 'transaction/list' });
 const goToReport = () => router.push({ name: 'report' });
 const refreshHome = () => loadAll();
 const goToCategoryDetail = () => router.push({ name: 'categorySpending' });
+const goToMyPage = () => router.push({ name: 'mypage' });
+
+// 햄버거 메뉴(서랍) 열림 상태
+const menuOpen = ref(false);
 // TODO: 적금 가입 화면 아직 없음 - 생기면 라우팅 연결
 const goToSavingsSubscribe = () => {
   console.log('TODO: 적금 가입 화면 라우팅 (C팀 담당)');
@@ -141,8 +146,14 @@ const goToSavingsSubscribe = () => {
       <div class="d-flex gap-3">
         <!-- TODO: 알림 기능 (B팀 담당), 지금은 자리만 -->
         <i class="fa-solid fa-bell" style="color: #ced4da; font-size: 18px"></i>
-        <!-- TODO: 메뉴/마이페이지 (다른 팀원 담당), 지금은 자리만 -->
-        <i class="fa-solid fa-bars" style="color: #ced4da; font-size: 18px"></i>
+        <button
+          type="button"
+          class="btn p-0"
+          aria-label="메뉴"
+          @click="menuOpen = true"
+        >
+          <i class="fa-solid fa-bars" style="color: #6b7280; font-size: 18px"></i>
+        </button>
       </div>
     </div>
 
@@ -348,20 +359,22 @@ const goToSavingsSubscribe = () => {
           ></i>
           <span class="small text-secondary">적금</span>
         </button>
-        <!-- TODO: 마이페이지 탭 (다른 팀원 담당) -->
         <button
           type="button"
           class="btn d-flex flex-column align-items-center gap-1 p-0"
-          disabled
+          @click="goToMyPage"
         >
           <i
-            class="fa-solid fa-user"
-            style="color: #ced4da; font-size: 18px"
+            class="fa-solid fa-user text-secondary"
+            style="font-size: 18px"
           ></i>
           <span class="small text-secondary">마이페이지</span>
         </button>
       </nav>
     </div>
+
+    <!-- 햄버거 메뉴 (서랍) -->
+    <SideMenu :open="menuOpen" @close="menuOpen = false" />
   </div>
 </template>
 
