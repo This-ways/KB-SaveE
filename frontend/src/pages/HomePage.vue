@@ -39,10 +39,8 @@ const goToReport = () => router.push({ name: 'report' })
 // 홈(네비바) -> 지금 화면 데이터 다시 불러오기("새로고침" 개념)
 const refreshHome = () => loadSummary()
 
-// TODO: 카테고리별 지출 오른쪽 화살표 - 팀원이 만들 상세화면 완성되면 라우팅 연결
-const goToCategoryDetail = () => {
-  console.log('TODO: 카테고리별 지출 상세 화면 라우팅 (다른 팀원 담당)')
-}
+// 카테고리별 지출 오른쪽 화살표 -> 카테고리별 지출 현황 상세 화면
+const goToCategoryDetail = () => router.push({ name: 'categorySpending' })
 </script>
 
 <template>

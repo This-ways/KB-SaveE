@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import moment from 'moment';
 import goalApi from '@/api/goalApi';
 import { getCategoryStyle } from '@/constants/categories';
 
@@ -11,6 +12,12 @@ const selectedIds = (route.query.ids || '')
   .split(',')
   .filter(Boolean)
   .map(Number);
+
+// 메인(지출 현황)에서 수정하러 들어온 경우 - 저장 후 완료 축하 화면을 건너뜀
+const isEditMode = route.query.mode === 'edit';
+
+// 백엔드 정책과 동일 - 매달 1~7일에만 저장 가능
+const canEdit = moment().date() <= 7;
 
 const items = ref([]);
 const loading = ref(true);
@@ -60,10 +67,18 @@ const totalBudget = computed(() =>
 
 const canSave = computed(
   () =>
+    canEdit &&
     items.value.length > 0 &&
     items.value.every((it) => Number(it.targetAmount) > 0) &&
     !hasOver.value
 );
+
+// 카테고리 선택 화면으로 (수정 모드 유지)
+const goBack = () =>
+  router.push({
+    path: '/goal/category',
+    query: isEditMode ? { mode: 'edit' } : {},
+  });
 
 const save = async () => {
   if (!canSave.value || saving.value) return;
@@ -76,7 +91,8 @@ const save = async () => {
         targetAmount: Number(it.targetAmount),
       }))
     );
-    router.push('/goal/complete');
+    // 최초 설정이면 완료 축하 화면, 수정이면 원래 보던 지출 현황으로
+    router.push(isEditMode ? '/goal/spending' : '/goal/complete');
   } catch (e) {
     const msg = e?.response?.data || '저장에 실패했어요.';
     alert(msg);
@@ -90,7 +106,7 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
 
 <template>
   <div class="budget-page">
-    <button class="back-btn" @click="router.back()">
+    <button class="back-btn" @click="goBack">
       <i class="fa-solid fa-chevron-left"></i>
     </button>
 
@@ -151,7 +167,12 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
     </div>
 
     <div class="bottom">
-      <p v-if="hasOver" class="bottom-warn">평균 지출을 초과한 항목이 있어요</p>
+      <p v-if="!canEdit" class="bottom-warn">
+        예산은 매달 1일 ~ 7일에만 설정할 수 있어요
+      </p>
+      <p v-else-if="hasOver" class="bottom-warn">
+        평균 지출을 초과한 항목이 있어요
+      </p>
       <button class="next-btn" :disabled="!canSave || saving" @click="save">
         {{ saving ? '저장 중...' : '다음' }}
       </button>
