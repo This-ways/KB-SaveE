@@ -94,9 +94,7 @@ loadAll()
 const goToTransactionList = () => router.push({ name: 'transaction/list' })
 const goToReport = () => router.push({ name: 'report' })
 const refreshHome = () => loadAll()
-const goToCategoryDetail = () => {
-  console.log('TODO: 카테고리별 지출 상세 화면 라우팅 (다른 팀원 담당)')
-}
+const goToCategoryDetail = () => router.push({ name: 'categorySpending' })
 // TODO: 적금 가입 화면 아직 없음 - 생기면 라우팅 연결
 const goToSavingsSubscribe = () => {
   console.log('TODO: 적금 가입 화면 라우팅 (C팀 담당)')
@@ -106,7 +104,7 @@ const goToSavingsSubscribe = () => {
 <template>
   <div style="padding: 20px 20px 100px">
     <!-- 상단 헤더 -->
-    <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="d-flex justify-content-between align-items-center mb-0">
       <img :src="logoImg" alt="SaveE" style="height: 80px" />
       <div class="d-flex gap-3">
         <!-- TODO: 알림 기능 (B팀 담당), 지금은 자리만 -->
@@ -119,7 +117,7 @@ const goToSavingsSubscribe = () => {
     <template v-if="summary">
       <!-- 이번 달 총 지출 -->
       <div class="card mb-3" style="cursor: pointer" @click="goToTransactionList">
-        <div class="card-body d-flex justify-content-between align-items-center">
+  <div class="card-body d-flex justify-content-between align-items-center" style="padding-top: 4px">
           <div>
             <div class="text-secondary small mb-1">{{ moment(yearMonth, 'YYYY-MM').format('MM') }}월 나의 총 지출</div>
             <div class="h4 fw-bold mb-0">{{ formatAmount(summary.totalAmount) }}</div>
