@@ -21,4 +21,10 @@ export default [
     name: 'goalComplete',
     component: () => import('../pages/goal/CompletePage.vue'),
   },
+  // 카테고리별 지출 현황 (메인에서 진입)
+  {
+    path: '/goal/spending',
+    name: 'categorySpending',
+    component: () => import('../pages/goal/CategorySpendingPage.vue'),
+  },
 ];

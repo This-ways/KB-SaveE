@@ -1,10 +1,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import goalApi from '@/api/goalApi';
 import { getCategoryStyle } from '@/constants/categories';
 
+const route = useRoute();
 const router = useRouter();
+
+// 메인(지출 현황)에서 수정하러 들어온 경우 - 저장 후 완료 축하 화면을 건너뜀
+const isEditMode = route.query.mode === 'edit';
 
 const categories = ref([]);   // [{ categoryId, name }]
 const selectedIds = ref([]);  // 선택한 categoryId 목록
@@ -13,6 +17,12 @@ const loading = ref(true);
 onMounted(async () => {
   try {
     categories.value = await goalApi.getCategories();
+
+    // 수정 모드면 이미 설정해둔 카테고리를 미리 체크해둠
+    if (isEditMode) {
+      const myGoals = await goalApi.getMyGoals();
+      selectedIds.value = myGoals.map((g) => g.categoryId);
+    }
   } catch (e) {
     alert('카테고리를 불러오지 못했어요.');
   } finally {
@@ -34,18 +44,25 @@ const clearAll = () => (selectedIds.value = []);
 
 const canProceed = computed(() => selectedIds.value.length > 0);
 
+// 수정 모드면 지출 현황으로, 최초 설정이면 자산 연결 화면으로
+const goBack = () =>
+  router.push(isEditMode ? '/goal/spending' : '/mydata/connect');
+
 const goNext = () => {
   if (!canProceed.value) return;
   router.push({
     path: '/goal/budget',
-    query: { ids: selectedIds.value.join(',') },
+    query: {
+      ids: selectedIds.value.join(','),
+      ...(isEditMode ? { mode: 'edit' } : {}),
+    },
   });
 };
 </script>
 
 <template>
   <div class="category-page">
-    <button class="back-btn" @click="router.back()">
+    <button class="back-btn" @click="goBack">
       <i class="fa-solid fa-chevron-left"></i>
     </button>
 
@@ -53,7 +70,9 @@ const goNext = () => {
       선택한 카테고리로<br />
       <span class="highlight">예산을 관리해요</span>
     </h1>
-    <p class="subtitle">관리할 카테고리를 선택해 주세요</p>
+    <p class="subtitle">
+      {{ isEditMode ? '수정할 카테고리를 다시 선택해 주세요' : '관리할 카테고리를 선택해 주세요' }}
+    </p>
 
     <div class="section-head">
       <span class="section-title">예산 카테고리 선택</span>
