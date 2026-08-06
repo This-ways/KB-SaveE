@@ -12,7 +12,7 @@ const selectedIds = (route.query.ids || '')
   .filter(Boolean)
   .map(Number);
 
-const items = ref([]); // [{ categoryId, name, avgAmount, targetAmount }]
+const items = ref([]);
 const loading = ref(true);
 const saving = ref(false);
 
@@ -39,7 +39,7 @@ onMounted(async () => {
         categoryId: id,
         name: cat ? cat.name : '알 수 없음',
         avgAmount: avgMap[id] ?? null,
-        targetAmount: avgMap[id] ?? 0, // 평균값을 기본 제안값으로
+        targetAmount: avgMap[id] ?? 0,
       };
     });
   } catch (e) {
@@ -49,7 +49,6 @@ onMounted(async () => {
   }
 });
 
-// 평균 지출을 초과하면 절약이 아니므로 경고 대상
 const isOver = (item) =>
   item.avgAmount != null && Number(item.targetAmount) > item.avgAmount;
 
@@ -100,28 +99,33 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
       <span class="highlight">월 예산 금액</span>을<br />
       설정해주세요
     </h1>
-    <p class="subtitle">평균 지출보다 낮게 잡아야 절약할 수 있어요</p>
+    <p class="subtitle">현실적인 예산이 절약의 시작이에요!</p>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
 
     <div v-else class="list">
-      <div v-for="item in items" :key="item.categoryId" class="item">
-        <div class="row">
-          <div
+      <div
+        v-for="item in items"
+        :key="item.categoryId"
+        class="item"
+        :class="{ over: isOver(item) }"
+      >
+        <div class="item-row">
+          <span
             class="cat-icon"
             :style="{ backgroundColor: getCategoryStyle(item.categoryId).color }"
           >
             <i :class="getCategoryStyle(item.categoryId).icon"></i>
-          </div>
+          </span>
 
           <div class="info">
             <strong>{{ item.name }}</strong>
             <span class="avg">
-              평균 지출 {{ formatMoney(item.avgAmount) }}원
+              나의 평균 지출 : {{ formatMoney(item.avgAmount) }}원
             </span>
           </div>
 
-          <div class="input-wrap" :class="{ over: isOver(item) }">
+          <div class="input-box">
             <input
               v-model="item.targetAmount"
               type="number"
@@ -138,17 +142,16 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
           평균 지출을 초과하였습니다
         </p>
       </div>
-    </div>
 
-    <div v-if="!loading" class="total">
-      <span>예산</span>
-      <strong>{{ formatMoney(totalBudget) }}원</strong>
+      <!-- 목록과 이어지도록 구분선 없이 배치 -->
+      <div class="total">
+        <span>예산</span>
+        <strong>{{ formatMoney(totalBudget) }}원</strong>
+      </div>
     </div>
 
     <div class="bottom">
-      <p v-if="hasOver" class="bottom-warn">
-        평균 지출을 초과한 항목이 있어요. 금액을 다시 확인해 주세요
-      </p>
+      <p v-if="hasOver" class="bottom-warn">평균 지출을 초과한 항목이 있어요</p>
       <button class="next-btn" :disabled="!canSave || saving" @click="save">
         {{ saving ? '저장 중...' : '다음' }}
       </button>
@@ -172,16 +175,16 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
 .title {
   font-size: 24px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.5;
   margin-top: 20px;
 }
 .highlight {
   color: #ffbc00;
 }
 .subtitle {
-  color: #6b7280;
-  font-size: 14px;
-  margin-top: 8px;
+  color: #9ca3af;
+  font-size: 13px;
+  margin-top: 14px;
   margin-bottom: 28px;
 }
 .loading {
@@ -189,107 +192,114 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
   color: #9ca3af;
   padding: 40px 0;
 }
+
 .list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 28px;
 }
 .item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
-.row {
+
+/* 아이콘 | 이름·평균 | 금액 - 한 줄 고정 */
+.item-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 .cat-icon {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 14px;
-  flex-shrink: 0;
+  font-size: 15px;
+  flex: 0 0 36px;
 }
 .info {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  gap: 3px;
 }
 .info strong {
   font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 700;
+  color: #111;
 }
 .avg {
   font-size: 11px;
   color: #9ca3af;
-  white-space: nowrap;
 }
-/* 입력란이 아래로 밀리지 않도록 고정 폭 + 줄바꿈 방지 */
-.input-wrap {
+.input-box {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
-}
-.input-wrap input {
-  width: 96px;
-  padding: 8px 8px;
+  gap: 1px;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  text-align: right;
-  font-size: 14px;
-  font-weight: 600;
-  /* 숫자 입력 화살표 제거로 폭 확보 */
-  -moz-appearance: textfield;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #fff;
 }
-.input-wrap input::-webkit-outer-spin-button,
-.input-wrap input::-webkit-inner-spin-button {
+.input-box input {
+  width: 78px;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-align: right;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+  padding: 0;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.input-box input::-webkit-outer-spin-button,
+.input-box input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-.input-wrap input:focus {
-  outline: none;
-  border-color: #ffbc00;
+.input-box .won {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
 }
-.input-wrap.over input {
+.item.over .input-box {
   border-color: #ef4444;
+}
+.item.over .input-box input,
+.item.over .input-box .won {
   color: #ef4444;
 }
-.won {
-  font-size: 13px;
-  color: #6b7280;
-}
+
 .warn {
-  margin: 0 0 0 44px;
+  margin: 8px 0 0 46px;
   font-size: 11px;
   color: #ef4444;
   display: flex;
   align-items: center;
   gap: 4px;
 }
+
+/* 구분선 없이 목록에 이어지도록 */
 .total {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid #f3f4f6;
+  margin-top: 16px;
   font-size: 15px;
+  color: #111;
 }
 .total strong {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
 }
+
 .bottom {
   position: fixed;
   left: 0;
@@ -297,7 +307,7 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
   bottom: 0;
   max-width: 420px;
   margin: 0 auto;
-  padding: 12px 20px 24px;
+  padding: 12px 20px 28px;
   background: #fff;
 }
 .bottom-warn {
@@ -308,13 +318,13 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
 }
 .next-btn {
   width: 100%;
-  padding: 16px;
+  padding: 17px;
   border: none;
   border-radius: 12px;
   background: #ffbc00;
-  color: #fff;
+  color: #111;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 .next-btn:disabled {
