@@ -118,7 +118,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
 </script>
 
 <template>
-  <div style="padding: 20px 20px 100px">
+  <div style="padding: 20px 20px 100px; background-color: #f8f9fa; min-height: 100vh">
     <div class="d-flex align-items-center mb-3">
   <button type="button" class="btn btn-sm p-0" @click="goHome" style="width: 24px">
     <i class="fa-solid fa-chevron-left" style="color: #495057; font-size: 18px"></i>
@@ -140,7 +140,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
 
     <template v-if="report">
       <!-- 현금흐름 -->
-      <div class="card mb-3">
+      <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
         <div class="card-body">
           <h2 class="h6 text-secondary mb-3 fw-bold">이번 달 현금 흐름</h2>
           <div class="d-flex justify-content-between mb-1">
@@ -166,7 +166,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
       <!-- 세이브 금액 / 납입 적금 -->
       <div class="row g-3 mb-3">
         <div class="col-6">
-          <div class="card h-100">
+          <div class="card h-100 border-0 shadow-sm rounded-4 bg-white">
             <div class="card-body text-center">
               <div class="text-secondary small mb-1"><i class="fa-solid fa-piggy-bank" style="color: #fc9558;"></i> 이번 달 세이브</div>
               <div
@@ -186,7 +186,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
           </div>
         </div>
         <div class="col-6">
-          <div class="card h-100">
+          <div class="card h-100 border-0 shadow-sm rounded-4 bg-white">
             <div class="card-body text-center">
               <div class="text-secondary small mb-1"><i class="fa-solid fa-coins" style="color: #fc9558;"></i> 이번 달 적금 납입</div>
               <div class="fw-bold">{{ formatAmount(report.savingPayment) }}</div>
@@ -196,7 +196,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
       </div>
 
       <!-- 주차별 소비 -->
-      <div class="card mb-3">
+      <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
         <div class="card-body">
           <h2 class="h6 text-secondary mb-3 fw-bold">주차별 소비</h2>
           <div class="d-flex align-items-end justify-content-between" style="height: 120px">
@@ -223,7 +223,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
       </div>
 
       <!-- 요일별 소비 패턴 -->
-      <div class="card mb-3">
+      <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
         <div class="card-body">
           <h2 class="h6 text-secondary mb-1 fw-bold">요일별 소비 패턴</h2>
           <p class="small text-secondary mb-3" v-if="maxWeekdayLabel">
@@ -251,7 +251,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
       </div>
 
       <!-- 연령별 비교 Top3 -->
-      <div class="card mb-3">
+      <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
         <div class="card-body">
           <h2 class="h6 text-secondary mb-3 fw-bold">
             많이 쓴 카테고리 Top3
@@ -285,7 +285,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
       </div>
 
       <!-- AI 요약 -->
-      <div class="card mb-4" style="background-color: #fef7d8; border: none">
+      <div class="card mb-4 shadow-sm rounded-4" style="background-color: #fef7d8; border: none">
         <div class="card-body">
           <h2 class="h6 mb-2"><i class="fa-solid fa-wand-magic-sparkles" style="color: #fc9558;"></i> 이달의 Tip</h2>
           <p class="small mb-0">{{ report.aiSummary }}</p>
