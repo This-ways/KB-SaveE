@@ -305,4 +305,14 @@
         WHERE deposit_id = #{depositId}
           AND status = 10
     </select>
+
+    <select id="findActiveSubscriptionIdByUserId" resultType="java.lang.Long">
+        SELECT s.subscription_id
+        FROM SUBSCRIPTION s
+        JOIN deposit_account d ON s.deposit_id = d.deposit_id
+        WHERE d.user_id = #{userId}
+        AND s.status != 90  <!-- 90: 해지/만기 상태 제외 -->
+        ORDER BY s.subscription_id DESC
+        LIMIT 1
+    </select>
 </mapper>
