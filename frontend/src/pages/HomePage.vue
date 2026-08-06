@@ -1,21 +1,29 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import moment from 'moment'
 import transactionApi from '@/api/transactionApi'
+import categoryApi from '@/api/categoryApi'
+import goalApi from '@/api/goalApi'
+import savingsApi from '@/api/savingsApi'
+import { useAuthStore } from '@/stores/auth'
+import { getCategoryStyle } from '@/constants/categories'
 import logoImg from '@/assets/SaveE_logo.png'
 
 const router = useRouter()
-
-
 const authStore = useAuthStore()
+
 const userId = computed(() => authStore.userId)
 const userName = computed(() => authStore.userName)
 
 const yearMonth = ref(moment().format('YYYY-MM'))
 const summary = ref(null) // { totalAmount, categories: [...], remainder }
+const goalBudgets = ref([]) // [{ categoryId, categoryName, targetAmount, actualAmount }]
+const mySubscription = ref(null) // null이면 미가입 (또는 아직 로딩 전)
 
+const formatAmount = (amount) => amount.toLocaleString('ko-KR') + '원'
+
+// ===== 이번 달 총 지출 + 카테고리별 지출 =====
 const loadSummary = async () => {
   try {
     summary.value = await transactionApi.getSummary({ userId: userId.value, yearMonth: yearMonth.value })
@@ -23,31 +31,83 @@ const loadSummary = async () => {
     console.error('메인화면 요약 조회 실패', e)
   }
 }
-loadSummary()
-
-const formatAmount = (amount) => amount.toLocaleString('ko-KR') + '원'
-
-// 카테고리별 지출 Top2 (summary.categories는 이미 금액 큰 순으로 옴)
 const top2Categories = () => (summary.value ? summary.value.categories.slice(0, 2) : [])
 
-// 이번 달 총 지출 -> 지출 상세 내역 페이지로 이동
+// ===== 목표 예산 (설정한 카테고리별 목표금액 vs 실제지출) =====
+const totalBudget = computed(() => goalBudgets.value.reduce((sum, g) => sum + g.targetAmount, 0))
+
+const loadGoalBudget = async () => {
+  try {
+    const [goals, txns, categories] = await Promise.all([
+      goalApi.getMyGoals(yearMonth.value),
+      transactionApi.getList({ userId: userId.value, yearMonth: yearMonth.value }),
+      categoryApi.getList(),
+    ])
+
+    const nameMap = {}
+    categories.forEach((c) => {
+      nameMap[c.categoryId] = c.name
+    })
+
+    // 카테고리별 실제 지출 합계 (Top5 제한 없이 전체 거래내역 기준으로 직접 집계)
+    const spendMap = {}
+    txns.forEach((t) => {
+      if (t.categoryId) {
+        spendMap[t.categoryId] = (spendMap[t.categoryId] || 0) + t.amount
+      }
+    })
+
+    goalBudgets.value = goals.map((g) => ({
+      categoryId: g.categoryId,
+      categoryName: nameMap[g.categoryId] || '',
+      targetAmount: g.targetAmount,
+      actualAmount: spendMap[g.categoryId] || 0,
+    }))
+  } catch (e) {
+    console.error('목표 예산 조회 실패', e)
+  }
+}
+
+// ===== 내 적금 =====
+const loadMySubscription = async () => {
+  try {
+    const subscriptionId = await savingsApi.getMySubscriptionId()
+    if (!subscriptionId) {
+      mySubscription.value = null
+      return
+    }
+    mySubscription.value = await savingsApi.getStatus(subscriptionId)
+  } catch (e) {
+    console.error('내 적금 조회 실패', e)
+    mySubscription.value = null
+  }
+}
+
+const loadAll = () => {
+  loadSummary()
+  loadGoalBudget()
+  loadMySubscription()
+}
+loadAll()
+
+// ===== 네비게이션 =====
 const goToTransactionList = () => router.push({ name: 'transaction/list' })
-
-// 소비분석(네비바) -> 소비 리포트 페이지로 이동
 const goToReport = () => router.push({ name: 'report' })
-
-// 홈(네비바) -> 지금 화면 데이터 다시 불러오기("새로고침" 개념)
-const refreshHome = () => loadSummary()
-
-// 카테고리별 지출 오른쪽 화살표 -> 카테고리별 지출 현황 상세 화면
-const goToCategoryDetail = () => router.push({ name: 'categorySpending' })
+const refreshHome = () => loadAll()
+const goToCategoryDetail = () => {
+  console.log('TODO: 카테고리별 지출 상세 화면 라우팅 (다른 팀원 담당)')
+}
+// TODO: 적금 가입 화면 아직 없음 - 생기면 라우팅 연결
+const goToSavingsSubscribe = () => {
+  console.log('TODO: 적금 가입 화면 라우팅 (C팀 담당)')
+}
 </script>
 
 <template>
   <div style="padding: 20px 20px 100px">
     <!-- 상단 헤더 -->
-    <div class="d-flex justify-content-between align-items-center mb-0">
-      <img :src="logoImg" alt="SaveE" style="height: 100px" />
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <img :src="logoImg" alt="SaveE" style="height: 80px" />
       <div class="d-flex gap-3">
         <!-- TODO: 알림 기능 (B팀 담당), 지금은 자리만 -->
         <i class="fa-solid fa-bell" style="color: #ced4da; font-size: 18px"></i>
@@ -68,67 +128,132 @@ const goToCategoryDetail = () => router.push({ name: 'categorySpending' })
         </div>
       </div>
 
-      <!-- 카테고리별 지출 Top2 -->
+      <!-- 카테고리별 지출 Top2 (아이콘+색상 적용) -->
       <div class="card mb-3">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-3" style="cursor: pointer" @click="goToCategoryDetail">
+          <div
+            class="d-flex justify-content-between align-items-center mb-3"
+            style="cursor: pointer"
+            @click="goToCategoryDetail"
+          >
             <span class="fw-semibold">카테고리별 지출</span>
             <i class="fa-solid fa-chevron-right text-secondary"></i>
           </div>
-          <div v-for="cat in top2Categories()" :key="cat.categoryId" class="mb-2">
-            <div class="d-flex justify-content-between small mb-1">
-              <span>{{ cat.categoryName }}</span>
-              <span class="fw-semibold">{{ formatAmount(cat.amount) }}</span>
+          <div v-for="cat in top2Categories()" :key="cat.categoryId" class="d-flex align-items-center gap-2 mb-3">
+            <div
+              class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+              :style="{ width: '32px', height: '32px', backgroundColor: getCategoryStyle(cat.categoryId).color + '22' }"
+            >
+              <i
+                class="fa-solid"
+                :class="getCategoryStyle(cat.categoryId).icon"
+                :style="{ color: getCategoryStyle(cat.categoryId).color, fontSize: '13px' }"
+              ></i>
             </div>
-            <div class="progress" style="height: 6px">
-              <div
-                class="progress-bar"
-                style="background-color: #ffd239"
-                :style="{ width: (cat.amount / summary.totalAmount) * 100 + '%' }"
-              ></div>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between small mb-1">
+                <span>{{ cat.categoryName }}</span>
+                <span class="fw-semibold">{{ formatAmount(cat.amount) }}</span>
+              </div>
+              <div class="progress" style="height: 6px">
+                <div
+                  class="progress-bar"
+                  :style="{
+                    width: (cat.amount / summary.totalAmount) * 100 + '%',
+                    backgroundColor: getCategoryStyle(cat.categoryId).color,
+                  }"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </template>
 
-    <!-- 지금 적금에 넣을 수 있는 금액 (자리만, 비워둠 - C팀 담당) -->
+    <!-- 목표 예산 -->
     <div class="card mb-3">
       <div class="card-body">
-        <div class="text-secondary small mb-1">지금 적금에 넣을 수 있는 금액</div>
-        <div class="h5 mb-0">-</div>
+        <div class="text-secondary small mb-1">목표 예산</div>
+        <div class="h5 fw-bold mb-3">{{ goalBudgets.length > 0 ? formatAmount(totalBudget) : '-' }}</div>
+
+        <div v-for="g in goalBudgets" :key="g.categoryId" class="d-flex align-items-center gap-2 mb-3">
+          <div
+            class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+            :style="{ width: '28px', height: '28px', backgroundColor: getCategoryStyle(g.categoryId).color + '22' }"
+          >
+            <i
+              class="fa-solid"
+              :class="getCategoryStyle(g.categoryId).icon"
+              :style="{ color: getCategoryStyle(g.categoryId).color, fontSize: '12px' }"
+            ></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between small mb-1">
+              <span>{{ g.categoryName }}</span>
+              <span class="fw-semibold" :style="{ color: g.actualAmount > g.targetAmount ? '#e8512b' : '' }">
+                {{ formatAmount(g.actualAmount) }} / {{ formatAmount(g.targetAmount) }}
+              </span>
+            </div>
+            <div class="progress" style="height: 6px">
+              <div
+                class="progress-bar"
+                :style="{
+                  width: Math.min((g.actualAmount / g.targetAmount) * 100, 100) + '%',
+                  backgroundColor: g.actualAmount > g.targetAmount ? '#e8512b' : getCategoryStyle(g.categoryId).color,
+                }"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <p v-if="goalBudgets.length === 0" class="text-secondary small mb-0">설정한 목표 예산이 없어요.</p>
       </div>
     </div>
 
-    <!-- 내 적금 (자리만, 비워둠 - C팀 담당) -->
+    <!-- 내 적금 -->
     <div class="card mb-3">
       <div class="card-body">
         <div class="text-secondary small mb-1">내 적금</div>
-        <div class="h5 mb-0">-</div>
+        <template v-if="mySubscription">
+          <div class="fw-bold">{{ mySubscription.productName }}</div>
+          <div class="small text-secondary mt-1">누적 납입액 {{ formatAmount(mySubscription.totalPrincipal) }}</div>
+        </template>
+        <button
+          v-else
+          type="button"
+          class="btn w-100 mt-1"
+          style="background-color: #ffd239"
+          @click="goToSavingsSubscribe"
+        >
+          적금 가입하러 가기
+        </button>
       </div>
     </div>
 
     <p v-if="!summary" class="text-secondary text-center mt-5">불러오는 중이에요...</p>
+
     <!-- 하단 네비게이션 -->
-    <nav class="d-flex justify-content-around align-items-center border-top mt-4 pt-3">
-      <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" @click="refreshHome">
-  <i class="fa-solid fa-house" style="color: #ffd239; font-size: 18px"></i>
-  <span class="small" style="color: #ffd239">홈</span>
-</button>
-      <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" @click="goToReport">
-        <i class="fa-solid fa-chart-pie text-secondary" style="font-size: 18px"></i>
-        <span class="small text-secondary">소비분석</span>
-      </button>
-      <!-- TODO: 적금 탭 (C팀 담당) -->
-      <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" disabled>
-        <i class="fa-solid fa-coins" style="color: #ced4da; font-size: 18px"></i>
-        <span class="small text-secondary">적금</span>
-      </button>
-      <!-- TODO: 마이페이지 탭 (다른 팀원 담당) -->
-      <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" disabled>
-        <i class="fa-solid fa-user" style="color: #ced4da; font-size: 18px"></i>
-        <span class="small text-secondary">마이페이지</span>
-      </button>
-    </nav>
+    <div class="d-flex align-items-center border-top mt-4 pt-3">
+      <nav class="d-flex justify-content-around align-items-center flex-grow-1">
+        <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" @click="refreshHome">
+          <i class="fa-solid fa-house" style="color: #ffd239; font-size: 18px"></i>
+          <span class="small" style="color: #ffd239">홈</span>
+        </button>
+        <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" @click="goToReport">
+          <i class="fa-solid fa-chart-pie text-secondary" style="font-size: 18px"></i>
+          <span class="small text-secondary">소비분석</span>
+        </button>
+        <!-- TODO: 적금 탭 (C팀 담당) -->
+        <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" disabled>
+          <i class="fa-solid fa-coins" style="color: #ced4da; font-size: 18px"></i>
+          <span class="small text-secondary">적금</span>
+        </button>
+        <!-- TODO: 마이페이지 탭 (다른 팀원 담당) -->
+        <button type="button" class="btn d-flex flex-column align-items-center gap-1 p-0" disabled>
+          <i class="fa-solid fa-user" style="color: #ced4da; font-size: 18px"></i>
+          <span class="small text-secondary">마이페이지</span>
+        </button>
+      </nav>
+    </div>
   </div>
 </template>
