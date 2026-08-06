@@ -77,9 +77,24 @@ public class GoalServiceImpl implements GoalService {
     @Transactional
     public List<GoalResponseDTO> saveAll(Long userId, List<GoalRequestDTO> dtos) {
         // 하나의 트랜잭션으로 묶어서 저장 - 중간에 하나라도 실패(중복 카테고리, 기간 위반 등)하면 전체 롤백
-        return dtos.stream()
+        List<GoalResponseDTO> saved = dtos.stream()
                 .map(dto -> save(userId, dto))
                 .collect(Collectors.toList());
+
+        // 이 화면은 "이번 달 목표 전체를 다시 제출"하는 구조라, 이번에 빠진 카테고리는 해제된 것으로 보고 삭제한다.
+        // (안 지우면 카테고리를 4개 -> 3개로 줄여도 예전 4번째 목표가 그대로 남음)
+        if (!saved.isEmpty()) {
+            String yearMonth = saved.get(0).getYearMonth();
+            List<Long> keepCategoryIds = saved.stream()
+                    .map(GoalResponseDTO::getCategoryId)
+                    .collect(Collectors.toList());
+            int removed = goalMapper.deleteNotIn(userId, yearMonth, keepCategoryIds);
+            if (removed > 0) {
+                log.debug("선택 해제된 카테고리 목표 삭제: userId={} yearMonth={} {}건", userId, yearMonth, removed);
+            }
+        }
+
+        return saved;
     }
 
     @Override

@@ -20,4 +20,12 @@ public interface GoalMapper {
     GoalVO findOne(@Param("userId") Long userId,
                    @Param("categoryId") Long categoryId,
                    @Param("yearMonth") String yearMonth);
+
+    /**
+     * 해당 월 목표 중, 넘겨받은 카테고리 목록에 없는 것을 삭제.
+     * 카테고리 재선택 시 해제된 카테고리의 목표를 정리하는 용도.
+     */
+    int deleteNotIn(@Param("userId") Long userId,
+                    @Param("yearMonth") String yearMonth,
+                    @Param("categoryIds") List<Long> categoryIds);
 }

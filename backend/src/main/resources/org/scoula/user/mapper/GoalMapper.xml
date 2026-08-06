@@ -49,4 +49,15 @@
           AND `year_month` = #{yearMonth}
     </select>
 
+    <!-- 카테고리 재선택 시, 이번에 선택되지 않은 카테고리의 목표를 삭제 -->
+    <delete id="deleteNotIn">
+        DELETE FROM `goal`
+        WHERE user_id = #{userId}
+          AND `year_month` = #{yearMonth}
+          AND category_id NOT IN
+        <foreach item="id" collection="categoryIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
 </mapper>
