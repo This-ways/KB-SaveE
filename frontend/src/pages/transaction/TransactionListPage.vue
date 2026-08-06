@@ -107,13 +107,14 @@ const loadCategories = async () => {
   }
 }
 
-// 로그인 전이라 401이 나는 게 지금은 정상 - 이땐 기본 순서로 대체
+// 이제 로그인 기능이 실제로 동작하므로, 정상적으로 목표 카테고리를 가져와야 함
+// (실패하면 여전히 기본 순서로 대체 - 목표를 아예 안 세운 유저도 있을 수 있으니 방어는 유지)
 const loadGoalCategoryIds = async () => {
   try {
-    const goals = await goalApi.getList({ yearMonth: yearMonth.value })
+    const goals = await goalApi.getMyGoals(yearMonth.value)
     goalCategoryIds.value = goals.map((g) => g.categoryId)
   } catch (e) {
-    console.warn('목표 카테고리 조회 실패(로그인 전이면 정상) - 기본 순서로 대체', e)
+    console.warn('목표 카테고리 조회 실패 - 기본 순서로 대체', e)
     goalCategoryIds.value = []
   }
 }
@@ -170,7 +171,7 @@ const groupedByDate = computed(() => {
     .sort((a, b) => (a < b ? 1 : -1))
     .map((date) => ({
       date,
-      dayOfWeek: moment(date).format('dd'),
+      dayOfWeek: moment(date).format('ddd'),
       items: groups[date],
     }))
 })
@@ -325,11 +326,12 @@ const chooseCategory = async (categoryId) => {
       </div>
     </div>
 
-    <!-- 카테고리 필터칩: 전체 + 13개 (목표 설정한 카테고리가 앞쪽) -->
-    <div class="d-flex flex-wrap gap-2 mb-4">
+    <!-- 카테고리 필터칩: 전체 + 13개 (목표 설정한 카테고리가 앞쪽), 한 줄 + 가로 슬라이드 -->
+    <div class="position-relative mb-4">
+      <div class="chip-scroll d-flex flex-nowrap gap-2">
       <button
         type="button"
-        class="btn btn-sm bg-white"
+        class="btn btn-sm bg-white flex-shrink-0"
         :class="selectedCategoryIds.length === 0 ? 'fw-semibold' : 'fw-normal text-secondary'"
         :style="{
           border: selectedCategoryIds.length === 0 ? '2px solid #ffd239' : '1px solid #dee2e6',
@@ -342,7 +344,7 @@ const chooseCategory = async (categoryId) => {
         v-for="cat in chipCategories"
         :key="cat.categoryId"
         type="button"
-        class="btn btn-sm bg-white d-inline-flex align-items-center gap-1"
+        class="btn btn-sm bg-white d-inline-flex align-items-center gap-1 flex-shrink-0"
         :class="selectedCategoryIds.includes(cat.categoryId) ? 'fw-semibold' : 'fw-normal text-secondary'"
         :style="{
           border: selectedCategoryIds.includes(cat.categoryId) ? '2px solid #ffd239' : '1px solid #dee2e6',
@@ -356,6 +358,8 @@ const chooseCategory = async (categoryId) => {
         ></i>
         {{ cat.name }}
       </button>
+      </div>
+      <div class="chip-fade"></div>
     </div>
 
     <!-- 날짜별 거래내역 -->
@@ -442,3 +446,27 @@ const chooseCategory = async (categoryId) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 필터칩 가로 슬라이드 - 넘치는 칩은 좌우로 스와이프, 스크롤바는 안 보이게 */
+.chip-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE, Edge */
+}
+.chip-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* 오른쪽 끝 그라데이션 페이드 - 더 스크롤할 칩이 있다는 걸 은근히 암시 */
+.chip-fade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  background: linear-gradient(to right, rgba(248, 249, 250, 0), rgba(248, 249, 250, 1));
+  pointer-events: none; /* 페이드 위에 있어도 칩 클릭이 그대로 통과되게 */
+}
+</style>

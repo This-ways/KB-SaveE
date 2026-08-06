@@ -34,10 +34,11 @@
     <select id="getWeeklySpending" resultType="WeeklyAmountDTO">
         SELECT
             CEIL((DAY(t.txn_date) + DAYOFWEEK(DATE_FORMAT(t.txn_date, '%Y-%m-01')) - 1) / 7) AS weekNo,
-            SUM(t.amount)                                                                     AS amount
+            SUM(t.amount) AS amount
         FROM transaction t
         WHERE t.user_id = #{userId}
           AND t.txn_type = 0
+          AND t.category_id IS NOT NULL
           AND DATE_FORMAT(t.txn_date, '%Y-%m') = #{yearMonth}
         GROUP BY weekNo
         ORDER BY weekNo
@@ -47,18 +48,14 @@
     <select id="getWeekdaySpending" resultType="WeekdayAmountDTO">
         SELECT
             CASE DAYOFWEEK(t.txn_date)
-                WHEN 1 THEN '일'
-                WHEN 2 THEN '월'
-                WHEN 3 THEN '화'
-                WHEN 4 THEN '수'
-                WHEN 5 THEN '목'
-                WHEN 6 THEN '금'
-                WHEN 7 THEN '토'
-            END AS dayOfWeek,
+                WHEN 1 THEN '일' WHEN 2 THEN '월' WHEN 3 THEN '화' WHEN 4 THEN '수'
+                WHEN 5 THEN '목' WHEN 6 THEN '금' WHEN 7 THEN '토'
+                END AS dayOfWeek,
             SUM(t.amount) AS amount
         FROM transaction t
         WHERE t.user_id = #{userId}
           AND t.txn_type = 0
+          AND t.category_id IS NOT NULL
           AND DATE_FORMAT(t.txn_date, '%Y-%m') = #{yearMonth}
         GROUP BY dayOfWeek
         ORDER BY FIELD(dayOfWeek, '월', '화', '수', '목', '금', '토', '일')
