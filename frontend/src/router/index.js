@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import authRoutes from './auth';
 import goalRoutes from './goal';
+import transactionRoutes from './transaction';
+import reportRoutes from './report';
+import HomePage from '../pages/HomePage.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,8 +14,16 @@ const router = createRouter({
       name: 'onboarding',
       component: () => import('../pages/OnboardingPage.vue'),
     },
+    // 온보딩/가입/마이데이터연결/목표설정 완료 후 도착하는 메인 홈
+    {
+      path: '/home',
+      name: 'home',
+      component: HomePage,
+    },
     ...authRoutes,
     ...goalRoutes,
+    ...transactionRoutes,
+    ...reportRoutes,
   ],
 });
 

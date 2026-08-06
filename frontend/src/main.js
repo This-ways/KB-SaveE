@@ -1,5 +1,6 @@
 import './assets/main.css';
 import 'bootstrap/dist/css/bootstrap.css';
+import 'pretendard/dist/web/static/pretendard.css';  //pretendard 폰트
 import 'vue-awesome-paginate/dist/style.css';
 
 import { createApp } from 'vue';
