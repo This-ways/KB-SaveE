@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
 
@@ -9,6 +9,9 @@ const router = useRouter();
 const productId = route.params.id || route.params.productId;
 const product = ref(null);
 const loading = ref(true);
+
+// 적금 현황에서 진입했는지 여부 확인
+const isFromStatus = computed(() => route.query.from === 'status');
 
 const fetchDetail = async () => {
   if (!productId || productId === 'undefined') {
@@ -33,7 +36,6 @@ onMounted(() => {
   fetchDetail();
 });
 
-// 이전 추천 결과 화면 상태(Step3 + 입력값 쿼리)로 안전하게 되돌아가기
 const goBack = () => {
   router.back();
 };
@@ -44,10 +46,14 @@ const handleSubscribe = () => {
 </script>
 
 <template>
-  <!-- min-height 제거 및 padding-bottom 160px 확보 -->
+  <!-- 적금 현황에서 왔을 때는 하단 패딩을 줄이고 일반 상태일 땐 160px 적용 -->
   <div
     class="container py-3 position-relative"
-    style="max-width: 480px; background-color: #fff; padding-bottom: 160px"
+    :style="{
+      maxWidth: '480px',
+      backgroundColor: '#fff',
+      paddingBottom: isFromStatus ? '40px' : '160px',
+    }"
   >
     <!-- 상단 헤더 -->
     <div class="d-flex align-items-center mb-3">
@@ -96,7 +102,7 @@ const handleSubscribe = () => {
         <div class="d-flex justify-content-between align-items-end mb-2">
           <span class="fw-bold small">금리 안내</span>
           <span class="micro-text text-secondary">
-            ({{ product.rateStartDate || '조회일' }} 기준)
+            ({{ product.rateStartDate || '조회일' }} 기준, 세금공제 전)
           </span>
         </div>
 
@@ -131,7 +137,7 @@ const handleSubscribe = () => {
       <hr class="my-3 text-black-50" />
 
       <!-- 상세 요약 -->
-      <div class="d-flex flex-column gap-2 mb-4 micro-text">
+      <div class="d-flex flex-column gap-2 mb-3 micro-text">
         <div v-if="product.feature" class="d-flex">
           <span
             class="text-secondary fw-semibold flex-shrink-0"
@@ -183,14 +189,14 @@ const handleSubscribe = () => {
       </div>
 
       <!-- 유의사항 안내 박스 -->
-      <div class="bg-warning bg-opacity-10 p-3 rounded-4 d-flex gap-2 mb-4">
+      <div class="bg-warning bg-opacity-10 p-3 rounded-4 d-flex gap-2 mb-2">
         <i
           class="fa-solid fa-circle-info text-warning fs-6 flex-shrink-0 mt-1"
         ></i>
         <div class="micro-text text-dark">
           <div class="fw-bold mb-1">가입 전 꼭 확인하세요.</div>
           <ul class="ps-3 mb-0 text-secondary" style="line-height: 1.4">
-            <li>중도해지 시 약정금리 대신 중도해지금리가 적용돼요.</li>
+            <li>중도해지 시 약정금리 대신 중도해지금리(연 0.1%)가 적용돼요.</li>
             <li>
               우대금리는 조건 충족 여부에 따라 실제 적용 금리가 달라질 수
               있어요.
@@ -199,13 +205,14 @@ const handleSubscribe = () => {
           </ul>
         </div>
       </div>
+
+      <!-- 적금 추천에서 왔을 때만 여백 블록 생성 -->
+      <div v-if="!isFromStatus" style="height: 120px" aria-hidden="true"></div>
     </div>
 
-    <div style="height: 120px" aria-hidden="true"></div>
-
-    <!-- 하단 고정 버튼 -->
+    <!-- 적금 추천에서 들어왔을 때만 하단 고정 가입하기 버튼 노출 -->
     <div
-      v-if="product"
+      v-if="product && !isFromStatus"
       class="position-fixed bottom-0 start-50 translate-middle-x w-100 p-3 bg-white border-top"
       style="max-width: 480px; z-index: 100"
     >
