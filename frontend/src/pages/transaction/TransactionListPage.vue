@@ -248,7 +248,7 @@ const chooseCategory = async (categoryId) => {
 </script>
 
 <template>
-  <div style="padding: 20px 20px 100px">
+  <div style="padding: 20px 20px 100px; background-color: #f8f9fa; min-height: 100vh">
     <div class="d-flex align-items-center mb-3">
   <button type="button" class="btn btn-sm p-0" @click="goHome" style="width: 24px">
     <i class="fa-solid fa-chevron-left" style="color: #495057; font-size: 18px"></i>
@@ -269,7 +269,7 @@ const chooseCategory = async (categoryId) => {
     </div>
 
     <!-- 소비 구성 (Top5 + 나머지, 도넛 차트) -->
-    <div class="card mb-3">
+    <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
       <div class="card-body">
         <h2 class="h6 text-secondary mb-3 fw-bold">소비 구성</h2>
         <div class="d-flex align-items-center gap-4">
