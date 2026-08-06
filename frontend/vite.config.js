@@ -17,6 +17,9 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
       },
+      '/savings': {           // ← 이 블록 추가
+      target: 'http://localhost:8080',
+      },
     },
   },
 });
