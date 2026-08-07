@@ -15,4 +15,9 @@ export default [
     name: 'mypageHelp',
     component: () => import('../pages/mypage/HelpPage.vue'),
   },
+  {
+    path: '/mypage/support',
+    name: 'mypageSupport',
+    component: () => import('../pages/mypage/CustomerServicePage.vue'),
+  },
 ];

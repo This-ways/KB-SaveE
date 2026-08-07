@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import savingsApi from '@/api/savingsApi';
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -20,40 +19,41 @@ const go = (to) => {
   router.push(to);
 };
 
-// 적금: 구독 ID를 조회해서 상세 페이지로 이동 (HomePage.vue의 goToSavings와 동일한 로직)
-const goToSavings = async () => {
-  emit('close');
-  try {
-    const res = await savingsApi.getMySubscriptionId();
-    const subId = res?.subscriptionId;
-    if (subId) {
-      router.push(`/savings/status/${subId}`);
-    } else {
-      alert('가입된 적금이 없습니다.');
-    }
-  } catch (error) {
-    console.error('적금 가입 정보 조회 실패:', error);
-  }
-};
-
 const logout = () => {
   emit('close');
   auth.logout();
   router.push('/auth/login');
 };
 
+// 적금: 구독 ID를 조회해서 현재 가입한 적금 상세 페이지로 이동
+const goToMySavings = async () => {
+  emit('close');
+  try {
+    const savingsApi = (await import('@/api/savingsApi')).default;
+    const res = await savingsApi.getMySubscriptionId();
+    const subId = res?.subscriptionId;
+    if (subId) {
+      router.push(`/savings/status/${subId}`);
+    } else {
+      alert('가입된 적금이 없습니다. 적금 추천에서 먼저 가입해보세요.');
+    }
+  } catch (error) {
+    console.error('적금 가입 정보 조회 실패:', error);
+  }
+};
+
 const menus = [
   { icon: 'fa-solid fa-receipt', label: '지출내역', to: { name: 'transaction/list' } },
-  { icon: 'fa-solid fa-wallet', label: '예산관리', to: '/goal/spending' },
   { icon: 'fa-solid fa-chart-pie', label: '소비분석', to: { name: 'report' } },
-  { icon: 'fa-solid fa-piggy-bank', label: '적금', action: 'savings' },
+  { icon: 'fa-solid fa-magnifying-glass-dollar', label: '적금 추천', to: '/savings/recommend?step=3' },
+  { icon: 'fa-solid fa-piggy-bank', label: '내 적금', action: 'mySavings' },
   { icon: 'fa-solid fa-user', label: '마이페이지', to: '/mypage' },
   { icon: 'fa-solid fa-circle-question', label: '도움말', to: '/mypage/help' },
 ];
 
 const onMenuClick = (m) => {
-  if (m.action === 'savings') {
-    goToSavings();
+  if (m.action === 'mySavings') {
+    goToMySavings();
   } else {
     go(m.to);
   }

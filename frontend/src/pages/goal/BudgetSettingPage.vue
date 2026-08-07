@@ -112,10 +112,10 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
 
     <h1 class="title">
       선택한 카테고리의<br />
-      <span class="highlight">월 예산 금액</span>을<br />
+      <span class="highlight">이번 달 쓸 금액</span>을<br />
       설정해주세요
     </h1>
-    <p class="subtitle">현실적인 예산이 절약의 시작이에요!</p>
+    <p class="subtitle">현실적인 금액이 절약의 시작이에요!</p>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
 
@@ -161,14 +161,14 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
 
       <!-- 목록과 이어지도록 구분선 없이 배치 -->
       <div class="total">
-        <span>예산</span>
+        <span>합계</span>
         <strong>{{ formatMoney(totalBudget) }}원</strong>
       </div>
     </div>
 
     <div class="bottom">
       <p v-if="!canEdit" class="bottom-warn">
-        예산은 매달 1일 ~ 7일에만 설정할 수 있어요
+        쓸 금액은 매달 1일 ~ 7일에만 설정할 수 있어요
       </p>
       <p v-else-if="hasOver" class="bottom-warn">
         평균 지출을 초과한 항목이 있어요

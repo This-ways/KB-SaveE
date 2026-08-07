@@ -65,7 +65,7 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
     <!-- 지원 및 정보 -->
     <p class="section-label">지원 및 정보</p>
     <div class="group">
-      <button class="mypage-row" @click="notReady('고객센터')">
+      <button class="mypage-row" @click="router.push('/mypage/support')">
         <i class="fa-solid fa-headset mypage-row-icon"></i>
         <span class="mypage-row-label">고객센터</span>
         <i class="fa-solid fa-chevron-right arrow"></i>
@@ -197,7 +197,7 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
 .mypage-row-label {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 14px;
+  font-size: 16px;
   color: #111;
 }
 .status-badge {

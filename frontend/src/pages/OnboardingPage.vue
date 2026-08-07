@@ -16,7 +16,7 @@ const slides = [
   {
     emoji: '🎯',
     title: '목표 금액을\n설정해보세요',
-    desc: '카테고리별 예산을 설정하면\n지출 관리가 쉬워집니다',
+    desc: '카테고리별로 쓸 금액을 정하면\n지출 관리가 쉬워집니다',
   },
   {
     emoji: '🐷',
@@ -93,7 +93,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background: #fff;
+  background: #f7f8fa;
 }
 .logo-bee {
   font-size: 72px;
@@ -121,6 +121,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   padding: 20px;
+  background: #f7f8fa;
 }
 .skip {
   align-self: flex-end;

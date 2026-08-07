@@ -12,15 +12,11 @@ const authStore = useAuthStore();
 
 const userId = computed(() => authStore.userId);
 const yearMonth = moment().format('YYYY-MM');
-const today = moment().date();
 
 const summary = ref(null);
 const goals = ref([]);
 const loading = ref(true);
 const refreshing = ref(false);
-
-// 예산 카테고리 수정은 매달 1~7일에만 가능 (백엔드 정책과 동일)
-const canEditCategory = computed(() => today <= 7);
 
 const load = async () => {
   const [sum, goalList] = await Promise.all([
@@ -86,11 +82,6 @@ const barColor = (rate) => {
   if (rate >= 90) return '#ef4444';
   if (rate >= 70) return '#f97316';
   return '#ffbc00';
-};
-
-const goEditCategory = () => {
-  if (!canEditCategory.value) return;
-  router.push({ path: '/goal/category', query: { mode: 'edit' } });
 };
 
 const formatMoney = (n) => Number(n ?? 0).toLocaleString('ko-KR');
@@ -169,19 +160,6 @@ const formatMoney = (n) => Number(n ?? 0).toLocaleString('ko-KR');
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="bottom">
-      <p v-if="!canEditCategory" class="notice">
-        예산 카테고리는 매달 1일 ~ 7일에만 수정할 수 있어요
-      </p>
-      <button
-        class="edit-btn"
-        :disabled="!canEditCategory"
-        @click="goEditCategory"
-      >
-        예산 카테고리 수정하기
-      </button>
     </div>
   </div>
 </template>
@@ -316,36 +294,4 @@ const formatMoney = (n) => Number(n ?? 0).toLocaleString('ko-KR');
   color: #d1d5db;
 }
 
-.bottom {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 12px 20px 28px;
-  background: #fff;
-}
-.notice {
-  margin: 0 0 10px;
-  font-size: 12px;
-  color: #9ca3af;
-  text-align: center;
-}
-.edit-btn {
-  width: 100%;
-  padding: 17px;
-  border: none;
-  border-radius: 12px;
-  background: #ffbc00;
-  color: #111;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.edit-btn:disabled {
-  background: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
 </style>
