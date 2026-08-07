@@ -2,8 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
-import transactionApi from '@/api/transactionApi';
-import goalApi from '@/api/goalApi';
+import reportApi from '@/api/reportApi';
 import moment from 'moment';
 import { useAuthStore } from '@/stores/auth';
 
@@ -11,10 +10,16 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-//  URL Query에서 step, monthlyAmount, saveTerm 복원 (상세페이지 다녀와도 유지되도록)
+// URL Query에서 step, monthlyAmount, saveTerm 복원
 const step = ref(Number(route.query.step) || 1);
-const saveAmount = ref(0);
-const monthlyAmount = ref(0);
+const saveAmount = ref(0); // 현재 납입 가능 금액 (이달 잔액)
+
+// 🟢 디폴트 월 납입액을 0원으로 설정 (쿼리에 금액 값이 전달된 경우만 해당 값 사용)
+const monthlyAmount = ref(
+  route.query.monthlyAmount !== undefined
+    ? Number(route.query.monthlyAmount)
+    : 0,
+);
 const saveTerm = ref(Number(route.query.saveTerm) || 12);
 
 const yearMonth = ref(moment().format('YYYY-MM'));
@@ -34,27 +39,15 @@ const updateQueryParams = (newStep) => {
   });
 };
 
-const formattedMonthlyAmount = computed({
-  get() {
-    if (!monthlyAmount.value && monthlyAmount.value !== 0) return '';
-    return monthlyAmount.value.toLocaleString('ko-KR');
-  },
-  set(newValue) {
-    // 입력값에서 숫자가 아닌 모든 문자(콤마 등)를 제거 후 숫자로 변환
-    const numericValue = String(newValue).replace(/[^0-9]/g, '');
-    monthlyAmount.value = numericValue ? Number(numericValue) : 0;
-  },
-});
-
-// 브라우저 백/포워드 시 쿼리 변경 감지하여 화면 복원
+// 브라우저 백/포워드 시 쿼리 변경 감지
 watch(
   () => route.query,
   (query) => {
     if (query.step) step.value = Number(query.step);
-    if (query.monthlyAmount) monthlyAmount.value = Number(query.monthlyAmount);
+    if (query.monthlyAmount !== undefined)
+      monthlyAmount.value = Number(query.monthlyAmount);
     if (query.saveTerm) saveTerm.value = Number(query.saveTerm);
 
-    // 상세페이지에서 백버튼으로 step 3 상태에 도착했을 때 추천 목록 재조회
     if (step.value === 3 && recommendedList.value.length === 0) {
       fetchRecommendations(false);
     }
@@ -62,55 +55,57 @@ watch(
   { deep: true },
 );
 
+// 🟢 소비 리포트 API로부터 '이달 잔액' 조회
 const fetchSaveAmount = async () => {
   try {
     loadingSaveAmount.value = true;
 
-    const [goals, txns] = await Promise.all([
-      goalApi.getMyGoals(yearMonth.value),
-      transactionApi.getList({
-        userId: userId.value,
-        yearMonth: yearMonth.value,
-      }),
-    ]);
+    const reportData = await reportApi.get({
+      userId: userId.value,
+      yearMonth: yearMonth.value,
+    });
 
-    if (!goals || goals.length === 0) {
+    if (reportData && reportData.cashFlow) {
+      const currentBalance = reportData.cashFlow.currentBalance ?? 0;
+      saveAmount.value = Math.max(currentBalance, 0);
+    } else {
       saveAmount.value = 0;
-      if (!route.query.monthlyAmount) monthlyAmount.value = 0;
-      return;
     }
 
-    const spendMap = {};
-    if (Array.isArray(txns)) {
-      txns.forEach((t) => {
-        if (t.categoryId) {
-          spendMap[t.categoryId] = (spendMap[t.categoryId] || 0) + t.amount;
-        }
-      });
-    }
-
-    const totalRemaining = goals.reduce((sum, g) => {
-      const actualAmount = spendMap[g.categoryId] || 0;
-      return sum + (g.targetAmount - actualAmount);
-    }, 0);
-
-    saveAmount.value = totalRemaining > 0 ? totalRemaining : 0;
-
-    // query에 이미 입력했던 값이 없으면 기본 세이브 금액 할당
-    if (!route.query.monthlyAmount) {
-      monthlyAmount.value = saveAmount.value;
+    // URL 쿼리에 지정된 monthlyAmount가 있다면 해당 값 적용
+    if (route.query.monthlyAmount !== undefined) {
+      monthlyAmount.value = Number(route.query.monthlyAmount);
     }
   } catch (error) {
-    console.error('세이브 금액(잔여 예산) 조회 실패:', error);
+    console.error('이달 잔액 조회 실패:', error);
     saveAmount.value = 0;
   } finally {
     loadingSaveAmount.value = false;
   }
 };
 
+// 🟢 콤마 포맷팅 (0원일 때도 '0'으로 리턴)
+const formattedMonthlyAmount = computed({
+  get() {
+    if (monthlyAmount.value === null || monthlyAmount.value === undefined)
+      return '0';
+    return monthlyAmount.value.toLocaleString('ko-KR');
+  },
+  set(newValue) {
+    const numericValue = String(newValue).replace(/[^0-9]/g, '');
+    monthlyAmount.value = numericValue ? Number(numericValue) : 0;
+  },
+});
+
+// 🟢 숫자만 입력 가능하도록 제어하는 핸들러
+const handleInput = (event) => {
+  const cleanValue = event.target.value.replace(/[^0-9]/g, '');
+  monthlyAmount.value = cleanValue ? Number(cleanValue) : 0;
+  event.target.value = formattedMonthlyAmount.value;
+};
+
 onMounted(() => {
   fetchSaveAmount();
-  // 페이지 첫 진입 시 이미 step 3 쿼리가 있다면 바로 추천 API 호출
   if (step.value === 3) {
     fetchRecommendations(false);
   }
@@ -134,15 +129,14 @@ const toggleExpand = (productId) => {
 };
 
 const goBack = () => {
-  // step 3 (추천 결과 목록 화면)에서 백버튼 누르면 step 2 (조건 입력 화면)로 이동
   if (step.value === 3) {
     router.back();
   } else {
-    // step 2 (얼마씩 넣을까요? 화면) 또는 step 1에서는 바로 홈 화면으로 이동
     router.push('/home');
   }
 };
 
+// 🟢 [잔액 전액] 버튼 클릭 시 saveAmount(잔액)를 그대로 할당
 const addAmount = (val) => {
   if (val === 'ALL') {
     monthlyAmount.value = saveAmount.value;
@@ -152,10 +146,9 @@ const addAmount = (val) => {
 };
 
 const fetchRecommendations = async (shouldPushQuery = true) => {
-  // 0원 이하 입력 방어 (0원 이하일 경우 백엔드 API 요청 안 함)
   if (!monthlyAmount.value || monthlyAmount.value <= 0) {
     alert('월 납입액은 1원 이상 입력해 주세요.');
-    step.value = 2; // step 2 화면 유지
+    step.value = 2;
     return;
   }
 
@@ -179,13 +172,13 @@ const fetchRecommendations = async (shouldPushQuery = true) => {
     }
   } catch (error) {
     console.error('적금 추천 목록 조회 실패:', error);
-    // 조회 실패 시 목록을 비우고 500 에러 대신 빈 결과 표시
     recommendedList.value = [];
     displayList.value = [];
   } finally {
     loading.value = false;
   }
 };
+
 const selectFilter = async (filterType) => {
   activeFilter.value = filterType;
 
@@ -291,16 +284,22 @@ const goToDetail = (productId) => {
       <div>
         <label class="form-label text-secondary small">월 납입액</label>
         <div class="position-relative mb-3">
+          <!-- type="text", inputmode="numeric", @input 및 방어 로직 추가 -->
           <input
-            v-model="formattedMonthlyAmount"
+            :value="formattedMonthlyAmount"
             type="text"
             inputmode="numeric"
             class="form-control form-control-lg border-0 border-bottom rounded-0 px-0 fw-bold fs-2 text-end pe-4"
             placeholder="0"
+            @input="handleInput"
           />
           <span class="position-absolute end-0 bottom-0 fs-4 fw-bold pb-2"
             >원</span
           >
+        </div>
+
+        <div class="row g-2">
+          <!-- 하단 금액 버튼 영역 동일 -->
         </div>
 
         <div class="row g-2">
