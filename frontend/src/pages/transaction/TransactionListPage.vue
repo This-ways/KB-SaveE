@@ -25,8 +25,10 @@ const summary = reactive({
 })
 
 const transactions = ref([])
+const allMonthAmountByCategory = ref({}) // 목표만 보기 정확도용: 상위5 제한 없는 카테고리별 전체 합계
 const allCategories = ref([]) // 13개 전체 (필터칩/변경 바텀시트 순서 구성용)
 const goalCategoryIds = ref([]) // 이번 달 목표로 설정한 카테고리 id 목록 (앞쪽에 배치)
+const goals = ref([]) // 이번 달 목표 전체 (categoryId, targetAmount) - 도넛 범례에 목표 대비 표시용
 
 // 카테고리 이름 -> FontAwesome 아이콘 클래스
 const CATEGORY_ICONS = {
@@ -107,20 +109,46 @@ const loadCategories = async () => {
   }
 }
 
+// 요약 API는 상위 5개만 주기 때문에("나머지"로 뭉침), "목표만 보기"에서
+// 순위 밖 카테고리가 0원으로 잘못 나오는 걸 막기 위해 이번 달 전체 거래를 따로 합산
+const loadAllMonthAmounts = async () => {
+  try {
+    const all = await transactionApi.getList({ userId: userId.value, yearMonth: yearMonth.value })
+    const map = {}
+    all.forEach((t) => {
+      if (t.categoryId) {
+        map[t.categoryId] = (map[t.categoryId] || 0) + t.amount
+      }
+    })
+    allMonthAmountByCategory.value = map
+  } catch (e) {
+    console.error('카테고리별 전체 합계 조회 실패', e)
+    allMonthAmountByCategory.value = {}
+  }
+}
+
 // 이제 로그인 기능이 실제로 동작하므로, 정상적으로 목표 카테고리를 가져와야 함
 // (실패하면 여전히 기본 순서로 대체 - 목표를 아예 안 세운 유저도 있을 수 있으니 방어는 유지)
 const loadGoalCategoryIds = async () => {
   try {
-    const goals = await goalApi.getMyGoals(yearMonth.value)
-    goalCategoryIds.value = goals.map((g) => g.categoryId)
+    const myGoals = await goalApi.getMyGoals(yearMonth.value)
+    goals.value = myGoals
+    goalCategoryIds.value = myGoals.map((g) => g.categoryId)
   } catch (e) {
     console.warn('목표 카테고리 조회 실패 - 기본 순서로 대체', e)
+    goals.value = []
     goalCategoryIds.value = []
   }
 }
 
 const load = async () => {
-  await Promise.all([loadSummary(), loadList(), loadCategories(), loadGoalCategoryIds()])
+  await Promise.all([
+    loadSummary(),
+    loadList(),
+    loadCategories(),
+    loadGoalCategoryIds(),
+    loadAllMonthAmounts(),
+  ])
 }
 load()
 
@@ -198,31 +226,82 @@ const iconForTxn = (txn) => {
   return { icon: 'fa-house', color: '#6c757d' }
 }
 
-// ===== 도넛 차트 (소비 구성) =====
+// ===== 카테고리별 목표 대비 (기존 "카테고리별 지출" 화면과 통합) =====
+const goalMap = computed(() =>
+  goals.value.reduce((acc, g) => {
+    acc[g.categoryId] = g.targetAmount
+    return acc
+  }, {}),
+)
+
+const barColor = (rate) => {
+  if (rate == null) return '#e5e7eb'
+  if (rate >= 90) return '#ef4444'
+  if (rate >= 70) return '#f97316'
+  return '#ffbc00'
+}
+
+// ===== 소비 구성 (가로 스택 바) =====
+// 요약 API가 이미 상위 5개 + 나머지로 정리해서 주기 때문에 그대로 사용
 const CHART_COLORS = ['#127f5f', '#fc9558', '#ffd239', '#e8512b', '#8ecae6']
 const REMAINDER_COLOR = '#ced4da'
-const RADIUS = 50
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 const donutSegments = computed(() => {
-  const slices = summary.categories.map((cat, i) => ({
-    label: cat.categoryName,
-    amount: cat.amount,
-    color: CHART_COLORS[i % CHART_COLORS.length],
-  }))
+  const slices = summary.categories.map((cat, i) => {
+    const target = goalMap.value[cat.categoryId] ?? null
+    const rate =
+      target && target > 0 ? Math.min(Math.round((cat.amount / target) * 100), 100) : null
+    return {
+      categoryId: cat.categoryId,
+      label: cat.categoryName,
+      amount: cat.amount,
+      color: CHART_COLORS[i % CHART_COLORS.length],
+      target,
+      rate,
+    }
+  })
+
   if (summary.remainder && summary.remainder.amount > 0) {
-    slices.push({ label: summary.remainder.label, amount: summary.remainder.amount, color: REMAINDER_COLOR })
+    slices.push({
+      categoryId: null,
+      label: summary.remainder.label,
+      amount: summary.remainder.amount,
+      color: REMAINDER_COLOR,
+      target: null,
+      rate: null,
+    })
   }
 
-  let cumulative = 0
-  return slices.map((slice) => {
-    const ratio = summary.totalAmount > 0 ? slice.amount / summary.totalAmount : 0
-    const length = ratio * CIRCUMFERENCE
-    const segment = { ...slice, ratio, length, offset: -cumulative }
-    cumulative += length
-    return segment
+  return slices.map((slice) => ({
+    ...slice,
+    ratio: summary.totalAmount > 0 ? slice.amount / summary.totalAmount : 0,
+  }))
+})
+
+// 목표만 보기: 상위5 제한 없는 allMonthAmountByCategory 기준이라 순위 밖 카테고리도 정확히 나옴
+const goalOnlySegments = computed(() => {
+  return goals.value.map((g, i) => {
+    const amount = allMonthAmountByCategory.value[g.categoryId] || 0
+    const rate =
+      g.targetAmount > 0 ? Math.min(Math.round((amount / g.targetAmount) * 100), 100) : null
+    const catInfo = allCategories.value.find((c) => c.categoryId === g.categoryId)
+    return {
+      categoryId: g.categoryId,
+      label: catInfo?.name || '카테고리',
+      amount,
+      color: CHART_COLORS[i % CHART_COLORS.length],
+      target: g.targetAmount,
+      rate,
+      ratio: summary.totalAmount > 0 ? amount / summary.totalAmount : 0,
+    }
   })
 })
+
+// 체크하면 목표 설정한 카테고리만 소비구성에 표시
+const showGoalOnly = ref(false)
+const displaySegments = computed(() =>
+  showGoalOnly.value ? goalOnlySegments.value : donutSegments.value,
+)
 
 // ===== 카테고리 변경 바텀시트 =====
 const editingTxn = ref(null) // 지금 카테고리를 바꾸려는 거래 (없으면 시트 닫힘)
@@ -240,7 +319,7 @@ const chooseCategory = async (categoryId) => {
   try {
     await transactionApi.updateCategory(editingTxn.value.txnId, userId.value, categoryId)
     closeCategorySheet()
-    await Promise.all([loadSummary(), loadList()]) // 카테고리 바뀌었으니 요약/목록 다시 불러옴
+    await Promise.all([loadSummary(), loadList(), loadAllMonthAmounts()]) // 카테고리 바뀌었으니 요약/목록/전체합계 다시 불러옴
   } catch (e) {
     console.error('카테고리 수정 실패', e)
     alert('카테고리 수정에 실패했어요. (수입/고정비 거래는 수정할 수 없어요)')
@@ -269,62 +348,86 @@ const chooseCategory = async (categoryId) => {
       </button>
     </div>
 
-    <!-- 소비 구성 (Top5 + 나머지, 도넛 차트) -->
+    <!-- 소비 구성 (Top5 + 나머지, 가로 스택 바) -->
     <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
       <div class="card-body">
-        <h2 class="h6 text-secondary mb-3 fw-bold">소비 구성</h2>
-        <div class="d-flex align-items-center gap-4">
-          <div class="position-relative flex-shrink-0" style="width: 120px; height: 120px">
-            <svg width="120" height="120" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="50" fill="none" stroke="#f0f0f0" stroke-width="16" />
-              <circle
-                v-for="seg in donutSegments"
-                :key="seg.label"
-                cx="60"
-                cy="60"
-                r="50"
-                fill="none"
-                :stroke="seg.color"
-                stroke-width="16"
-                :stroke-dasharray="`${seg.length} ${CIRCUMFERENCE - seg.length}`"
-                :stroke-dashoffset="seg.offset"
-                transform="rotate(-90 60 60)"
-              />
-            </svg>
-            <div
-              class="position-absolute top-50 start-50 translate-middle text-center"
-              style="width: 90px"
-            >
-              <div class="small text-secondary">총 지출</div>
-              <div class="fw-bold small">{{ formatAmount(summary.totalAmount) }}</div>
-            </div>
-          </div>
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <h2 class="h6 text-secondary mb-0 fw-bold">소비 구성</h2>
+          <button
+            type="button"
+            class="goal-only-btn"
+            :class="{ active: showGoalOnly }"
+            @click="showGoalOnly = !showGoalOnly"
+          >
+            <i
+              class="fa-solid"
+              :class="showGoalOnly ? 'fa-check' : 'fa-filter'"
+            ></i>
+            목표만 보기
+          </button>
+        </div>
+        <div class="fw-bold mb-2" style="font-size: 1.3rem">
+          {{ formatAmount(summary.totalAmount) }}
+        </div>
 
-          <div class="flex-grow-1">
-            <div
-              v-for="seg in donutSegments"
-              :key="seg.label"
-              class="d-flex justify-content-between align-items-center small mb-2"
+        <!-- 카테고리 비율을 색깔별로 이어붙인 막대 -->
+        <div class="stack-bar mb-3">
+          <div
+            v-for="seg in displaySegments"
+            :key="seg.label"
+            class="stack-seg"
+            :style="{ width: seg.ratio * 100 + '%', backgroundColor: seg.color }"
+          ></div>
+        </div>
+
+        <div class="flex-grow-1">
+          <div
+            v-for="seg in displaySegments"
+            :key="seg.label"
+            class="legend-row"
             >
-              <span class="fw-semibold">
-                <span
-                  class="me-1"
-                  :style="{
-                    display: 'inline-block',
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: seg.color,
-                  }"
-                ></span>
-                {{ seg.label }}
-              </span>
-              <span class="fw-semibold">{{ formatAmount(seg.amount) }}</span>
+              <div class="d-flex justify-content-between align-items-center small">
+                <span class="fw-semibold">
+                  <span
+                    class="me-1"
+                    :style="{
+                      display: 'inline-block',
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: seg.color,
+                    }"
+                  ></span>
+                  {{ seg.label }}
+                </span>
+                <span class="fw-semibold">{{ formatAmount(seg.amount) }}</span>
+              </div>
+
+              <!-- 목표가 실제로 설정된 카테고리만 진행률 바 표시. 없으면 문구만, 빈 바 트랙 안 그림 -->
+              <template v-if="seg.categoryId">
+                <template v-if="seg.target">
+                  <div class="legend-bar-bg mt-1">
+                    <div
+                      class="legend-bar"
+                      :style="{ width: (seg.rate ?? 0) + '%', backgroundColor: barColor(seg.rate) }"
+                    ></div>
+                  </div>
+                  <span class="legend-target">
+                    목표 {{ formatAmount(seg.target) }} · {{ seg.rate }}% 사용
+                  </span>
+                </template>
+                <span v-else class="legend-target no-goal">목표 미설정</span>
+              </template>
             </div>
           </div>
+          <p
+            v-if="showGoalOnly && displaySegments.length === 0"
+            class="text-secondary small mb-0"
+          >
+            목표를 설정한 카테고리가 없어요.
+          </p>
         </div>
       </div>
-    </div>
 
     <!-- 카테고리 필터칩: 전체 + 13개 (목표 설정한 카테고리가 앞쪽), 한 줄 + 가로 슬라이드 -->
     <div class="position-relative mb-4">
@@ -448,6 +551,66 @@ const chooseCategory = async (categoryId) => {
 </template>
 
 <style scoped>
+/* 소비 구성 - 가로 스택 바 (도넛 대체) */
+.stack-bar {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #f1f2f4;
+}
+.stack-seg {
+  height: 100%;
+}
+.goal-only-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 600;
+}
+.goal-only-btn i {
+  font-size: 10px;
+}
+.goal-only-btn.active {
+  border: 2px solid #ffd239;
+  background: #fffbea;
+  color: #111;
+}
+
+/* 목표 대비 진행률 (기존 카테고리별 지출 화면에서 가져옴) */
+.legend-row {
+  margin-bottom: 10px;
+}
+.legend-row:last-child {
+  margin-bottom: 0;
+}
+.legend-bar-bg {
+  height: 5px;
+  border-radius: 999px;
+  background: #f1f2f4;
+  overflow: hidden;
+}
+.legend-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.legend-target {
+  font-size: 11px;
+  color: #9ca3af;
+}
+.legend-target.no-goal {
+  color: #d1d5db;
+}
+
 /* 필터칩 가로 슬라이드 - 넘치는 칩은 좌우로 스와이프, 스크롤바는 안 보이게 */
 .chip-scroll {
   overflow-x: auto;

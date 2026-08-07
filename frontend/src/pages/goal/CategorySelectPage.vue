@@ -68,14 +68,14 @@ const goNext = () => {
 
     <h1 class="title">
       선택한 카테고리로<br />
-      <span class="highlight">예산을 관리해요</span>
+      <span class="highlight">지출을 관리해요</span>
     </h1>
     <p class="subtitle">
       {{ isEditMode ? '수정할 카테고리를 다시 선택해 주세요' : '관리할 카테고리를 선택해 주세요' }}
     </p>
 
     <div class="section-head">
-      <span class="section-title">예산 카테고리 선택</span>
+      <span class="section-title">지출 카테고리 선택</span>
       <button class="clear-btn" @click="clearAll">선택해제</button>
     </div>
 
