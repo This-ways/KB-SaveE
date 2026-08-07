@@ -40,8 +40,14 @@ const goBack = () => {
   router.back();
 };
 
+// KB 링크로 해둠
 const handleSubscribe = () => {
-  alert(`${product.value?.productName} 가입 신청 페이지로 이동합니다.`);
+  // alert(`${product.value?.productName} 가입 신청 페이지로 이동합니다.`);
+
+  const kbUrl = 'https://obank.kbstar.com/quics?page=C016613#loading';
+
+  // 새 탭에서 열기 (권장)
+  window.open(kbUrl, '_blank');
 };
 </script>
 
