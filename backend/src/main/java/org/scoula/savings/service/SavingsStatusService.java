@@ -109,6 +109,7 @@ public class SavingsStatusService {
 
         return SavingsStatusResDTO.builder()
                 .productName(sub.getProductName())
+                .productId(sub.getProductId())
                 .saveType(sub.getUserSaveType())
                 .companyName(getCompanyName(sub.getCompanyCode()))
                 .appliedRate(sub.getAppliedRate().doubleValue())

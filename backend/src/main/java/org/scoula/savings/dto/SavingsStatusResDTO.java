@@ -1,15 +1,18 @@
 package org.scoula.savings.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
+
 import java.time.LocalDate;
 import java.util.List;
 
-@Data
+@Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class SavingsStatusResDTO {
     // 1. 상단 카드 (기본 정보)
     private String productName;      // 상품명 (ex: KB스타적금III)
+    private Long productId;
     private String saveType;         // 적립방식 (ex: 자유적립식)
     private String companyName;      // 은행명 (ex: KB국민은행)
     private double appliedRate;      // 적용 금리

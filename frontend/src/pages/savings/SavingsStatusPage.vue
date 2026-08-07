@@ -55,12 +55,19 @@ const getMaxPaymentAmount = () => {
   return max > 0 ? max : 100000;
 };
 
-// 상품 상세 / 해지 페이지 이동 (추후 구현 시 연결)
+// 상품 상세 / 해지 페이지 이동
+
 const goToDetail = () => {
-  if (statusData.value?.productId) {
-    router.push(`/savings/products/${statusData.value.productId}`);
+  const pId = statusData.value?.productId || statusData.value?.savingsProductId;
+
+  if (pId) {
+    // from=status 쿼리 파라미터 추가
+    router.push({
+      path: `/savings/products/${pId}`,
+      query: { from: 'status' },
+    });
   } else {
-    alert('상품 상세 정보 준비 중입니다.');
+    alert('상품 상세 정보를 불러올 수 없습니다.');
   }
 };
 
