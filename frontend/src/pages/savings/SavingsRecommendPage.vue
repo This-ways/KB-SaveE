@@ -140,6 +140,13 @@ const addAmount = (val) => {
 };
 
 const fetchRecommendations = async (shouldPushQuery = true) => {
+  // 0원 이하 입력 방어 (0원 이하일 경우 백엔드 API 요청 안 함)
+  if (!monthlyAmount.value || monthlyAmount.value <= 0) {
+    alert('월 납입액은 1원 이상 입력해 주세요.');
+    step.value = 2; // step 2 화면 유지
+    return;
+  }
+
   try {
     loading.value = true;
     if (shouldPushQuery) {
@@ -160,12 +167,13 @@ const fetchRecommendations = async (shouldPushQuery = true) => {
     }
   } catch (error) {
     console.error('적금 추천 목록 조회 실패:', error);
-    alert('추천 적금을 불러오는 중 오류가 발생했습니다.');
+    // 조회 실패 시 목록을 비우고 500 에러 대신 빈 결과 표시
+    recommendedList.value = [];
+    displayList.value = [];
   } finally {
     loading.value = false;
   }
 };
-
 const selectFilter = async (filterType) => {
   activeFilter.value = filterType;
 
@@ -417,6 +425,31 @@ const goToDetail = (productId) => {
         적금 상품을 불러오는 중입니다...
       </div>
 
+      <!--  추천 상품이 0개일 때 (Empty State UI) -->
+      <div
+        v-else-if="displayList.length === 0"
+        class="d-flex flex-column align-items-center justify-content-center py-5 my-3"
+      >
+        <div
+          class="bg-light rounded-circle p-3 mb-3 d-flex align-items-center justify-content-center"
+          style="width: 70px; height: 70px"
+        >
+          <i class="fa-solid fa-triangle-exclamation text-secondary fs-3"></i>
+        </div>
+        <h6 class="fw-bold text-dark mb-1">조건에 맞는 적금 상품이 없어요</h6>
+        <p class="text-secondary micro-text text-center mb-4">
+          월 납입액이나 목표 기간을 변경해서<br />다시 추천받아 보세요.
+        </p>
+        <button
+          type="button"
+          class="btn btn-warning fw-bold px-4 py-2 rounded-4 text-dark micro-text"
+          @click="updateQueryParams(2)"
+        >
+          조건 다시 설정하기
+        </button>
+      </div>
+
+      <!--  추천 상품이 1개 이상 있을 때 (아코디언 리스트) -->
       <div v-else class="d-flex flex-column gap-3">
         <div
           v-for="(product, idx) in displayList"
