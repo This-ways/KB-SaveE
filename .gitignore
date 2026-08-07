@@ -40,7 +40,7 @@ application-*.yml
 db.properties
 *.pem
 *.key
-firebase-adminsdk-*.json
+firebase-*-*.json
 .env
 .env.local
 .env.*.local
