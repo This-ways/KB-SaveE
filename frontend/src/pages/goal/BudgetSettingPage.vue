@@ -91,8 +91,8 @@ const save = async () => {
         targetAmount: Number(it.targetAmount),
       }))
     );
-    // 최초 설정이면 완료 축하 화면, 수정이면 원래 보던 지출 현황으로
-    router.push(isEditMode ? '/goal/spending' : '/goal/complete');
+    // 최초 설정이면 완료 축하 화면, 수정이면 홈으로
+    router.push(isEditMode ? '/home' : '/goal/complete');
   } catch (e) {
     const msg = e?.response?.data || '저장에 실패했어요.';
     alert(msg);
