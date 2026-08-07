@@ -14,7 +14,7 @@ const authStore = useAuthStore();
 //  URL Query에서 step, monthlyAmount, saveTerm 복원 (상세페이지 다녀와도 유지되도록)
 const step = ref(Number(route.query.step) || 1);
 const saveAmount = ref(0);
-const monthlyAmount = ref(Number(route.query.monthlyAmount) || 0);
+const monthlyAmount = ref(0);
 const saveTerm = ref(Number(route.query.saveTerm) || 12);
 
 const yearMonth = ref(moment().format('YYYY-MM'));
@@ -33,6 +33,18 @@ const updateQueryParams = (newStep) => {
     },
   });
 };
+
+const formattedMonthlyAmount = computed({
+  get() {
+    if (!monthlyAmount.value && monthlyAmount.value !== 0) return '';
+    return monthlyAmount.value.toLocaleString('ko-KR');
+  },
+  set(newValue) {
+    // 입력값에서 숫자가 아닌 모든 문자(콤마 등)를 제거 후 숫자로 변환
+    const numericValue = String(newValue).replace(/[^0-9]/g, '');
+    monthlyAmount.value = numericValue ? Number(numericValue) : 0;
+  },
+});
 
 // 브라우저 백/포워드 시 쿼리 변경 감지하여 화면 복원
 watch(
@@ -257,8 +269,8 @@ const goToDetail = (productId) => {
           세이브 금액을 계산하는 중입니다...
         </span>
         <span v-else class="small text-dark fw-semibold">
-          지금까지 모은 세이브 {{ saveAmount.toLocaleString() }}원으로 시작할 수
-          있는 적금이 있어요
+          현재 남아있는 {{ saveAmount.toLocaleString() }}원으로 시작할 수 있는
+          적금이 있어요
         </span>
       </div>
     </div>
@@ -269,7 +281,7 @@ const goToDetail = (productId) => {
         class="bg-warning bg-opacity-10 p-3 rounded-4 d-flex justify-content-between align-items-center"
       >
         <div>
-          <div class="micro-text text-secondary mb-1">이번 달 모은 세이브</div>
+          <div class="micro-text text-secondary mb-1">현재 납입 가능 금액</div>
           <div class="fw-bold text-warning h5 mb-0">
             {{ saveAmount.toLocaleString() }}원
           </div>
@@ -280,8 +292,9 @@ const goToDetail = (productId) => {
         <label class="form-label text-secondary small">월 납입액</label>
         <div class="position-relative mb-3">
           <input
-            v-model.number="monthlyAmount"
-            type="number"
+            v-model="formattedMonthlyAmount"
+            type="text"
+            inputmode="numeric"
             class="form-control form-control-lg border-0 border-bottom rounded-0 px-0 fw-bold fs-2 text-end pe-4"
             placeholder="0"
           />
@@ -302,7 +315,7 @@ const goToDetail = (productId) => {
               "
               @click="addAmount('ALL')"
             >
-              세이브 전액
+              잔액 전액
             </button>
           </div>
           <div class="col-3">
