@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/auth';
 import { getCategoryStyle } from '@/constants/categories';
 import logoImg from '@/assets/SaveE_logo.png';
 import SideMenu from '@/components/SideMenu.vue';
+import NotificationBanner from '@/components/notification/NotificationBanner.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -206,6 +207,8 @@ const goToSavingsSubscribe = () => {
         </button>
       </div>
     </div>
+
+    <NotificationBanner />
 
     <template v-if="summary">
       <!-- 카테고리별 지출 + 남은 돈 (하나의 카드로 통합: 이만큼 썼다 -> 그래서 이만큼 남았다) -->

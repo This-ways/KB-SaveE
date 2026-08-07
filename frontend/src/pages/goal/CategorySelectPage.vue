@@ -44,9 +44,9 @@ const clearAll = () => (selectedIds.value = []);
 
 const canProceed = computed(() => selectedIds.value.length > 0);
 
-// 수정 모드면 지출 현황으로, 최초 설정이면 자산 연결 화면으로
+// 수정 모드면 홈으로, 최초 설정이면 자산 연결 화면으로
 const goBack = () =>
-  router.push(isEditMode ? '/goal/spending' : '/mydata/connect');
+  router.push(isEditMode ? '/home' : '/mydata/connect');
 
 const goNext = () => {
   if (!canProceed.value) return;
