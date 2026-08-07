@@ -22,8 +22,6 @@ const yearMonth = ref(moment().format('YYYY-MM'));
 const summary = ref(null); // { totalAmount, categories: [...], remainder }
 const goalBudgets = ref([]); // [{ categoryId, categoryName, targetAmount, actualAmount }]
 const mySubscription = ref(null); // null이면 미가입 (또는 아직 로딩 전)
-// TODO: 실제 계산 로직 연결 전까지 0원 하드코딩 (이번 달 절약분 기반 적금 가능 금액)
-const availableSaveAmount = ref(0);
 
 const formatAmount = (amount) => amount.toLocaleString('ko-KR') + '원';
 
@@ -70,6 +68,10 @@ const totalBudget = computed(() =>
     0,
   ),
 );
+
+// 목표를 넘겨서 남은 돈이 마이너스면 적금에 넣을 돈이 없는 상태 -> 0원으로 표시, 카드도 빨간색으로
+const isOverBudget = computed(() => totalBudget.value < 0);
+const savableAmount = computed(() => Math.max(totalBudget.value, 0));
 
 const loadGoalBudget = async () => {
   try {
@@ -158,10 +160,6 @@ const goToMyPage = () => router.push({ name: 'mypage' });
 
 // 햄버거 메뉴(서랍) 열림 상태
 const menuOpen = ref(false);
-// TODO: 적금 가입 화면 아직 없음 - 생기면 라우팅 연결
-const goToSavingsSubscribe = () => {
-  console.log('TODO: 적금 가입 화면 라우팅 (C팀 담당)');
-};
 </script>
 
 <template>
@@ -208,6 +206,7 @@ const goToSavingsSubscribe = () => {
       </div>
     </div>
 
+    <!-- 알림 배너 - 예산 경고 및 카테고리 수정 기간 안내 -->
     <NotificationBanner />
 
     <template v-if="summary">
@@ -320,19 +319,27 @@ const goToSavingsSubscribe = () => {
     </template>
 
     <!-- 내 적금 -->
-    <div class="savable-card mb-3">
-      <div class="d-flex justify-content-between align-items-start">
-        <div class="savable-label">지금 적금에 넣을 수 있는 금액</div>
-        <span class="savable-icon">🪙</span>
+    <div class="savable-card mb-3" :class="{ over: isOverBudget }">
+      <div class="savable-label">
+        {{ isOverBudget ? '이번 달 목표를 넘었어요' : '이번 달 목표를 지키면' }}
       </div>
-      <div class="savable-amount">{{ formatAmount(availableSaveAmount) }}</div>
-      <div class="savable-sub">이번 달 배달·카페 절약으로 모은 세이브</div>
+      <div class="savable-amount">
+        {{ formatAmount(savableAmount) }} 적금에 넣을 수 있어요
+      </div>
+      <div class="savable-sub">
+        {{
+          isOverBudget
+            ? '목표를 넘겨서 이번 달은 적금에 넣을 돈이 없어요'
+            : '선택한 카테고리 목표 대비 절약 가능 금액'
+        }}
+      </div>
       <button
         type="button"
         class="savable-btn"
-        @click="goToSavingsSubscribe"
+        :class="{ over: isOverBudget }"
+        @click="goToSavings"
       >
-        내 적금에 넣고 만기 채우기 →
+        {{ mySubscription ? '내 적금 현황 보러 가기' : '적금 추천 받으러 가기' }} →
       </button>
     </div>
 
@@ -438,14 +445,13 @@ const goToSavingsSubscribe = () => {
   border-radius: 16px;
   padding: 16px;
 }
+.savable-card.over {
+  background: linear-gradient(135deg, #fdecea, #fbd9d5);
+}
 .savable-label {
   font-size: 13px;
   font-weight: 600;
   color: #1f7a4d;
-}
-.savable-icon {
-  font-size: 22px;
-  line-height: 1;
 }
 .savable-amount {
   font-size: 1.6rem;
@@ -457,6 +463,15 @@ const goToSavingsSubscribe = () => {
   font-size: 12px;
   color: #4b8a68;
   margin-bottom: 14px;
+}
+.savable-card.over .savable-label {
+  color: #c0392b;
+}
+.savable-card.over .savable-amount {
+  color: #a5241a;
+}
+.savable-card.over .savable-sub {
+  color: #c0645c;
 }
 .savable-btn {
   width: 100%;
@@ -470,5 +485,11 @@ const goToSavingsSubscribe = () => {
 }
 .savable-btn:hover {
   background: #185f3c;
+}
+.savable-btn.over {
+  background: #c0392b;
+}
+.savable-btn.over:hover {
+  background: #a5241a;
 }
 </style>
