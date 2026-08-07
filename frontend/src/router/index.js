@@ -6,6 +6,7 @@ import reportRoutes from './report';
 import HomePage from '../pages/HomePage.vue';
 import savingsRoutes from './savings';
 import notificationRoutes from './notification';
+import mypageRoutes from './mypage';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +29,7 @@ const router = createRouter({
     ...reportRoutes,
     ...savingsRoutes,
     ...notificationRoutes,
+    ...mypageRoutes,
   ],
 });
 
