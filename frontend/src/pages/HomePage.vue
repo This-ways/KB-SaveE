@@ -337,9 +337,14 @@ const menuOpen = ref(false);
         type="button"
         class="savable-btn"
         :class="{ over: isOverBudget }"
+        :disabled="isOverBudget"
         @click="goToSavings"
       >
-        {{ mySubscription ? '내 적금 현황 보러 가기' : '적금 추천 받으러 가기' }} →
+        {{
+          isOverBudget
+            ? '남은 세이브 금액이 없어요'
+            : (mySubscription ? '내 적금 현황 보러 가기 →' : '적금 추천 받으러 가기 →')
+        }}
       </button>
     </div>
 
@@ -487,9 +492,10 @@ const menuOpen = ref(false);
   background: #185f3c;
 }
 .savable-btn.over {
-  background: #c0392b;
+  background: #d9a29c;
+  cursor: not-allowed;
 }
-.savable-btn.over:hover {
-  background: #a5241a;
+.savable-btn:disabled:hover {
+  background: #d9a29c;
 }
 </style>
