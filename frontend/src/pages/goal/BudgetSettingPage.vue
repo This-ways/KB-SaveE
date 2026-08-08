@@ -17,7 +17,9 @@ const selectedIds = (route.query.ids || '')
 const isEditMode = route.query.mode === 'edit';
 
 // 백엔드 정책과 동일 - 매달 1~7일에만 저장 가능
-const canEdit = moment().date() <= 7;
+// 단, 신규 가입자의 최초 설정(회원가입 -> 계좌연결 -> 카테고리 선택 흐름, mode=edit 아님)은
+// 날짜와 무관하게 항상 허용한다. 안 그러면 8일 이후 가입한 사람은 온보딩을 완주할 수 없다.
+const canEdit = !isEditMode || moment().date() <= 7;
 
 const items = ref([]);
 const loading = ref(true);
