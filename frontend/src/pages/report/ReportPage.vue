@@ -6,9 +6,19 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const goHome = () => router.push({ name: 'home' })
-
 const authStore = useAuthStore()
+
+// 마이데이터 미연결 상태(온보딩 이탈 등)에서 뒤로가기를 누르면
+// 어중간하게 앱 안에 남기지 않고 로그아웃 후 로그인 화면으로 완전히 빠져나가게 한다.
+const goHome = () => {
+  if (!authStore.isMydataConnected) {
+    authStore.logout()
+    router.push('/auth/login')
+    return
+  }
+  router.push({ name: 'home' })
+}
+
 const userId = computed(() => authStore.userId)
 
 const yearMonth = ref(moment().format('YYYY-MM'))
