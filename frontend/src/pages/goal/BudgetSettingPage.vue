@@ -4,9 +4,11 @@ import { useRoute, useRouter } from 'vue-router';
 import moment from 'moment';
 import goalApi from '@/api/goalApi';
 import { getCategoryStyle } from '@/constants/categories';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
 
 const selectedIds = (route.query.ids || '')
   .split(',')
@@ -93,6 +95,7 @@ const save = async () => {
         targetAmount: Number(it.targetAmount),
       }))
     );
+    auth.setHasGoals(); // 온보딩 완료(목표 설정 끝) - 다음 로그인부터 /home으로 바로 가게
     // 최초 설정이면 완료 축하 화면, 수정이면 홈으로
     router.push(isEditMode ? '/home' : '/goal/complete');
   } catch (e) {
@@ -104,6 +107,13 @@ const save = async () => {
 };
 
 const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
+
+// 입력창에 숫자만 남기고(콤마·문자 제거), 실제 값은 숫자로 저장 -> 화면엔 formatMoney로 다시 콤마 붙여서 보여줌
+const onAmountInput = (item, event) => {
+  const digitsOnly = event.target.value.replace(/[^\d]/g, '');
+  item.targetAmount = digitsOnly ? Number(digitsOnly) : 0;
+  event.target.value = formatMoney(item.targetAmount);
+};
 </script>
 
 <template>
@@ -145,11 +155,10 @@ const formatMoney = (n) => (n ? Number(n).toLocaleString() : '0');
 
           <div class="input-box">
             <input
-              v-model="item.targetAmount"
-              type="number"
-              min="0"
-              step="10000"
+              :value="formatMoney(item.targetAmount)"
+              type="text"
               inputmode="numeric"
+              @input="onAmountInput(item, $event)"
             />
             <span class="won">원</span>
           </div>

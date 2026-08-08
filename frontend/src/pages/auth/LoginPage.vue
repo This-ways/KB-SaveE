@@ -24,11 +24,14 @@ const doLogin = async () => {
   try {
     await auth.login(form.value);
 
-    // 마이데이터 연결 여부로 진입 화면 분기
-    if (auth.isMydataConnected) {
-      router.push('/home'); // 이미 자산 연결된 기존 사용자는 메인으로
-    } else {
+    // 로그인 라우팅 분기: 계좌 미연결 -> 계좌연결부터, 계좌는 연결했지만 목표 설정을
+    // 한 번도 안 끝냈으면(온보딩 중간 이탈) -> 카테고리 선택부터 이어서, 둘 다 끝났으면 -> 메인
+    if (!auth.isMydataConnected) {
       router.push('/mydata/connect');
+    } else if (!auth.hasGoals) {
+      router.push('/goal/category');
+    } else {
+      router.push('/home');
     }
   } catch (e) {
     error.value = '아이디 또는 비밀번호가 일치하지 않습니다.';
