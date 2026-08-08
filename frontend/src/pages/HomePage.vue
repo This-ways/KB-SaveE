@@ -194,7 +194,7 @@ const menuOpen = ref(false);
             style="color: #495057; font-size: 18px"
           ></i>
         </button>
-        <!-- TODO: 메뉴/마이페이지 (다른 팀원 담당), 지금은 자리만 -->
+
         <button
           type="button"
           class="btn p-0 border-0 bg-transparent"
