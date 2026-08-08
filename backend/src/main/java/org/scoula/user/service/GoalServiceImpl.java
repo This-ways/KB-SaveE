@@ -35,15 +35,30 @@ public class GoalServiceImpl implements GoalService {
     @Override
     @Transactional
     public GoalResponseDTO save(Long userId, GoalRequestDTO dto) {
+        // 단건 저장 API - "처음인지"를 이 호출 시점 기준으로 판단
+        boolean isFirstTimeSetup = goalMapper.countAllByUser(userId) == 0;
+        return save(userId, dto, isFirstTimeSetup);
+    }
+
+    /**
+     * isFirstTimeSetup을 외부(saveAll)에서 미리 계산해 넘겨받는 내부용 버전.
+     * saveAll에서 카테고리마다 이 메서드를 반복 호출하는데, 매번 새로 countAllByUser를 조회하면
+     * 첫 카테고리가 저장된 순간 "처음"이 아니게 되어버려서 두 번째 카테고리부터 다시 1~7일 제한에
+     * 걸리는 버그가 있었다. 그래서 배치 시작 전에 딱 한 번만 판단한 값을 그대로 써야 한다.
+     */
+    private GoalResponseDTO save(Long userId, GoalRequestDTO dto, boolean isFirstTimeSetup) {
         String yearMonth = (dto.getYearMonth() == null || dto.getYearMonth().isBlank())
                 ? clockService.currentYearMonth().toString()
                 : dto.getYearMonth();
 
         // 팀 확정 규칙: 카테고리별 목표는 해당 월 1~7일에만 설정/수정 가능
+        // 단, 이 사용자가 지금까지 목표를 한 번도 설정한 적 없으면(=신규 가입자 최초 설정)
+        // 날짜와 무관하게 허용한다. 안 그러면 8일 이후 가입한 신규 사용자는
+        // 회원가입 -> 계좌연결 -> 카테고리 선택 온보딩 흐름 자체를 완주할 수 없다.
         if (!yearMonth.equals(clockService.currentYearMonth().toString())) {
             throw new IllegalStateException("이번 달 목표만 설정할 수 있습니다.");
         }
-        if (!clockService.isWithinGoalEditWindow()) {
+        if (!isFirstTimeSetup && !clockService.isWithinGoalEditWindow()) {
             throw new IllegalStateException("목표 설정은 매달 1~7일에만 가능합니다.");
         }
 
@@ -76,9 +91,14 @@ public class GoalServiceImpl implements GoalService {
     @Override
     @Transactional
     public List<GoalResponseDTO> saveAll(Long userId, List<GoalRequestDTO> dtos) {
+        // "처음인지"는 배치 전체를 시작하기 전에 딱 한 번만 판단해서, 카테고리 여러 개를
+        // 저장하는 동안 값이 중간에 바뀌지 않게 고정한다 (버그: 카테고리별로 매번 새로 판단하면
+        // 첫 카테고리 저장 직후부터 "처음"이 아니게 되어 두 번째 카테고리부터 다시 막혔었음).
+        boolean isFirstTimeSetup = goalMapper.countAllByUser(userId) == 0;
+
         // 하나의 트랜잭션으로 묶어서 저장 - 중간에 하나라도 실패(중복 카테고리, 기간 위반 등)하면 전체 롤백
         List<GoalResponseDTO> saved = dtos.stream()
-                .map(dto -> save(userId, dto))
+                .map(dto -> save(userId, dto, isFirstTimeSetup))
                 .collect(Collectors.toList());
 
         // 이 화면은 "이번 달 목표 전체를 다시 제출"하는 구조라, 이번에 빠진 카테고리는 해제된 것으로 보고 삭제한다.

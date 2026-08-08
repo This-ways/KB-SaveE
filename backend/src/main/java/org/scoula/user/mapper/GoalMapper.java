@@ -28,4 +28,10 @@ public interface GoalMapper {
     int deleteNotIn(@Param("userId") Long userId,
                     @Param("yearMonth") String yearMonth,
                     @Param("categoryIds") List<Long> categoryIds);
+
+    /**
+     * 이 사용자가 지금까지 (어느 달이든) 목표를 한 번이라도 설정한 적 있는지 확인.
+     * 0이면 진짜 최초 가입자 -> 1~7일 제한을 적용하지 않는다.
+     */
+    int countAllByUser(@Param("userId") Long userId);
 }
