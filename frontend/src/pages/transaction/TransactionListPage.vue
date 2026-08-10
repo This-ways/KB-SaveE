@@ -66,6 +66,11 @@ const CATEGORY_COLORS = {
 }
 const colorOf = (name) => CATEGORY_COLORS[name] || '#127f5f'
 
+// 더보기 관련 상태 - loadList()가 마운트 시 곧바로(동기적으로) 호출되므로
+// loadList보다 반드시 앞에서 선언해야 함 (TDZ 에러로 loadList 전체가 조용히 죽는 버그가 있었음)
+const INITIAL_TXN_LIMIT = 10
+const showAllTransactions = ref(false)
+
 // ===== 데이터 로딩 =====
 const loadSummary = async () => {
   try {
@@ -79,13 +84,23 @@ const loadSummary = async () => {
 }
 
 const loadList = async () => {
-  showAllTransactions.value = false // 목록을 새로 불러올 땐 항상 10건부터 다시 시작
   try {
+    showAllTransactions.value = false // 목록을 새로 불러올 땐 항상 10건부터 다시 시작
     if (selectedCategoryIds.value.length === 0) {
       transactions.value = await transactionApi.getList({
         userId: userId.value,
         yearMonth: yearMonth.value,
       })
+      // 목표만 보기 정확도용 전체 합계도 여기서 같이 계산 (동일 API를 별도로 또 호출하지 않음 -
+      // loadAllMonthAmounts와 완전히 같은 요청을 동시에 두 번 날리면 레이스 컨디션으로
+      // 초기 진입 시 목록이 빈 배열로 보이는 문제가 있었음)
+      const map = {}
+      transactions.value.forEach((t) => {
+        if (t.categoryId) {
+          map[t.categoryId] = (map[t.categoryId] || 0) + t.amount
+        }
+      })
+      allMonthAmountByCategory.value = map
       return
     }
     const results = await Promise.all(
@@ -97,6 +112,8 @@ const loadList = async () => {
       if (a.txnDate !== b.txnDate) return a.txnDate < b.txnDate ? 1 : -1
       return b.txnId - a.txnId // 같은 날짜면 항상 이 기준(등록순)으로 고정 - 카테고리 클릭 순서와 무관하게 안정적
     })
+    // 카테고리 필터가 걸려있을 땐 전체 합계를 위해 필터 없는 전체 목록을 별도로 조회
+    await loadAllMonthAmounts()
   } catch (e) {
     console.error('거래내역 조회 실패', e)
   }
@@ -143,13 +160,9 @@ const loadGoalCategoryIds = async () => {
 }
 
 const load = async () => {
-  await Promise.all([
-    loadSummary(),
-    loadList(),
-    loadCategories(),
-    loadGoalCategoryIds(),
-    loadAllMonthAmounts(),
-  ])
+  // loadList()가 필터 없는 상태(초기 진입 시 항상 그러함)에서는
+  // allMonthAmountByCategory도 같이 채워주므로 여기서 별도로 또 부르지 않음
+  await Promise.all([loadSummary(), loadList(), loadCategories(), loadGoalCategoryIds()])
 }
 load()
 
@@ -212,9 +225,6 @@ const groupedByDate = computed(() => {
 })
 
 // ===== 더보기 (초기 10건만 표시) =====
-const INITIAL_TXN_LIMIT = 10
-const showAllTransactions = ref(false)
-
 const visibleGroupedByDate = computed(() => {
   if (showAllTransactions.value) return groupedByDate.value
 
@@ -348,7 +358,7 @@ const chooseCategory = async (categoryId) => {
   try {
     await transactionApi.updateCategory(editingTxn.value.txnId, userId.value, categoryId)
     closeCategorySheet()
-    await Promise.all([loadSummary(), loadList(), loadAllMonthAmounts()]) // 카테고리 바뀌었으니 요약/목록/전체합계 다시 불러옴
+    await Promise.all([loadSummary(), loadList()]) // 카테고리 바뀌었으니 요약/목록 다시 불러옴 (전체합계는 loadList 안에서 같이 처리됨)
   } catch (e) {
     console.error('카테고리 수정 실패', e)
     alert('카테고리 수정에 실패했어요. (수입/고정비 거래는 수정할 수 없어요)')
