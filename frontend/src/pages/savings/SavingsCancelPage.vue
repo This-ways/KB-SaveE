@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
 
@@ -14,6 +14,16 @@ const step = ref(1);
 const loading = ref(true);
 const cancelling = ref(false);
 const previewData = ref(null);
+
+const isMaturityCancel = computed(() => {
+  if (!previewData.value) return false;
+
+  const type = previewData.value.cancelType || '';
+  const label = previewData.value.rateLabel || '';
+
+  // cancelType이 '중도해지'가 아니거나, 텍스트에 '만기'가 들어가면 표 노출
+  return type.includes('만기') || label.includes('만기') || type !== '중도해지';
+});
 
 //  해지 명세서 데이터 조회
 const fetchCancelPreview = async () => {
@@ -108,20 +118,35 @@ onMounted(() => {
           </div>
 
           <!-- 세전 이자 -->
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="text-secondary detail-text">
-              {{
-                previewData?.rateLabel ||
-                (previewData?.cancelType === '만기해지'
-                  ? '약정 이율'
-                  : '중도해지 이율')
-              }}
-              <span v-if="previewData?.appliedCancelRate !== undefined">
-                (연 {{ previewData?.appliedCancelRate }}%)
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex flex-column">
+              <span class="text-secondary detail-text">
+                {{
+                  previewData?.rateLabel ||
+                  (isMaturityCancel ? '약정 이율' : '중도해지 이율')
+                }}
+                <span v-if="previewData?.appliedCancelRate !== undefined">
+                  (연 {{ previewData?.appliedCancelRate }}%)
+                </span>
+                세전이자
               </span>
-              세전이자
-            </span>
-            <span class="fw-bold detail-text text-dark">
+
+              <!-- 만기 후 이율 적용 시 약정이율 기반 산출식 안내 문구 추가 -->
+              <span
+                v-if="
+                  previewData?.cancelType?.includes('만기후') ||
+                  previewData?.rateLabel?.includes('만기 후')
+                "
+                class="text-primary micro-text mt-0-5"
+                style="font-size: 11px"
+              >
+                * 약정이율({{
+                  previewData?.baseRate || previewData?.appliedRate || '2.50'
+                }}%) × 만기후 경과기간율
+              </span>
+            </div>
+
+            <span class="fw-bold detail-text text-dark ms-2 text-nowrap">
               {{ previewData?.preTaxInterest?.toLocaleString() }}원
             </span>
           </div>
@@ -150,7 +175,7 @@ onMounted(() => {
       </div>
 
       <!-- 만기해지 시 표출되는 만기 후 방치 시 적용 이율 표 -->
-      <div v-if="previewData?.cancelType === '만기해지'" class="mt-2">
+      <div v-if="isMaturityCancel" class="mt-2">
         <h6 class="fw-bold text-secondary mb-2 table-title-text">
           만기 후 방치 시 적용 이율
         </h6>
