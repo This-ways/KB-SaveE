@@ -164,6 +164,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.PUT, "/api/board/**").authenticated()
                 .antMatchers(HttpMethod.DELETE, "/api/board/**").authenticated()
                 .antMatchers("/api/users/mydata/**").authenticated()
+                .antMatchers("/api/auth/logout").authenticated() // 로그아웃은 본인 인증 필요 (userId를 principal에서 꺼내야 함)
                 .antMatchers("/api/goals/**").authenticated()
                 .antMatchers("/api/deposit-account/**").authenticated()
                 .antMatchers("/api/savings/products").permitAll()   // 상품 카탈로그는 로그인 없이도 조회 가능해야 하니 먼저 명시

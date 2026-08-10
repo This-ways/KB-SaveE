@@ -28,9 +28,9 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private AuthResultDTO makeAuthResult(CustomUser user) {
         String loginId = user.getUsername();
-        // 토큰 생성
-        String token = jwtProcessor.generateToken(loginId);
         boolean hasGoals = goalMapper.countAllByUser(user.getUserVO().getUserId()) > 0;
+        // 토큰 생성 - 로그인 시점의 tokenVersion을 같이 심어서 발급 (로그아웃 무효화 판단 기준)
+        String token = jwtProcessor.generateToken(loginId, user.getUserVO().getTokenVersion());
         // 토큰 + 사용자 기본 정보(joinMonth, isTrial, hasGoals 포함)를 묶어서 AuthResultDTO 구성
         return new AuthResultDTO(token, UserInfoDTO.of(user.getUserVO(), clockService.currentYearMonth(), hasGoals));
     }

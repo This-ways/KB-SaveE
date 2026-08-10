@@ -48,6 +48,16 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   const logout = () => {
+    // 서버에도 로그아웃을 알려서 token_version을 올려야, 다른 탭/기기에 남아있는 토큰도
+    // 만료 전에 즉시 무효 처리된다. state를 지우기 전에 토큰을 직접 헤더에 실어서 보내야 함
+    // (여기서 쓰는 axios는 인터셉터 없는 순수 인스턴스라 토큰을 자동으로 안 붙여줌 - login()과 동일 패턴).
+    // 실패해도(네트워크 문제 등) 로컬 로그아웃 자체는 그대로 진행한다.
+    const token = state.value.token;
+    if (token) {
+      axios
+        .post('/api/auth/logout', null, { headers: { Authorization: `Bearer ${token}` } })
+        .catch((e) => console.warn('로그아웃 서버 반영 실패 (로컬 로그아웃은 정상 진행)', e));
+    }
     localStorage.removeItem('auth'); // 온보딩 봤음 플래그는 남겨둬야 하므로 clear() 대신 removeItem
     state.value = { ...initState };
   };
