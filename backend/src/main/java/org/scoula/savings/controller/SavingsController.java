@@ -134,6 +134,22 @@ public class SavingsController {
         return ResponseEntity.ok(response);
     }
 
+    private final SavingsAdditionalPaymentService savingsAdditionalPaymentService;
+    //추가납입
+    @PostMapping("/{subscriptionId}/deposit")
+    public ResponseEntity<DepositResDTO> processDeposit(
+            @AuthenticationPrincipal CustomUser user,
+            @PathVariable Long subscriptionId,
+            @RequestBody DepositReqDTO req) {
+
+        DepositResDTO response = savingsAdditionalPaymentService.processDeposit(
+                user.getUserId(),
+                subscriptionId,
+                req
+        );
+        return ResponseEntity.ok(response);
+    }
+
 
 }
 
