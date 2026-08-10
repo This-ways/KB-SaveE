@@ -386,39 +386,51 @@ const onAmountChange = () => {
 
       <!-- 입력 폼 -->
       <div class="d-flex flex-column gap-3 mb-4">
-        <!-- 1. 적립방식 선택 (하나만 지원할 경우 disabled 처리) -->
+        <!-- 1. 적립방식 선택 (버튼 방식) -->
         <div>
-          <label class="form-label small text-secondary">적립방식</label>
-          <select
-            v-model="saveType"
-            class="form-select rounded-3 fw-bold"
-            :disabled="!isSaveTypeSelectable"
+          <label class="form-label small text-secondary d-block mb-2"
+            >적립방식</label
           >
-            <option
+          <div class="d-flex gap-2">
+            <button
               v-for="type in availableSaveTypes"
               :key="type"
-              :value="type"
+              type="button"
+              class="btn flex-fill py-2-5 fw-bold rounded-3 transition-all"
+              :class="
+                saveType === type
+                  ? 'btn-warning text-dark border-warning'
+                  : 'btn-outline-secondary text-secondary border-light-subtle bg-light'
+              "
+              :disabled="!isSaveTypeSelectable"
+              @click="saveType = type"
             >
               {{ type }}
-            </option>
-          </select>
+            </button>
+          </div>
         </div>
 
-        <!-- 2. 가입기간 선택 (해당 상품이 지원하는 기간만 동적 노출) -->
+        <!-- 2. 가입기간 선택 (버튼 방식) -->
         <div>
-          <label class="form-label small text-secondary">가입기간</label>
-          <select
-            v-model.number="saveTerm"
-            class="form-select rounded-3 fw-bold"
+          <label class="form-label small text-secondary d-block mb-2"
+            >가입기간</label
           >
-            <option
-              v-for="rate in rateList"
-              :key="rate.saveTerm"
-              :value="rate.saveTerm"
-            >
-              {{ rate.saveTerm }}개월
-            </option>
-          </select>
+          <div class="row g-2">
+            <div v-for="rate in rateList" :key="rate.saveTerm" class="col">
+              <button
+                type="button"
+                class="btn w-100 py-2-5 fw-bold rounded-3 transition-all text-nowrap"
+                :class="
+                  saveTerm === rate.saveTerm
+                    ? 'btn-warning text-dark border-warning'
+                    : 'btn-outline-secondary text-secondary border-light-subtle bg-light'
+                "
+                @click="saveTerm = rate.saveTerm"
+              >
+                {{ rate.saveTerm }}개월
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 3. 가입금액 입력 -->
@@ -663,7 +675,8 @@ const onAmountChange = () => {
           <span class="text-primary">{{
             formatDateKorean(resultData?.endDate)
           }}</span
-          >까지 함께해요!
+          >까지 <br />
+          함께해요!
         </h4>
       </div>
 

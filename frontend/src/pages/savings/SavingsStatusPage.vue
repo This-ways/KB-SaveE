@@ -72,11 +72,16 @@ const goToDetail = () => {
 };
 
 const goToCancel = () => {
-  //alert('해지 예상 명세서 확인 페이지 준비 중입니다.');
-  const kbUrl = 'https://obank.kbstar.com/quics?page=C016613#loading';
+  const sid =
+    statusData.value?.subscriptionId ||
+    statusData.value?.id ||
+    route.params.subscriptionId;
 
-  // 새 탭에서 열기 (권장)
-  window.open(kbUrl, '_blank');
+  if (sid) {
+    router.push(`/savings/${sid}/cancel`);
+  } else {
+    alert('적금 가입 정보(ID)를 찾을 수 없습니다.');
+  }
 };
 </script>
 

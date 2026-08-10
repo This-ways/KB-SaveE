@@ -70,13 +70,27 @@ export default {
     return data;
   },
 
-  // 🟢 1. 적금 가입 정보 확인 API (POST /savings/subscribe/confirm)
+  // 적금 가입 정보 확인 API (POST /savings/subscribe/confirm)
   confirmSubscribe(data) {
     return api.post('/savings/subscribe/confirm', data).then((res) => res.data);
   },
 
-  // 🟢 2. 최종 적금 가입 신청 API (POST /savings/subscribe)
+  // 최종 적금 가입 신청 API (POST /savings/subscribe)
   subscribeSavings(data) {
     return api.post('/savings/subscribe', data).then((res) => res.data);
+  },
+
+  //해지 명세서 조회
+  getCancelPreview(subscriptionId) {
+    return api
+      .get(`/savings/${subscriptionId}/cancel/confirm`)
+      .then((res) => res.data);
+  },
+
+  //실제 해지
+  cancelSubscription(subscriptionId) {
+    return api
+      .post(`/savings/${subscriptionId}/cancel`)
+      .then((res) => res.data);
   },
 };
