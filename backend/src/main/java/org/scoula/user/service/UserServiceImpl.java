@@ -17,6 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private static final int DEFAULT_INITIAL_BALANCE = 1_000_000;
+    private static final int LOGIN_ID_MIN_LENGTH = 4;
+    private static final int LOGIN_ID_MAX_LENGTH = 20; // 네이버(5~20)·카카오(6~20) 등 참고해서 4~20자로 결정
+    private static final int PASSWORD_MIN_LENGTH = 4;
+    private static final int PASSWORD_MAX_LENGTH = 20;
 
     private final UserMapper userMapper;
     private final DepositAccountMapper depositAccountMapper;
@@ -25,8 +29,23 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Long signup(SignupRequestDTO dto) {
+        // 업무 로직 검증: DB에 그대로 밀어넣어서 DB 예외(Data truncation 등)로 터지게 하지 않고,
+        // 여기서 먼저 걸러서 사용자에게 친절한 문구로 응답한다.
+        if (dto.getLoginId() == null || dto.getLoginId().isBlank()) {
+            throw new IllegalStateException("아이디를 입력해 주세요.");
+        }
+        if (dto.getLoginId().length() < LOGIN_ID_MIN_LENGTH || dto.getLoginId().length() > LOGIN_ID_MAX_LENGTH) {
+            throw new IllegalStateException(
+                    "아이디는 " + LOGIN_ID_MIN_LENGTH + "~" + LOGIN_ID_MAX_LENGTH + "자로 입력해 주세요.");
+        }
         if (userMapper.existsByLoginId(dto.getLoginId()) > 0) {
             throw new IllegalStateException("이미 사용 중인 아이디입니다.");
+        }
+        if (dto.getPassword() == null
+                || dto.getPassword().length() < PASSWORD_MIN_LENGTH
+                || dto.getPassword().length() > PASSWORD_MAX_LENGTH) {
+            throw new IllegalStateException(
+                    "비밀번호는 " + PASSWORD_MIN_LENGTH + "~" + PASSWORD_MAX_LENGTH + "자로 입력해 주세요.");
         }
 
         UserVO user = UserVO.builder()

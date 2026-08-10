@@ -24,6 +24,14 @@ const doJoin = async () => {
     error.value = '모든 항목을 입력해 주세요.';
     return;
   }
+  if (form.value.loginId.length < 4 || form.value.loginId.length > 20) {
+    error.value = '아이디는 4~20자로 입력해 주세요.';
+    return;
+  }
+  if (form.value.password.length < 4 || form.value.password.length > 20) {
+    error.value = '비밀번호는 4~20자로 입력해 주세요.';
+    return;
+  }
   if (form.value.password !== form.value.passwordCheck) {
     error.value = '비밀번호가 일치하지 않습니다.';
     return;
@@ -64,17 +72,17 @@ const goLogin = () => router.push('/auth/login');
     <div class="form">
       <label class="field">
         <span class="label">아이디</span>
-        <input v-model="form.loginId" type="text" placeholder="아이디를 입력해 주세요" />
+        <input v-model="form.loginId" type="text" maxlength="20" placeholder="아이디를 입력해 주세요 (4~20자)" />
       </label>
 
       <label class="field">
         <span class="label">비밀번호</span>
-        <input v-model="form.password" type="password" placeholder="비밀번호를 입력해 주세요" />
+        <input v-model="form.password" type="password" maxlength="20" placeholder="비밀번호를 입력해 주세요 (4~20자)" />
       </label>
 
       <label class="field">
         <span class="label">비밀번호 확인</span>
-        <input v-model="form.passwordCheck" type="password" placeholder="비밀번호를 다시 입력해 주세요" />
+        <input v-model="form.passwordCheck" type="password" maxlength="20" placeholder="비밀번호를 다시 입력해 주세요" />
       </label>
 
       <label class="field">

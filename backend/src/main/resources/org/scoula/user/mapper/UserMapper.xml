@@ -21,4 +21,10 @@
         SELECT mydata_connected FROM `user` WHERE user_id = #{userId}
     </select>
 
+    <update id="incrementTokenVersion">
+        UPDATE `user`
+        SET token_version = token_version + 1
+        WHERE user_id = #{userId}
+    </update>
+
 </mapper>

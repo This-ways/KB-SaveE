@@ -138,3 +138,13 @@ Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJtajA1MTciLCJpYXQiOjE3ODU4M
 GET http://localhost:8080/api/notifications?targetMonth=2026-07
 Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJtajA1MTciLCJpYXQiOjE3ODU4MTg0OTksImV4cCI6MTc4NTgyMjA5OX0.7oxlFoi85GU_K-pV4AOlpEgshgkDKLymUyPlwQLwOnshR5Q7ET5hIrlCF2GdhkWj
 
+### 아이디 길이 초과 테스트 (프론트 우회, 백엔드 단독 방어 확인용)
+POST http://localhost:8080/api/users/signup
+Content-Type: application/json
+
+{
+  "loginId": "123456789012345678901234567890",
+  "password": "testpass123",
+  "userName": "테스트",
+  "birthDate": "2000-01-01"
+}

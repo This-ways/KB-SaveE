@@ -50,6 +50,7 @@ CREATE TABLE `user`
     push_enabled     BOOLEAN      NOT NULL DEFAULT TRUE,
     mydata_connected BOOLEAN      NOT NULL DEFAULT FALSE,             -- 마이데이터(계좌/카드) 연결 여부. 신규가입은 기본 미연결
     status           TINYINT      NOT NULL DEFAULT 10,                -- 10 정상 / 20 휴면 / 90 탈퇴
+    token_version    INT          NOT NULL DEFAULT 0,                 -- 로그아웃 시 +1. JWT에 발급 시점 버전을 같이 심어서, 매 요청마다 이 값과 비교해 무효화 처리 (다중 탭/기기 즉시 로그아웃용)
     created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 가입일 = 트라이얼/정식 판별 기준
     updated_at       DATETIME NULL,
     PRIMARY KEY (user_id),

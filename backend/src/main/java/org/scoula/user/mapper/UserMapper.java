@@ -12,4 +12,7 @@ public interface UserMapper {
 
     /** 평균 지출 계산 전, 연결 여부 확인용 */
     boolean findMydataConnected(@Param("userId") Long userId);
+
+    /** 로그아웃 시 호출 - 이 값을 올리면 그 이전에 발급된 모든 토큰(다른 탭·기기 포함)이 다음 요청부터 무효 처리됨 */
+    int incrementTokenVersion(@Param("userId") Long userId);
 }
