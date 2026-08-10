@@ -26,4 +26,9 @@ export default [
     name: 'savings-subscribe',
     component: () => import('../pages/savings/SavingsSubscribePage.vue'),
   },
+  {
+    path: '/savings/:subscriptionId/cancel',
+    name: 'SavingsCancel',
+    component: () => import('../pages/savings/SavingsCancelPage.vue'),
+  },
 ];
