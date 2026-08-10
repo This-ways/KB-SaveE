@@ -41,7 +41,20 @@ const goBack = () => {
 };
 
 const handleSubscribe = () => {
-  alert(`${product.value?.productName} 가입 신청 페이지로 이동합니다.`);
+  // route.query에서 값을 가져오고 없으면 안전하게 0 / 12로 기본값 설정
+  const mAmount = route.query.monthlyAmount
+    ? Number(route.query.monthlyAmount)
+    : 0;
+  const sTerm = route.query.saveTerm ? Number(route.query.saveTerm) : 12;
+
+  router.push({
+    path: `/savings/subscribe/${productId}`,
+    query: {
+      monthlyAmount: mAmount,
+      saveTerm: sTerm,
+      saveType: product.value?.productType || '자유적립식',
+    },
+  });
 };
 </script>
 

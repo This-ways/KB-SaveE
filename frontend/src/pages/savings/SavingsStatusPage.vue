@@ -72,7 +72,16 @@ const goToDetail = () => {
 };
 
 const goToCancel = () => {
-  alert('해지 예상 명세서 확인 페이지 준비 중입니다.');
+  const sid =
+    statusData.value?.subscriptionId ||
+    statusData.value?.id ||
+    route.params.subscriptionId;
+
+  if (sid) {
+    router.push(`/savings/${sid}/cancel`);
+  } else {
+    alert('적금 가입 정보(ID)를 찾을 수 없습니다.');
+  }
 };
 </script>
 
@@ -91,7 +100,6 @@ const goToCancel = () => {
         <i class="fa-solid fa-chevron-left fs-5"></i>
         <h5 class="fw-bold mb-0">적금 현황</h5>
       </div>
-      <i class="fa-regular fa-bell fs-5 text-secondary"></i>
     </div>
 
     <!-- 로딩 상태 -->

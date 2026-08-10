@@ -21,4 +21,14 @@ export default [
     component: () => import('../pages/savings/SavingsDetailPage.vue'),
     props: true,
   },
+  {
+    path: '/savings/subscribe/:productId',
+    name: 'savings-subscribe',
+    component: () => import('../pages/savings/SavingsSubscribePage.vue'),
+  },
+  {
+    path: '/savings/:subscriptionId/cancel',
+    name: 'SavingsCancel',
+    component: () => import('../pages/savings/SavingsCancelPage.vue'),
+  },
 ];
