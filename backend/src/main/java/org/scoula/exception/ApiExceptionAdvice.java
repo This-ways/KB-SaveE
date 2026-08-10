@@ -40,12 +40,16 @@ public class ApiExceptionAdvice {
                 .header("Content-Type", "text/plain;charset=UTF-8")
                 .body(e.getMessage());
     }
-    // 500 에러
-    @ExceptionHandler(Exception.class) protected ResponseEntity<String> handleException(Exception e) {
+    // 500 에러 - 예상 못한 시스템/통신 장애만 여기로 옴 (업무 로직 에러는 위에서 이미 처리됨)
+    // 스택트레이스/DB 예외 메시지 등 개발자용 상세 정보는 로그로만 남기고, 클라이언트에는
+    // 절대 노출하지 않는다 (SQL 문법, 컬럼명, 예외 클래스명 등이 그대로 나가면 보안상 위험함)
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<String> handleException(Exception e) {
+        log.error("처리되지 않은 서버 오류", e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .header("Content-Type", "text/plain;charset=UTF-8")
-                .body(e.getMessage());
+                .body("일시적인 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
     }
 
 }
