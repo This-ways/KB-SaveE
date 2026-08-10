@@ -8,4 +8,7 @@ public interface UserService {
 
     /** "계좌/카드 연결" 버튼 - 마이데이터 연결 상태를 true로 전환 (시연용 플래그) */
     void connectMydata(Long userId);
+
+    /** 아이디 중복확인 버튼 - 사용 가능하면 true. 형식(4~20자) 검증도 여기서 같이 함 */
+    boolean isLoginIdAvailable(String loginId);
 }

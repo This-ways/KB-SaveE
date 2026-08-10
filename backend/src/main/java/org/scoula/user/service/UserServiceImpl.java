@@ -74,4 +74,14 @@ public class UserServiceImpl implements UserService {
         userMapper.updateMydataConnected(userId, true);
         log.debug("마이데이터 연결 처리 완료 userId={}", userId);
     }
+
+    @Override
+    public boolean isLoginIdAvailable(String loginId) {
+        if (loginId == null
+                || loginId.length() < LOGIN_ID_MIN_LENGTH
+                || loginId.length() > LOGIN_ID_MAX_LENGTH) {
+            return false; // 형식부터 안 맞으면 굳이 DB까지 안 가고 바로 사용불가로 응답
+        }
+        return userMapper.existsByLoginId(loginId) == 0;
+    }
 }
