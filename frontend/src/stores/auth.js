@@ -14,6 +14,7 @@ const initState = {
     joinMonth: '', // 가입월 "YYYY-MM"
     trial: false, // 가입월 == 현재월이면 트라이얼
     mydataConnected: false, // 마이데이터(계좌/카드) 연결 여부
+    hasGoals: false, // 목표(카테고리/예산)를 한 번이라도 설정한 적 있는지 - 온보딩 완료 여부 판단용
   },
 };
 
@@ -35,6 +36,10 @@ export const useAuthStore = defineStore('auth', () => {
   // false -> "데이터를 연결해 주세요" 화면부터
   const isMydataConnected = computed(() => state.value.user.mydataConnected);
 
+  // 계좌는 연결했지만(mydataConnected=true) 카테고리/예산 설정을 아직 한 번도 안 끝냈으면
+  // "온보딩 중간에 이탈한" 상태 - 로그인 라우팅에서 /home이 아니라 /goal/category로 보내야 함
+  const hasGoals = computed(() => state.value.user.hasGoals);
+
   const login = async (member) => {
     // member = { username, password }  (백엔드 필터가 username 필드명을 사용)
     const { data } = await axios.post('/api/auth/login', member);
@@ -55,6 +60,12 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('auth', JSON.stringify(state.value));
   };
 
+  // 카테고리/예산 설정(온보딩) 완료 후 재로그인 없이 상태만 갱신
+  const setHasGoals = () => {
+    state.value.user.hasGoals = true;
+    localStorage.setItem('auth', JSON.stringify(state.value));
+  };
+
   const load = () => {
     const auth = localStorage.getItem('auth');
     if (auth != null) {
@@ -72,9 +83,11 @@ export const useAuthStore = defineStore('auth', () => {
     userName,
     isTrial,
     isMydataConnected,
+    hasGoals,
     login,
     logout,
     getToken,
     setMydataConnected,
+    setHasGoals,
   };
 });

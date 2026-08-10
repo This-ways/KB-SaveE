@@ -3,9 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import goalApi from '@/api/goalApi';
 import { getCategoryStyle } from '@/constants/categories';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
 
 // 메인(지출 현황)에서 수정하러 들어온 경우 - 저장 후 완료 축하 화면을 건너뜀
 const isEditMode = route.query.mode === 'edit';
@@ -45,8 +47,17 @@ const clearAll = () => (selectedIds.value = []);
 const canProceed = computed(() => selectedIds.value.length > 0);
 
 // 수정 모드면 홈으로, 최초 설정이면 자산 연결 화면으로
-const goBack = () =>
-  router.push(isEditMode ? '/home' : '/mydata/connect');
+// 수정 모드면 홈으로, 최초 설정(온보딩 중)이면 자산 연결 화면으로
+// 단, isEditMode가 아니면(=진짜 최초 온보딩 흐름) 뒤로가기를 눌렀을 때
+// 어중간하게 앱 안에 남기지 않고 로그아웃 후 로그인 화면으로 완전히 빠져나가게 한다.
+const goBack = () => {
+  if (!isEditMode) {
+    auth.logout();
+    router.push('/auth/login');
+    return;
+  }
+  router.push('/home');
+};
 
 const goNext = () => {
   if (!canProceed.value) return;

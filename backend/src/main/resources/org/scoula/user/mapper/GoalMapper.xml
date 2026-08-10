@@ -60,4 +60,11 @@
         </foreach>
     </delete>
 
+    <!-- 이 사용자가 지금까지 목표를 한 번이라도 설정한 적 있는지 (0이면 최초 가입자) -->
+    <select id="countAllByUser" resultType="int">
+        SELECT COUNT(*)
+        FROM `goal`
+        WHERE user_id = #{userId}
+    </select>
+
 </mapper>
