@@ -10,16 +10,10 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-// URL Query에서 step, monthlyAmount, saveTerm 복원
+// 🟢 쿼리 파라미터 숫자 형변환 보장
 const step = ref(Number(route.query.step) || 1);
-const saveAmount = ref(0); // 현재 납입 가능 금액 (이달 잔액)
-
-// 디폴트 월 납입액을 0원으로 설정 (쿼리에 금액 값이 전달된 경우만 해당 값 사용)
-const monthlyAmount = ref(
-  route.query.monthlyAmount !== undefined
-    ? Number(route.query.monthlyAmount)
-    : 0,
-);
+const saveAmount = ref(0);
+const monthlyAmount = ref(Number(route.query.monthlyAmount) || 0);
 const saveTerm = ref(Number(route.query.saveTerm) || 12);
 
 const yearMonth = ref(moment().format('YYYY-MM'));
@@ -39,23 +33,12 @@ const updateQueryParams = (newStep) => {
   });
 };
 
-// 브라우저 백/포워드 시 쿼리 변경 감지
-watch(
-  () => route.query,
-  (query) => {
-    if (query.step) step.value = Number(query.step);
-    if (query.monthlyAmount !== undefined)
-      monthlyAmount.value = Number(query.monthlyAmount);
-    if (query.saveTerm) saveTerm.value = Number(query.saveTerm);
+// 🟢 잔액 초과 여부
+const isExceeded = computed(() => {
+  return monthlyAmount.value > saveAmount.value;
+});
 
-    if (step.value === 3 && recommendedList.value.length === 0) {
-      fetchRecommendations(false);
-    }
-  },
-  { deep: true },
-);
-
-// 소비 리포트 API로부터 '이달 잔액' 조회
+// 🟢 소비 리포트 API로부터 '이달 잔액' 조회
 const fetchSaveAmount = async () => {
   try {
     loadingSaveAmount.value = true;
@@ -72,7 +55,7 @@ const fetchSaveAmount = async () => {
       saveAmount.value = 0;
     }
 
-    // URL 쿼리에 지정된 monthlyAmount가 있다면 해당 값 적용
+    // 쿼리에 지정된 금액이 숫자로 넘어왔다면 해당 값 유지
     if (route.query.monthlyAmount !== undefined) {
       monthlyAmount.value = Number(route.query.monthlyAmount);
     }
@@ -84,7 +67,78 @@ const fetchSaveAmount = async () => {
   }
 };
 
-// 콤마 포맷팅 (0원일 때도 '0'으로 리턴)
+// 🟢 추천 목록 불러오기
+const fetchRecommendations = async (isUserClick = false) => {
+  // 1. 유효성 검사 (0원 이하)
+  if (!monthlyAmount.value || monthlyAmount.value <= 0) {
+    if (isUserClick) {
+      alert('월 납입액은 1원 이상 입력해 주세요.');
+    }
+    step.value = 2;
+    return;
+  }
+
+  // 2. 버튼 직접 클릭시에만 초과 검사 및 경고창 출력
+  if (isUserClick && isExceeded.value) {
+    alert('현재 납입 가능 금액을 초과하여 설정할 수 없습니다.');
+    return;
+  }
+
+  try {
+    loading.value = true;
+    if (isUserClick) {
+      updateQueryParams(3);
+    }
+    activeFilter.value = 'ALL';
+
+    const res = await savingsApi.getRecommendedSavings({
+      monthlyAmount: Number(monthlyAmount.value), // 숫자 변환 명시
+      saveTerm: Number(saveTerm.value),
+    });
+
+    recommendedList.value = res || [];
+    displayList.value = res || [];
+
+    if (displayList.value.length > 0) {
+      expandedProductId.value = displayList.value[0].productId;
+    }
+  } catch (error) {
+    console.error('적금 추천 목록 조회 실패:', error);
+    recommendedList.value = [];
+    displayList.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 🟢 브라우저 백/포워드 및 라우트 변경 감지
+watch(
+  () => route.query,
+  (query) => {
+    if (query.step) step.value = Number(query.step);
+    if (query.monthlyAmount !== undefined)
+      monthlyAmount.value = Number(query.monthlyAmount);
+    if (query.saveTerm) saveTerm.value = Number(query.saveTerm);
+
+    // 상세페이지 다녀온 후 step 3인 상태에서 목록이 없거나 쿼리가 바뀌면 자동 재조회
+    if (step.value === 3) {
+      fetchRecommendations(false);
+    }
+  },
+  { deep: true },
+);
+
+onMounted(async () => {
+  // 예금 잔액 조회 완료를 먼저 기다린 후
+  await fetchSaveAmount();
+
+  // step 3 상태라면 추천 목록 조회
+  if (step.value === 3) {
+    fetchRecommendations(false);
+  }
+});
+
+// 콤마 포맷팅 처리
 const formattedMonthlyAmount = computed({
   get() {
     if (monthlyAmount.value === null || monthlyAmount.value === undefined)
@@ -97,19 +151,11 @@ const formattedMonthlyAmount = computed({
   },
 });
 
-// 숫자만 입력 가능하도록 제어하는 핸들러
 const handleInput = (event) => {
   const cleanValue = event.target.value.replace(/[^0-9]/g, '');
   monthlyAmount.value = cleanValue ? Number(cleanValue) : 0;
   event.target.value = formattedMonthlyAmount.value;
 };
-
-onMounted(() => {
-  fetchSaveAmount();
-  if (step.value === 3) {
-    fetchRecommendations(false);
-  }
-});
 
 const termOptions = [6, 12, 24, 36];
 
@@ -136,56 +182,11 @@ const goBack = () => {
   }
 };
 
-// [잔액 전액] 버튼 클릭 시 saveAmount(잔액)를 그대로 할당
 const addAmount = (val) => {
   if (val === 'ALL') {
     monthlyAmount.value = saveAmount.value;
   } else {
     monthlyAmount.value += val;
-  }
-};
-
-const isExceeded = computed(() => {
-  return monthlyAmount.value > saveAmount.value;
-});
-
-const fetchRecommendations = async (shouldPushQuery = true) => {
-  if (!monthlyAmount.value || monthlyAmount.value <= 0) {
-    alert('월 납입액은 1원 이상 입력해 주세요.');
-    step.value = 2;
-    return;
-  }
-
-  // 잔액 초과 시 진행 막기
-  if (isExceeded.value) {
-    alert('현재 납입 가능 금액을 초과하여 설정할 수 없습니다.');
-    return;
-  }
-
-  try {
-    loading.value = true;
-    if (shouldPushQuery) {
-      updateQueryParams(3);
-    }
-    activeFilter.value = 'ALL';
-
-    const res = await savingsApi.getRecommendedSavings({
-      monthlyAmount: monthlyAmount.value,
-      saveTerm: saveTerm.value,
-    });
-
-    recommendedList.value = res || [];
-    displayList.value = res || [];
-
-    if (displayList.value.length > 0) {
-      expandedProductId.value = displayList.value[0].productId;
-    }
-  } catch (error) {
-    console.error('적금 추천 목록 조회 실패:', error);
-    recommendedList.value = [];
-    displayList.value = [];
-  } finally {
-    loading.value = false;
   }
 };
 
@@ -217,7 +218,13 @@ const selectFilter = async (filterType) => {
 };
 
 const goToDetail = (productId) => {
-  router.push(`/savings/products/${productId}`);
+  router.push({
+    path: `/savings/products/${productId}`,
+    query: {
+      monthlyAmount: monthlyAmount.value,
+      saveTerm: saveTerm.value,
+    },
+  });
 };
 </script>
 

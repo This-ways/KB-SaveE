@@ -24,6 +24,6 @@ export default [
   {
     path: '/savings/subscribe/:productId',
     name: 'savings-subscribe',
-    component: () => import('@/views/savings/SavingsSubscribePage.vue'),
+    component: () => import('../pages/savings/SavingsSubscribePage.vue'),
   },
 ];
