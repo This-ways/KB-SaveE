@@ -130,10 +130,14 @@ watch(
 
 onMounted(async () => {
   // 예금 잔액 조회 완료를 먼저 기다린 후
-  await fetchSaveAmount();
+  await fetchSaveAmount(); // step 3 상태라면 추천 목록 조회
 
-  // step 3 상태라면 추천 목록 조회
   if (step.value === 3) {
+    // 메뉴에서 조건 없이 step=3으로 바로 넘어온 경우, 이번 달 실제 남은 돈을 쓰면
+    // 금액이 너무 커서 조건에 맞는 상품이 안 나올 수 있어 최소 기준액(만원)으로 조회
+    if (route.query.monthlyAmount === undefined) {
+      monthlyAmount.value = 10000;
+    }
     fetchRecommendations(false);
   }
 });
@@ -159,24 +163,6 @@ const handleInput = (event) => {
 
 const termOptions = [6, 12, 24, 36];
 
-<<<<<<< HEAD
-// 메뉴에서 조건 없이 step=3으로 바로 넘어온 경우(예: 이미 적금 가입한 사용자가 "적금 추천"
-// 클릭), 이번 달 실제 남은 돈을 쓰면 금액이 너무 커서 조건에 맞는 상품이 안 나올 수 있어
-// 그냥 고정된 최소 기준액(만원)으로 항상 조회해서 결과를 보여준다.
-const MIN_DEFAULT_AMOUNT = 10000;
-
-onMounted(async () => {
-  await fetchSaveAmount();
-  if (step.value === 3) {
-    if (route.query.monthlyAmount === undefined) {
-      monthlyAmount.value = MIN_DEFAULT_AMOUNT;
-    }
-    fetchRecommendations(false);
-  }
-});
-
-=======
->>>>>>> develop
 const recommendedList = ref([]);
 const displayList = ref([]);
 const activeFilter = ref('ALL');
