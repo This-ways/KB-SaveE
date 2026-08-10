@@ -22,6 +22,7 @@ const yearMonth = ref(moment().format('YYYY-MM'));
 const summary = ref(null); // { totalAmount, categories: [...], remainder }
 const goalBudgets = ref([]); // [{ categoryId, categoryName, targetAmount, actualAmount }]
 const mySubscription = ref(null); // null이면 미가입 (또는 아직 로딩 전)
+const expectedSaving = ref(0); // 이번 달 예상 절약 가능 금액 (2~3달 평균지출 - 목표금액)
 
 const formatAmount = (amount) => amount.toLocaleString('ko-KR') + '원';
 
@@ -57,7 +58,7 @@ const spendCompareText = computed(() => {
   if (!summary.value || lastMonthTotal.value == null) return '';
   const diff = summary.value.totalAmount - lastMonthTotal.value;
   if (diff === 0) return '지난달과 똑같이 썼어요';
-  if (diff < 0) return `지난달보다 ${formatAmount(Math.abs(diff))} 덜 썼어요`;
+  if (diff < 0) return `지난달보다 ${formatAmount(Math.abs(diff))} 덜 쓰는 중이에요`;
   return `지난달보다 ${formatAmount(diff)} 더 썼어요`;
 });
 
@@ -71,7 +72,6 @@ const totalBudget = computed(() =>
 
 // 목표를 넘겨서 남은 돈이 마이너스면 적금에 넣을 돈이 없는 상태 -> 0원으로 표시, 카드도 빨간색으로
 const isOverBudget = computed(() => totalBudget.value < 0);
-const savableAmount = computed(() => Math.max(totalBudget.value, 0));
 
 const loadGoalBudget = async () => {
   try {
@@ -144,11 +144,23 @@ const goToSavings = async () => {
   }
 };
 
+// ===== 이번 달 예상 절약 가능 금액 (2~3달 평균지출 기준, 목표설정 완료화면과 동일 API) =====
+const loadExpectedSaving = async () => {
+  try {
+    const data = await goalApi.getExpectedSaving();
+    expectedSaving.value = data.expectedSaving ?? 0;
+  } catch (e) {
+    console.error('예상 절약 가능 금액 조회 실패', e);
+    expectedSaving.value = 0;
+  }
+};
+
 const loadAll = () => {
   loadSummary();
   loadLastMonthSummary();
   loadGoalBudget();
   loadMySubscription();
+  loadExpectedSaving();
 };
 loadAll();
 
@@ -194,7 +206,7 @@ const menuOpen = ref(false);
             style="color: #495057; font-size: 18px"
           ></i>
         </button>
-        <!-- TODO: 메뉴/마이페이지 (다른 팀원 담당), 지금은 자리만 -->
+
         <button
           type="button"
           class="btn p-0 border-0 bg-transparent"
@@ -209,148 +221,161 @@ const menuOpen = ref(false);
     <!-- 알림 배너 - 예산 경고 및 카테고리 수정 기간 안내 -->
     <NotificationBanner />
 
-    <template v-if="summary">
-      <!-- 카테고리별 지출 + 남은 돈 (하나의 카드로 통합: 이만큼 썼다 -> 그래서 이만큼 남았다) -->
-      <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="fw-semibold">카테고리별 지출</span>
-            <button
-              type="button"
-              class="detail-link-btn"
-              @click="goToCategoryDetail"
-            >
-              지출 상세
-            </button>
-          </div>
+    <!-- 카테고리별 지출 + 남은 돈 (하나의 카드로 통합: 이만큼 썼다 -> 그래서 이만큼 남았다) -->
+    <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="fw-semibold">카테고리별 지출</span>
+        </div>
+        <div
+          v-for="cat in goalBudgets"
+          :key="cat.categoryId"
+          class="d-flex align-items-center gap-2 mb-3"
+        >
           <div
-            v-for="cat in goalBudgets"
-            :key="cat.categoryId"
-            class="d-flex align-items-center gap-2 mb-3"
+            class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+            :style="{
+              width: '32px',
+              height: '32px',
+              backgroundColor: getCategoryStyle(cat.categoryId).color + '22',
+            }"
           >
-            <div
-              class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+            <i
+              class="fa-solid"
+              :class="getCategoryStyle(cat.categoryId).icon"
               :style="{
-                width: '32px',
-                height: '32px',
-                backgroundColor: getCategoryStyle(cat.categoryId).color + '22',
+                color: getCategoryStyle(cat.categoryId).color,
+                fontSize: '13px',
               }"
-            >
-              <i
-                class="fa-solid"
-                :class="getCategoryStyle(cat.categoryId).icon"
+            ></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between small mb-1">
+              <span>{{ cat.categoryName }}</span>
+              <span
+                class="fw-semibold"
                 :style="{
-                  color: getCategoryStyle(cat.categoryId).color,
-                  fontSize: '13px',
+                  color: cat.actualAmount > cat.targetAmount ? '#e8512b' : '',
                 }"
-              ></i>
+              >
+                {{ formatAmount(cat.actualAmount) }} /
+                {{ formatAmount(cat.targetAmount) }}
+              </span>
             </div>
-            <div class="flex-grow-1">
-              <div class="d-flex justify-content-between small mb-1">
-                <span>{{ cat.categoryName }}</span>
-                <span
-                  class="fw-semibold"
-                  :style="{
-                    color: cat.actualAmount > cat.targetAmount ? '#e8512b' : '',
-                  }"
-                >
-                  {{ formatAmount(cat.actualAmount) }} /
-                  {{ formatAmount(cat.targetAmount) }}
-                </span>
-              </div>
-              <div class="progress" style="height: 6px">
-                <div
-                  class="progress-bar"
-                  :style="{
-                    width:
-                      Math.min((cat.actualAmount / cat.targetAmount) * 100, 100) +
-                      '%',
-                    backgroundColor:
-                      cat.actualAmount > cat.targetAmount
-                        ? '#e8512b'
-                        : getCategoryStyle(cat.categoryId).color,
-                  }"
-                ></div>
-              </div>
+            <div class="progress" style="height: 6px">
+              <div
+                class="progress-bar"
+                :style="{
+                  width:
+                    Math.min((cat.actualAmount / cat.targetAmount) * 100, 100) +
+                    '%',
+                  backgroundColor:
+                    cat.actualAmount > cat.targetAmount
+                      ? '#e8512b'
+                      : getCategoryStyle(cat.categoryId).color,
+                }"
+              ></div>
             </div>
           </div>
+        </div>
 
-          <p v-if="goalBudgets.length === 0" class="text-secondary small mb-0">
-            선택한 카테고리가 없어요.
-          </p>
+        <p v-if="goalBudgets.length === 0" class="text-secondary small mb-0">
+          선택한 카테고리가 없어요.
+        </p>
 
-          <hr class="my-2" style="opacity: 0.08" />
+        <hr class="my-2" style="opacity: 0.08" />
 
-          <!-- 남은 돈: 위 리스트에서 이어져서 "그래서 얼마 남았는지"처럼 보이게 -->
-          <div class="d-flex justify-content-between align-items-center mt-2">
-            <span class="text-secondary small">이번 달 남은 돈</span>
-            <span
-              class="h5 fw-bold mb-0"
-              :style="{
-                color: goalBudgets.length > 0 && totalBudget < 0 ? '#e8512b' : '',
-              }"
-            >
-              {{ goalBudgets.length > 0 ? formatAmount(totalBudget) : '-' }}
-            </span>
-          </div>
-          <p
-            v-if="goalBudgets.length === 0"
-            class="text-secondary small mb-0 mt-1"
+        <!-- 남은 돈: 위 리스트에서 이어져서 "그래서 얼마 남았는지"처럼 보이게 -->
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <span class="text-secondary small">이번 달 남은 돈</span>
+          <span
+            class="h5 fw-bold mb-0"
+            :style="{
+              color: goalBudgets.length > 0 && totalBudget < 0 ? '#e8512b' : '',
+            }"
           >
-            설정한 목표가 없어요.
-          </p>
+            {{ goalBudgets.length > 0 ? formatAmount(totalBudget) : '-' }}
+          </span>
         </div>
+        <p
+          v-if="goalBudgets.length === 0"
+          class="text-secondary small mb-0 mt-1"
+        >
+          설정한 목표가 없어요.
+        </p>
       </div>
-
-      <!-- 이번 달 총 지출 (장식용, 클릭 연결 없음) -->
-      <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
-        <div class="card-body">
-          <div class="text-secondary small mb-1">
-            {{ moment(yearMonth, 'YYYY-MM').format('MM') }}월 나의 총 지출
-          </div>
-          <div class="h4 fw-bold mb-0">
-            {{ formatAmount(summary.totalAmount) }}
-          </div>
-          <div v-if="spendCompareText" class="text-secondary small mt-1">
-            {{ spendCompareText }}
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <!-- 내 적금 -->
-    <div class="savable-card mb-3" :class="{ over: isOverBudget }">
-      <div class="savable-label">
-        {{ isOverBudget ? '이번 달 목표를 넘었어요' : '이번 달 목표를 지키면' }}
-      </div>
-      <div class="savable-amount">
-        {{ formatAmount(savableAmount) }} 적금에 넣을 수 있어요
-      </div>
-      <div class="savable-sub">
-        {{
-          isOverBudget
-            ? '목표를 넘겨서 이번 달은 적금에 넣을 돈이 없어요'
-            : '선택한 카테고리 목표 대비 절약 가능 금액'
-        }}
-      </div>
-      <button
-        type="button"
-        class="savable-btn"
-        :class="{ over: isOverBudget }"
-        :disabled="isOverBudget"
-        @click="goToSavings"
-      >
-        {{
-          isOverBudget
-            ? '남은 세이브 금액이 없어요'
-            : (mySubscription ? '내 적금 현황 보러 가기 →' : '적금 추천 받으러 가기 →')
-        }}
-      </button>
     </div>
 
-    <p v-if="!summary" class="text-secondary text-center mt-5">
-      불러오는 중이에요...
-    </p>
+    <!-- 이번 달 총 지출 (장식용, 클릭 연결 없음) -->
+    <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="text-secondary small">
+            {{ moment(yearMonth, 'YYYY-MM').format('MM') }}월 나의 총 지출
+          </span>
+          <button
+            type="button"
+            class="detail-link-btn"
+            @click="goToCategoryDetail"
+          >
+            지출 상세
+          </button>
+        </div>
+        <div class="h4 fw-bold mb-0">
+          {{ summary ? formatAmount(summary.totalAmount) : '-' }}
+        </div>
+        <div v-if="spendCompareText" class="text-secondary small mt-1">
+          {{ spendCompareText }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 이번 달 예상 절약 가능 금액 -->
+    <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+      <div class="card-body">
+        <div class="text-secondary small mb-1">
+          {{ isOverBudget ? '이번 달 목표를 넘었어요' : '이번 달 예상 절약 가능 금액' }}
+        </div>
+        <div class="h4 fw-bold mb-0">
+          {{ formatAmount(expectedSaving) }}
+        </div>
+        <div class="text-secondary small mt-1">적금으로 모아보세요</div>
+        <button
+          v-if="!mySubscription"
+          type="button"
+          class="savable-btn mt-3"
+          :class="{ over: isOverBudget }"
+          :disabled="isOverBudget"
+          @click="goToSavings"
+        >
+          {{ isOverBudget ? '남은 세이브 금액이 없어요' : '적금 추천 받기 →' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 내 적금 -->
+    <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+  <span class="text-secondary small">내 적금</span>
+  <button
+    v-if="mySubscription"
+    type="button"
+    class="detail-link-btn"
+    @click="goToSavings"
+  >
+    적금 상세
+  </button>
+</div>
+        <template v-if="mySubscription">
+          <div class="fw-bold">{{ mySubscription.productName }}</div>
+          <div class="small text-secondary mt-1">
+            누적 납입액 {{ formatAmount(mySubscription.totalPrincipal) }}
+          </div>
+        </template>
+        <p v-else class="text-secondary small mb-0">가입한 적금이 없습니다</p>
+      </div>
+    </div>
 
     <!-- 하단 네비게이션 -->
     <div
@@ -444,53 +469,18 @@ const menuOpen = ref(false);
   background: #f8f9fa;
 }
 
-/* 내 적금 - 적금 가능 금액 프로모 카드 (image 4 참고) */
-.savable-card {
-  background: linear-gradient(135deg, #eafaf0, #d9f2e3);
-  border-radius: 16px;
-  padding: 16px;
-}
-.savable-card.over {
-  background: linear-gradient(135deg, #fdecea, #fbd9d5);
-}
-.savable-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1f7a4d;
-}
-.savable-amount {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #14532d;
-  margin: 6px 0 2px;
-}
-.savable-sub {
-  font-size: 12px;
-  color: #4b8a68;
-  margin-bottom: 14px;
-}
-.savable-card.over .savable-label {
-  color: #c0392b;
-}
-.savable-card.over .savable-amount {
-  color: #a5241a;
-}
-.savable-card.over .savable-sub {
-  color: #c0645c;
-}
 .savable-btn {
   width: 100%;
   border: none;
   border-radius: 12px;
-  background: #1f7a4d;
-  color: #fff;
+  background: #ffd239;
+  color: #212529;
   font-weight: 700;
   font-size: 14px;
   padding: 12px;
 }
 .savable-btn:hover {
-  background: #185f3c;
-}
+  background: #e6bd33;}
 .savable-btn.over {
   background: #d9a29c;
   cursor: not-allowed;

@@ -49,13 +49,20 @@ const loadReport = async () => {
 loadReport()
 
 // ===== 날짜 이동 =====
+const MIN_YEAR_MONTH = '2026-01' // 서비스 데이터가 존재하는 가장 이른 달 - 이보다 이전으로는 못 감
+
 const monthLabel = computed(() => moment(yearMonth.value, 'YYYY-MM').format('YYYY년 MM월'))
 const prevMonthLabel = computed(() => moment(yearMonth.value, 'YYYY-MM').subtract(1, 'months').format('MM월'))
+const isAtMinMonth = computed(() => yearMonth.value === MIN_YEAR_MONTH)
+
 const changeMonth = (diff) => {
   yearMonth.value = moment(yearMonth.value, 'YYYY-MM').add(diff, 'months').format('YYYY-MM')
   loadReport()
 }
-const prevMonth = () => changeMonth(-1)
+const prevMonth = () => {
+  if (isAtMinMonth.value) return
+  changeMonth(-1)
+}
 const nextMonth = () => changeMonth(1)
 
 const formatAmount = (amount) => {
@@ -139,8 +146,8 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
 
     <!-- 날짜 이동 -->
     <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
-      <button type="button" class="btn btn-sm btn-light" @click="prevMonth">
-        <i class="fa-solid fa-chevron-left" style="color: #495057;"></i>
+      <button type="button" class="btn btn-sm btn-light" :disabled="isAtMinMonth" @click="prevMonth">
+        <i class="fa-solid fa-chevron-left" :style="{ color: isAtMinMonth ? '#ced4da' : '#495057' }"></i>
       </button>
       <span class="fw-semibold">{{ monthLabel }}</span>
       <button type="button" class="btn btn-sm btn-light" @click="nextMonth">
