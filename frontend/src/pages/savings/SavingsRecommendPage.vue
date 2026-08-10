@@ -14,7 +14,7 @@ const authStore = useAuthStore();
 const step = ref(Number(route.query.step) || 1);
 const saveAmount = ref(0); // 현재 납입 가능 금액 (이달 잔액)
 
-// 🟢 디폴트 월 납입액을 0원으로 설정 (쿼리에 금액 값이 전달된 경우만 해당 값 사용)
+// 디폴트 월 납입액을 0원으로 설정 (쿼리에 금액 값이 전달된 경우만 해당 값 사용)
 const monthlyAmount = ref(
   route.query.monthlyAmount !== undefined
     ? Number(route.query.monthlyAmount)
@@ -55,7 +55,7 @@ watch(
   { deep: true },
 );
 
-// 🟢 소비 리포트 API로부터 '이달 잔액' 조회
+// 소비 리포트 API로부터 '이달 잔액' 조회
 const fetchSaveAmount = async () => {
   try {
     loadingSaveAmount.value = true;
@@ -84,7 +84,7 @@ const fetchSaveAmount = async () => {
   }
 };
 
-// 🟢 콤마 포맷팅 (0원일 때도 '0'으로 리턴)
+// 콤마 포맷팅 (0원일 때도 '0'으로 리턴)
 const formattedMonthlyAmount = computed({
   get() {
     if (monthlyAmount.value === null || monthlyAmount.value === undefined)
@@ -97,7 +97,7 @@ const formattedMonthlyAmount = computed({
   },
 });
 
-// 🟢 숫자만 입력 가능하도록 제어하는 핸들러
+// 숫자만 입력 가능하도록 제어하는 핸들러
 const handleInput = (event) => {
   const cleanValue = event.target.value.replace(/[^0-9]/g, '');
   monthlyAmount.value = cleanValue ? Number(cleanValue) : 0;
@@ -136,7 +136,7 @@ const goBack = () => {
   }
 };
 
-// 🟢 [잔액 전액] 버튼 클릭 시 saveAmount(잔액)를 그대로 할당
+// [잔액 전액] 버튼 클릭 시 saveAmount(잔액)를 그대로 할당
 const addAmount = (val) => {
   if (val === 'ALL') {
     monthlyAmount.value = saveAmount.value;
@@ -145,10 +145,20 @@ const addAmount = (val) => {
   }
 };
 
+const isExceeded = computed(() => {
+  return monthlyAmount.value > saveAmount.value;
+});
+
 const fetchRecommendations = async (shouldPushQuery = true) => {
   if (!monthlyAmount.value || monthlyAmount.value <= 0) {
     alert('월 납입액은 1원 이상 입력해 주세요.');
     step.value = 2;
+    return;
+  }
+
+  // 잔액 초과 시 진행 막기
+  if (isExceeded.value) {
+    alert('현재 납입 가능 금액을 초과하여 설정할 수 없습니다.');
     return;
   }
 
@@ -290,12 +300,18 @@ const goToDetail = (productId) => {
             type="text"
             inputmode="numeric"
             class="form-control form-control-lg border-0 border-bottom rounded-0 px-0 fw-bold fs-2 text-end pe-4"
+            :class="{ 'text-danger': isExceeded }"
             placeholder="0"
             @input="handleInput"
           />
           <span class="position-absolute end-0 bottom-0 fs-4 fw-bold pb-2"
             >원</span
           >
+        </div>
+
+        <div v-if="isExceeded" class="text-danger micro-text text-end mb-3">
+          현재 납입 가능 금액({{ saveAmount.toLocaleString() }}원)을
+          초과했습니다.
         </div>
 
         <div class="row g-2">
