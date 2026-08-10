@@ -14,6 +14,7 @@ import org.scoula.savings.mapper.SavingsMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -51,13 +52,14 @@ public class SavingsSubscriptionService {
 
         String depositAccountNo = accountMapper.selectAccountNoByUserId(userId);
         LocalDate endDate = LocalDate.now().plusMonths(req.getSaveTerm());
+        BigDecimal finalRate = resolveAppliedRate(req.getAppliedRate(), rate);
 
         return SavingsConfirmResDTO.builder()
                 .productName(product.getProductName())
                 .saveTerm(req.getSaveTerm())
                 .endDate(endDate)
                 .depositAmount(req.getDepositAmount())
-                .appliedRate(rate.getMaxRate())
+                .appliedRate(finalRate)
                 .saveType(finalSaveType)
                 .depositAccountNo(depositAccountNo)
                 .paymentDay(req.getPaymentDay())
@@ -104,6 +106,7 @@ public class SavingsSubscriptionService {
         int endDateInt = convertLocalDateToInt(endLocalDate);
 
         String savingsAccountNo = generateRandomAccount();
+        BigDecimal finalRate = resolveAppliedRate(req.getAppliedRate(), rate);
 
         SubscriptionVO subscription = SubscriptionVO.builder()
                 .depositId(depositId)
@@ -112,7 +115,7 @@ public class SavingsSubscriptionService {
                 .startDate(startDateInt)
                 .endDate(endDateInt)
                 .accountNo(savingsAccountNo)
-                .appliedRate(rate.getMaxRate())
+                .appliedRate(finalRate)
                 .monthlyAmount(req.getDepositAmount())
                 .userSaveTerm(req.getSaveTerm())
                 .userSaveType(finalSaveType)
@@ -138,13 +141,21 @@ public class SavingsSubscriptionService {
                 .endDate(endLocalDate)
                 .productName(product.getProductName())
                 .depositAmount(req.getDepositAmount())
-                .appliedRate(rate.getMaxRate())
+                .appliedRate(finalRate)
                 .baseRate(rate.getMinRate())
                 .savingsAccountNo(savingsAccountNo)
                 .paymentDay(req.getPaymentDay())
                 .autoTransferAmount(req.getAutoTransferAmount())
                 .startDate(startLocalDate)
                 .build();
+    }
+
+    private BigDecimal resolveAppliedRate(BigDecimal requestedRate, SavingsRateVO rateVO) {
+        if (requestedRate != null && requestedRate.compareTo(BigDecimal.ZERO) > 0) {
+            return requestedRate;
+        }
+        // 요청된 금리가 없으면 해당 기간의 최고금리를 기본값으로 바인딩
+        return rateVO.getMaxRate();
     }
 
     private String determineSaveType(String dbProductType, String requestedType) {

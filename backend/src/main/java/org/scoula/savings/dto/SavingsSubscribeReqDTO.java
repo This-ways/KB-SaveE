@@ -3,6 +3,8 @@ package org.scoula.savings.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter @Setter
 public class SavingsSubscribeReqDTO {
     //private Long userId;             // 사용자 ID
@@ -12,4 +14,5 @@ public class SavingsSubscribeReqDTO {
     private Integer depositAmount;   // 가입금액 (초기/월 납입액)
     private Integer paymentDay;      // 자동이체일 (매월 OO일)
     private Integer autoTransferAmount; // 자동이체금액
+    private BigDecimal appliedRate;     // 적용금리
 }
