@@ -58,7 +58,7 @@ const spendCompareText = computed(() => {
   if (!summary.value || lastMonthTotal.value == null) return '';
   const diff = summary.value.totalAmount - lastMonthTotal.value;
   if (diff === 0) return '지난달과 똑같이 썼어요';
-  if (diff < 0) return `지난달보다 ${formatAmount(Math.abs(diff))} 덜 썼어요`;
+  if (diff < 0) return `지난달보다 ${formatAmount(Math.abs(diff))} 덜 쓰는 중이에요`;
   return `지난달보다 ${formatAmount(diff)} 더 썼어요`;
 });
 
@@ -226,13 +226,6 @@ const menuOpen = ref(false);
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <span class="fw-semibold">카테고리별 지출</span>
-          <button
-            type="button"
-            class="detail-link-btn"
-            @click="goToCategoryDetail"
-          >
-            지출 상세
-          </button>
         </div>
         <div
           v-for="cat in goalBudgets"
@@ -316,8 +309,17 @@ const menuOpen = ref(false);
     <!-- 이번 달 총 지출 (장식용, 클릭 연결 없음) -->
     <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
       <div class="card-body">
-        <div class="text-secondary small mb-1">
-          {{ moment(yearMonth, 'YYYY-MM').format('MM') }}월 나의 총 지출
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="text-secondary small">
+            {{ moment(yearMonth, 'YYYY-MM').format('MM') }}월 나의 총 지출
+          </span>
+          <button
+            type="button"
+            class="detail-link-btn"
+            @click="goToCategoryDetail"
+          >
+            지출 상세
+          </button>
         </div>
         <div class="h4 fw-bold mb-0">
           {{ summary ? formatAmount(summary.totalAmount) : '-' }}
@@ -329,33 +331,42 @@ const menuOpen = ref(false);
     </div>
 
     <!-- 이번 달 예상 절약 가능 금액 -->
-    <div class="savable-card mb-3" :class="{ over: isOverBudget }">
-      <div class="savable-label">
-        {{ isOverBudget ? '이번 달 목표를 넘었어요' : '이번 달 목표를 지키면' }}
+    <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+      <div class="card-body">
+        <div class="text-secondary small mb-1">
+          {{ isOverBudget ? '이번 달 목표를 넘었어요' : '이번 달 예상 절약 가능 금액' }}
+        </div>
+        <div class="h4 fw-bold mb-0">
+          {{ formatAmount(expectedSaving) }}
+        </div>
+        <div class="text-secondary small mt-1">적금으로 모아보세요</div>
+        <button
+          v-if="!mySubscription"
+          type="button"
+          class="savable-btn mt-3"
+          :class="{ over: isOverBudget }"
+          :disabled="isOverBudget"
+          @click="goToSavings"
+        >
+          {{ isOverBudget ? '남은 세이브 금액이 없어요' : '적금 추천 받기 →' }}
+        </button>
       </div>
-      <div class="savable-amount">
-        {{ formatAmount(expectedSaving) }} 적금에 넣을 수 있어요
-      </div>
-      <button
-        v-if="!mySubscription"
-        type="button"
-        class="savable-btn"
-        :class="{ over: isOverBudget }"
-        :disabled="isOverBudget"
-        @click="goToSavings"
-      >
-        {{ isOverBudget ? '남은 세이브 금액이 없어요' : '적금 추천 받으러 가기 →' }}
-      </button>
     </div>
 
     <!-- 내 적금 -->
-    <div
-      class="card mb-3 border-0 shadow-sm rounded-4 bg-white"
-      :style="mySubscription ? 'cursor: pointer' : ''"
-      @click="mySubscription && goToSavings()"
-    >
+    <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
       <div class="card-body">
-        <div class="text-secondary small mb-1">내 적금</div>
+        <div class="d-flex justify-content-between align-items-center mb-1">
+  <span class="text-secondary small">내 적금</span>
+  <button
+    v-if="mySubscription"
+    type="button"
+    class="detail-link-btn"
+    @click="goToSavings"
+  >
+    적금 상세
+  </button>
+</div>
         <template v-if="mySubscription">
           <div class="fw-bold">{{ mySubscription.productName }}</div>
           <div class="small text-secondary mt-1">
@@ -458,53 +469,18 @@ const menuOpen = ref(false);
   background: #f8f9fa;
 }
 
-/* 내 적금 - 적금 가능 금액 프로모 카드 (image 4 참고) */
-.savable-card {
-  background: linear-gradient(135deg, #eafaf0, #d9f2e3);
-  border-radius: 16px;
-  padding: 16px;
-}
-.savable-card.over {
-  background: linear-gradient(135deg, #fdecea, #fbd9d5);
-}
-.savable-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1f7a4d;
-}
-.savable-amount {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #14532d;
-  margin: 6px 0 2px;
-}
-.savable-sub {
-  font-size: 12px;
-  color: #4b8a68;
-  margin-bottom: 14px;
-}
-.savable-card.over .savable-label {
-  color: #c0392b;
-}
-.savable-card.over .savable-amount {
-  color: #a5241a;
-}
-.savable-card.over .savable-sub {
-  color: #c0645c;
-}
 .savable-btn {
   width: 100%;
   border: none;
   border-radius: 12px;
-  background: #1f7a4d;
-  color: #fff;
+  background: #ffd239;
+  color: #212529;
   font-weight: 700;
   font-size: 14px;
   padding: 12px;
 }
 .savable-btn:hover {
-  background: #185f3c;
-}
+  background: #e6bd33;}
 .savable-btn.over {
   background: #d9a29c;
   cursor: not-allowed;
