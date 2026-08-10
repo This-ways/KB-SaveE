@@ -79,6 +79,7 @@ const loadSummary = async () => {
 }
 
 const loadList = async () => {
+  showAllTransactions.value = false // 목록을 새로 불러올 땐 항상 10건부터 다시 시작
   try {
     if (selectedCategoryIds.value.length === 0) {
       transactions.value = await transactionApi.getList({
@@ -153,13 +154,19 @@ const load = async () => {
 load()
 
 // ===== 날짜 이동 =====
+const MIN_YEAR_MONTH = '2026-01' // 서비스 데이터가 존재하는 가장 이른 달 - 이보다 이전으로는 못 감
+
 const monthLabel = computed(() => moment(yearMonth.value, 'YYYY-MM').format('YYYY년 MM월'))
+const isAtMinMonth = computed(() => yearMonth.value === MIN_YEAR_MONTH)
 
 const changeMonth = (diff) => {
   yearMonth.value = moment(yearMonth.value, 'YYYY-MM').add(diff, 'months').format('YYYY-MM')
   load()
 }
-const prevMonth = () => changeMonth(-1)
+const prevMonth = () => {
+  if (isAtMinMonth.value) return
+  changeMonth(-1)
+}
 const nextMonth = () => changeMonth(1)
 
 // ===== 필터칩 =====
@@ -203,6 +210,28 @@ const groupedByDate = computed(() => {
       items: groups[date],
     }))
 })
+
+// ===== 더보기 (초기 10건만 표시) =====
+const INITIAL_TXN_LIMIT = 10
+const showAllTransactions = ref(false)
+
+const visibleGroupedByDate = computed(() => {
+  if (showAllTransactions.value) return groupedByDate.value
+
+  const result = []
+  let count = 0
+  for (const group of groupedByDate.value) {
+    if (count >= INITIAL_TXN_LIMIT) break
+    const items = group.items.slice(0, INITIAL_TXN_LIMIT - count)
+    result.push({ ...group, items })
+    count += items.length
+  }
+  return result
+})
+
+const hasMoreTransactions = computed(
+  () => !showAllTransactions.value && transactions.value.length > INITIAL_TXN_LIMIT,
+)
 
 const formatAmount = (amount) => amount.toLocaleString('ko-KR') + '원'
 
@@ -339,8 +368,8 @@ const chooseCategory = async (categoryId) => {
 
     <!-- 날짜 이동 -->
     <div class="d-flex align-items-center justify-content-center gap-3 mb-3">
-      <button type="button" class="btn btn-sm btn-light" @click="prevMonth">
-        <i class="fa-solid fa-chevron-left" style="color: #495057;"></i>
+      <button type="button" class="btn btn-sm btn-light" :disabled="isAtMinMonth" @click="prevMonth">
+        <i class="fa-solid fa-chevron-left" :style="{ color: isAtMinMonth ? '#ced4da' : '#495057' }"></i>
       </button>
       <span class="fw-semibold">{{ monthLabel }}</span>
       <button type="button" class="btn btn-sm btn-light" @click="nextMonth">
@@ -466,7 +495,7 @@ const chooseCategory = async (categoryId) => {
     </div>
 
     <!-- 날짜별 거래내역 -->
-    <div v-for="group in groupedByDate" :key="group.date" class="mb-3">
+    <div v-for="group in visibleGroupedByDate" :key="group.date" class="mb-3">
       <div class="text-secondary small mb-1">
         {{ moment(group.date).format('MM월 DD일') }} ({{ group.dayOfWeek }})
       </div>
@@ -503,6 +532,17 @@ const chooseCategory = async (categoryId) => {
     <p v-if="transactions.length === 0" class="text-secondary text-center mt-5">
       해당 월의 거래내역이 없어요.
     </p>
+
+    <!-- 더보기 -->
+    <button
+      v-if="hasMoreTransactions"
+      type="button"
+      class="btn w-100 mb-3 border-0 shadow-sm rounded-4 bg-white"
+      style="padding: 10px"
+      @click="showAllTransactions = true"
+    >
+      더보기 <i class="fa-solid fa-chevron-down small ms-1" style="color: #495057"></i>
+    </button>
 
     <!-- 카테고리 변경 바텀시트 -->
     <div
