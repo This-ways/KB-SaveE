@@ -72,7 +72,11 @@ const goToDetail = () => {
 };
 
 const goToCancel = () => {
-  alert('해지 예상 명세서 확인 페이지 준비 중입니다.');
+  //alert('해지 예상 명세서 확인 페이지 준비 중입니다.');
+  const kbUrl = 'https://obank.kbstar.com/quics?page=C016613#loading';
+
+  // 새 탭에서 열기 (권장)
+  window.open(kbUrl, '_blank');
 };
 </script>
 
@@ -91,7 +95,6 @@ const goToCancel = () => {
         <i class="fa-solid fa-chevron-left fs-5"></i>
         <h5 class="fw-bold mb-0">적금 현황</h5>
       </div>
-      <i class="fa-regular fa-bell fs-5 text-secondary"></i>
     </div>
 
     <!-- 로딩 상태 -->
