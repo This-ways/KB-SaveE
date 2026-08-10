@@ -365,6 +365,15 @@ const goToCancel = () => {
             <i class="fa-solid fa-chevron-right text-secondary small"></i>
           </button>
         </div>
+        <div class="col-12">
+          <button
+            class="btn btn-warning w-100 py-3 fw-bold rounded-4 text-dark shadow-sm"
+            style="background-color: #ffcc00; border: none"
+            @click="router.push(`/savings/${subscriptionId}/deposit`)"
+          >
+            <i class="fa-solid fa-plus me-1"></i> 추가 납입하기
+          </button>
+        </div>
       </div>
     </div>
   </div>

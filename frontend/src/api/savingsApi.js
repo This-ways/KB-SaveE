@@ -93,4 +93,11 @@ export default {
       .post(`/savings/${subscriptionId}/cancel`)
       .then((res) => res.data);
   },
+
+  //추가납입
+  depositSavings(subscriptionId, amount) {
+    return api
+      .post(`/savings/${subscriptionId}/deposit`, { amount })
+      .then((res) => res.data);
+  },
 };
