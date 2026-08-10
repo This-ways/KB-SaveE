@@ -225,7 +225,7 @@ const handleConfirm = async () => {
   }
 };
 
-// 🟢 [STEP 2 -> STEP 3] 최종 적금 가입 처리 API 호출
+// [STEP 2 -> STEP 3] 최종 적금 가입 처리 API 호출
 const handleFinalSubscribe = async () => {
   try {
     loading.value = true;
@@ -255,6 +255,20 @@ const handleFinalSubscribe = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const formatDateKorean = (dateStr) => {
+  if (!dateStr) return '0000년 00월 00일';
+
+  // '2029-08-10' 또는 '2029.08.10' 또는 '20290810' 대응
+  const cleanDate = String(dateStr).replace(/[^0-9]/g, '');
+  if (cleanDate.length === 8) {
+    const year = cleanDate.substring(0, 4);
+    const month = cleanDate.substring(4, 6);
+    const day = cleanDate.substring(6, 8);
+    return `${year}년 ${month}월 ${day}일`;
+  }
+  return dateStr;
 };
 
 // 가입 정보 확인 화면에서 뒤로가기 시 입력 단계(STEP 1)로 복귀
@@ -633,20 +647,23 @@ const onAmountChange = () => {
 
       <!-- 상단 축하 캐릭터 및 일자 강조 카드 -->
       <div class="text-center py-4 my-2">
-        <!-- 캐릭터 이미지 / 아이콘 -->
+        <!-- 캐릭터 아이콘 (꿀벌) -->
         <div class="mb-3 d-inline-block position-relative">
           <div
             class="bg-warning bg-opacity-20 rounded-circle p-4 d-flex align-items-center justify-content-center"
             style="width: 100px; height: 100px; margin: 0 auto"
           >
-            <i class="fa-solid fa-seedling text-warning display-5"></i>
+            <!-- 🐝 꿀벌 이모지 -->
+            <span class="display-3">🐝</span>
           </div>
         </div>
 
-        <h4 class="fw-bold text-dark mb-2">
+        <h4 class="fw-bold text-dark mb-2 lh-base">
           오늘부터 1일!<br />
-          <span class="text-primary">{{ resultData?.endDate }}</span
-          >까지 함께 해요!
+          <span class="text-primary">{{
+            formatDateKorean(resultData?.endDate)
+          }}</span
+          >까지 함께해요!
         </h4>
       </div>
 

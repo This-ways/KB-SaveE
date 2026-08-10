@@ -10,7 +10,7 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-// 🟢 쿼리 파라미터 숫자 형변환 보장
+// 쿼리 파라미터 숫자 형변환 보장
 const step = ref(Number(route.query.step) || 1);
 const saveAmount = ref(0);
 const monthlyAmount = ref(Number(route.query.monthlyAmount) || 0);
@@ -33,12 +33,12 @@ const updateQueryParams = (newStep) => {
   });
 };
 
-// 🟢 잔액 초과 여부
+// 잔액 초과 여부
 const isExceeded = computed(() => {
   return monthlyAmount.value > saveAmount.value;
 });
 
-// 🟢 소비 리포트 API로부터 '이달 잔액' 조회
+// 소비 리포트 API로부터 '이달 잔액' 조회
 const fetchSaveAmount = async () => {
   try {
     loadingSaveAmount.value = true;
@@ -67,7 +67,7 @@ const fetchSaveAmount = async () => {
   }
 };
 
-// 🟢 추천 목록 불러오기
+// 추천 목록 불러오기
 const fetchRecommendations = async (isUserClick = false) => {
   // 1. 유효성 검사 (0원 이하)
   if (!monthlyAmount.value || monthlyAmount.value <= 0) {
@@ -111,7 +111,7 @@ const fetchRecommendations = async (isUserClick = false) => {
   }
 };
 
-// 🟢 브라우저 백/포워드 및 라우트 변경 감지
+// 브라우저 백/포워드 및 라우트 변경 감지
 watch(
   () => route.query,
   (query) => {
