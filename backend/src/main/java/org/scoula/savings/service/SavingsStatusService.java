@@ -105,6 +105,20 @@ public class SavingsStatusService {
                 sub.getUserSaveTerm()
         );
 
+        // 추가 납입 한도 계산
+        Long maxMonthlyAmount = sub.getMaxAmount();
+        Long remainingMonthlyLimit = null;
+
+        if (maxMonthlyAmount != null && maxMonthlyAmount > 0) {
+            // 이번 달 누적 납입액 조회
+            String currentYearMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+            Long paidThisMonthLong = savingsMapper.selectTotalPaidThisMonth(subscriptionId, currentYearMonth);
+            long paidThisMonth = (paidThisMonthLong != null) ? paidThisMonthLong : 0L;
+
+            // 잔여 한도 계산
+            remainingMonthlyLimit = Math.max(0L, maxMonthlyAmount - paidThisMonth);
+        }
+
         return SavingsStatusResDTO.builder()
                 .productName(sub.getProductName())
                 .productId(sub.getProductId())
@@ -119,6 +133,8 @@ public class SavingsStatusService {
                 .achievementRate(achievementRate)
                 .nextPaymentDate(nextPaymentDate)
                 .monthlyPayments(chartData)
+                .maxMonthlyAmount(maxMonthlyAmount)
+                .remainingMonthlyLimit(remainingMonthlyLimit)
                 .build();
     }
 

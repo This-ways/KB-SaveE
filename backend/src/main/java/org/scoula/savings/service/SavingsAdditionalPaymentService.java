@@ -48,12 +48,42 @@ public class SavingsAdditionalPaymentService {
             throw new IllegalStateException("해지되었거나 만기된 적금 계좌에는 추가 납입할 수 없습니다.");
         }
 
+
+
+        //출금 전 월 최대 납입 한도 계산
+        Long maxMonthlyAmount = sub.getMaxAmount();
+
+        if (maxMonthlyAmount != null && maxMonthlyAmount > 0) {
+            // 이번 달(YYYYMM) 이미 납입한 총액 조회
+            String currentYearMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+            Long paidThisMonthLong = savingsMapper.selectTotalPaidThisMonth(subscriptionId, currentYearMonth);
+            long paidThisMonth = (paidThisMonthLong != null) ? paidThisMonthLong : 0L;
+
+            // 이달 남은 한도 계산
+            long remainingMonthlyLimit = maxMonthlyAmount - paidThisMonth;
+
+            if (remainingMonthlyLimit <= 0) {
+                throw new IllegalStateException(
+                        String.format("이번 달 월 납입 한도(%,d원)를 이미 모두 채웠습니다.", maxMonthlyAmount)
+                );
+            }
+
+            if (req.getAmount() > remainingMonthlyLimit) {
+                throw new IllegalArgumentException(
+                        String.format("이번 달 추가 납입 가능 잔여 금액은 최대 %,d원입니다.", remainingMonthlyLimit)
+                );
+            }
+        }
+
+
         // 3. 출금 계좌 잔액 확인 및 차감 (출금)
         Long currentBalance = accountMapper.selectBalanceByDepositId(sub.getDepositId());
         if (currentBalance == null || currentBalance < req.getAmount()) {
             throw new IllegalStateException("출금 계좌의 잔액이 부족합니다.");
         }
 
+
+        // 실제 출금
         int updatedRows = accountMapper.withdrawBalance(sub.getDepositId(), req.getAmount());
         if (updatedRows == 0) {
             throw new IllegalStateException("출금 처리 중 오류가 발생했습니다.");
