@@ -70,8 +70,18 @@ const totalBudget = computed(() =>
   ),
 );
 
-// 목표를 넘겨서 남은 돈이 마이너스면 적금에 넣을 돈이 없는 상태 -> 0원으로 표시, 카드도 빨간색으로
-const isOverBudget = computed(() => totalBudget.value < 0);
+// 이번 달 목표를 초과한 카테고리들의 초과분 합계 (예상 절약금액을 실시간으로 깎는 데 씀)
+const overageThisMonth = computed(() =>
+  goalBudgets.value.reduce(
+    (sum, g) => sum + Math.max(g.actualAmount - g.targetAmount, 0),
+    0,
+  ),
+);
+
+// 최종 표시값 = (최근평균-목표 기반 예상절약액) - (이번 달 실제 초과분), 0 밑으로는 안 내려감
+const adjustedExpectedSaving = computed(() =>
+  Math.max(expectedSaving.value - overageThisMonth.value, 0),
+);
 
 const loadGoalBudget = async () => {
   try {
@@ -287,7 +297,7 @@ const menuOpen = ref(false);
 
         <!-- 남은 돈: 위 리스트에서 이어져서 "그래서 얼마 남았는지"처럼 보이게 -->
         <div class="d-flex justify-content-between align-items-center mt-2">
-          <span class="text-secondary small">이번 달 남은 돈</span>
+          <span class="text-secondary small">목표 대비 남은 금액</span>
           <span
             class="h5 fw-bold mb-0"
             :style="{
@@ -333,22 +343,26 @@ const menuOpen = ref(false);
     <!-- 이번 달 예상 절약 가능 금액 -->
     <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
       <div class="card-body">
-        <div class="text-secondary small mb-1">
-          {{ isOverBudget ? '이번 달 목표를 넘었어요' : '이번 달 예상 절약 가능 금액' }}
-        </div>
+        <div class="text-secondary small mb-1">이번 달 예상 절약 가능 금액</div>
         <div class="h4 fw-bold mb-0">
-          {{ formatAmount(expectedSaving) }}
+  {{ goalBudgets.length === 0 ? '-' : formatAmount(adjustedExpectedSaving) }}
+</div>
+        <div class="text-secondary small mt-1">
+          {{
+            goalBudgets.length === 0
+              ? '절약 목표를 세워보세요'
+              : adjustedExpectedSaving === 0
+                ? '조금만 아껴볼까요?'
+                : '적금으로 모아보세요'
+          }}
         </div>
-        <div class="text-secondary small mt-1">적금으로 모아보세요</div>
         <button
           v-if="!mySubscription"
           type="button"
           class="savable-btn mt-3"
-          :class="{ over: isOverBudget }"
-          :disabled="isOverBudget"
           @click="goToSavings"
         >
-          {{ isOverBudget ? '남은 세이브 금액이 없어요' : '적금 추천 받기 →' }}
+          적금 추천 받기 →
         </button>
       </div>
     </div>
@@ -481,12 +495,6 @@ const menuOpen = ref(false);
   padding: 12px;
 }
 .savable-btn:hover {
-  background: #e6bd33;}
-.savable-btn.over {
-  background: #d9a29c;
-  cursor: not-allowed;
-}
-.savable-btn:disabled:hover {
-  background: #d9a29c;
+  background: #e6bd33;
 }
 </style>

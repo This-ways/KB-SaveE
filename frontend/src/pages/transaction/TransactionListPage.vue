@@ -474,7 +474,7 @@ const chooseCategory = async (categoryId) => {
 
     <!-- 카테고리 필터칩: 전체 + 13개 (목표 설정한 카테고리가 앞쪽), 한 줄 + 가로 슬라이드 -->
     <div class="position-relative mb-4">
-      <div class="chip-scroll">
+      <div class="chip-scroll d-flex flex-nowrap gap-2">
       <button
         type="button"
         class="btn btn-sm bg-white flex-shrink-0"
@@ -665,14 +665,8 @@ const chooseCategory = async (categoryId) => {
   color: #d1d5db;
 }
 
-/* 필터칩 가로 슬라이드 - 세로 2줄씩 채우면서 가로로 스와이프, 스크롤바는 안 보이게 */
+/* 필터칩 가로 슬라이드 - 넘치는 칩은 좌우로 스와이프, 스크롤바는 안 보이게 */
 .chip-scroll {
-  display: grid;
-  grid-auto-flow: column; /* 세로 2줄을 채운 뒤, 다음 "열"로 넘어가는 방식 */
-  grid-template-rows: repeat(2, auto);
-  grid-auto-columns: max-content;
-  column-gap: 8px;
-  row-gap: 8px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
