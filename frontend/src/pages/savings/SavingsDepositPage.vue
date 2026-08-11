@@ -22,13 +22,24 @@ const amountError = ref('');
 const formattedDepositAmount = computed(() => {
   return depositAmount.value ? depositAmount.value.toLocaleString() : '';
 });
-// 최대 납입 한도 100만 원 하드코딩
-const MAX_DEPOSIT_LIMIT = 1000000;
+
+// 최대 납입 한도
+const remainingLimit = computed(() => {
+  if (
+    statusData.value?.remainingMonthlyLimit !== undefined &&
+    statusData.value?.remainingMonthlyLimit !== null
+  ) {
+    return statusData.value.remainingMonthlyLimit;
+  }
+  // 기본 백업 한도 (응답받기 전 또는 미설정 시)
+  return 1000000;
+});
 
 // 금액 검증 공통 함수
 const validateAmount = (amount) => {
-  if (amount > MAX_DEPOSIT_LIMIT) {
-    return '최대 납입 가능 금액은 1,000,000원입니다.';
+  // remainingLimit.value (현재 남아있는 한도: 80만원)를 직접 비교
+  if (amount > remainingLimit.value) {
+    return `이번 달 추가 납입 가능 한도는 ${remainingLimit.value.toLocaleString()}원입니다.`;
   } else if (amount > 0 && amount < 1000) {
     return '최소 납입 금액은 1,000원 이상입니다.';
   }
@@ -155,7 +166,17 @@ onMounted(() => {
       <!-- 입력 폼 영역 -->
       <div class="d-flex flex-column gap-3 mt-2">
         <!-- 납입 금액 입력 -->
+
         <div>
+          <!-- 상단 잔여 한도 안내 문구 -->
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label micro-text text-secondary mb-0"
+              >납입 금액 (원)</label
+            >
+            <span class="micro-text text-warning fw-bold">
+              이달 잔여 한도: {{ remainingLimit.toLocaleString() }}원
+            </span>
+          </div>
           <div class="d-flex justify-content-between align-items-center mb-1">
             <label class="form-label micro-text text-secondary mb-0"
               >납입 금액 (원)</label
@@ -177,6 +198,13 @@ onMounted(() => {
             <span class="input-group-text bg-light fw-bold">원</span>
           </div>
 
+          <!-- 납입 한도 에러 메시지
+          <div
+            v-if="amountError"
+            class="text-danger micro-text mt-1 text-end fw-bold"
+          >
+            {{ amountError }}
+          </div> -->
           <!-- 금액 에러 메시지 -->
           <div
             v-if="amountError"
