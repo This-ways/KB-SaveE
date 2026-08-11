@@ -207,7 +207,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
         <div class="col-6">
           <div class="card h-100 border-0 shadow-sm rounded-4 bg-white">
             <div class="card-body text-center">
-              <div class="text-secondary small mb-1"><i class="fa-solid fa-piggy-bank" style="color: #fc9558;"></i> 이번 달 세이브</div>
+              <div class="text-secondary small mb-1"><i class="fa-solid fa-piggy-bank" style="color: #fc9558;"></i> 목표 대비 절약액</div>
               <div
                 class="fw-bold"
                 :style="{ color: report.saveAmount > 0 ? '#127f5f' : report.saveAmount < 0 ? '#e8512b' : '' }"
@@ -227,7 +227,7 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
         <div class="col-6">
           <div class="card h-100 border-0 shadow-sm rounded-4 bg-white">
             <div class="card-body text-center">
-              <div class="text-secondary small mb-1"><i class="fa-solid fa-coins" style="color: #fc9558;"></i> 이번 달 적금 납입</div>
+              <div class="text-secondary small mb-1"><i class="fa-solid fa-coins" style="color: #fc9558;"></i> 이번 달 적금 납입액</div>
               <div class="fw-bold">{{ formatAmount(report.savingPayment) }}</div>
             </div>
           </div>
