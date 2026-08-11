@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/users")
@@ -39,4 +42,20 @@ public class UserController {
         userService.connectMydata(user.getUserId());
         return ResponseEntity.ok().build();
     }
+
+    // 마이페이지 알림 설정 - 토글 초기값
+    @GetMapping("/push-enabled")
+    public ResponseEntity<Boolean> getPushEnabled(@AuthenticationPrincipal CustomUser user) {
+        return ResponseEntity.ok(userService.findPushEnabled(user.getUserId()));
+    }
+
+    // 마이페이지 알림 설정 - 푸시 수신 여부 변경
+    @PatchMapping("/push-enabled")
+    public ResponseEntity<Void> updatePushEnabled(
+            @AuthenticationPrincipal CustomUser user,
+            @RequestParam boolean enabled) {
+        userService.updatePushEnabled(user.getUserId(), enabled);
+        return ResponseEntity.ok().build();
+    }
+
 }

@@ -55,7 +55,7 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
     <!-- 앱 설정 -->
     <p class="section-label">앱 설정</p>
     <div class="group">
-      <button class="mypage-row" @click="notReady('알림 설정')">
+      <button class="mypage-row" @click="router.push('/mypage/notification')">
         <i class="fa-solid fa-bell mypage-row-icon"></i>
         <span class="mypage-row-label">알림 설정</span>
         <i class="fa-solid fa-chevron-right arrow"></i>

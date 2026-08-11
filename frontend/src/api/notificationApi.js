@@ -50,4 +50,18 @@ export default {
     });
     return data;
   },
+
+    // 푸시 수신 여부 조회 (user.push_enabled)
+  async getPushEnabled() {
+    const { data } = await api.get('/api/users/push-enabled');
+    return data;
+  },
+
+  // 푸시 수신 여부 변경
+  async updatePushEnabled(enabled) {
+    const { data } = await api.patch('/api/users/push-enabled', null, {
+      params: { enabled },
+    });
+    return data;
+  },
 };
