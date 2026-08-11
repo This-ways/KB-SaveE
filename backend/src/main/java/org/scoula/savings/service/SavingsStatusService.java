@@ -56,26 +56,24 @@ public class SavingsStatusService {
         }
 
         // ==========================================
-        // 실제 납입 회차 기반 목표 달성률 계산
+        // 날짜 기반 목표 달성률 계산
         // ==========================================
-        // DB에서 직접 납입 횟수(COUNT)를 가져옵니다.
-        Integer paidRounds = savingsMapper.selectPaidRounds(subscriptionId);
-        if (paidRounds == null) paidRounds = 0;
+        // 1. 가입일 ~ 만기일 총 일수 계산
+        long totalDays = ChronoUnit.DAYS.between(startDate, endDate);
+
+        // 2. 가입일 ~ 오늘 기준 경과 일수 계산
+        long elapsedDays = ChronoUnit.DAYS.between(startDate, today);
 
         int achievementRate = 0;
-        if (sub.getUserSaveTerm() > 0) {
-            // 전체 목표 횟수 = 가입 개월 수
-            int totalRounds = sub.getUserSaveTerm();
+        if (totalDays > 0) {
+            // 진행률 계산: (경과 일수 / 총 일수) * 100
+            achievementRate = (int) (((double) elapsedDays / totalDays) * 100);
 
-            // 달성률 계산: (현재 납입 횟수 / 전체 납입 횟수) * 100
-            achievementRate = (int) (((double) paidRounds / totalRounds) * 100);
-
-            // 달성률 예외 처리 (0% 미만이나 100% 초과 방지)
+            // 범위 예외 방지 (오늘이 가입일 전이면 0%, 만기일이 지났으면 100%)
             achievementRate = Math.max(0, Math.min(100, achievementRate));
         }
 
         List<MonthlyPaymentDTO> chartData = savingsMapper.selectMonthlyPayments(subscriptionId);
-
 
         // 마지막 납입일 기반 다음 납입일 계산
         Integer lastPaymentDateInt = savingsMapper.selectLastPaymentDate(subscriptionId);
