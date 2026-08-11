@@ -84,4 +84,16 @@ public class UserServiceImpl implements UserService {
         }
         return userMapper.existsByLoginId(loginId) == 0;
     }
+
+    @Override
+    public boolean findPushEnabled(Long userId) {
+        return userMapper.findPushEnabled(userId);
+    }
+
+    @Override
+    @Transactional
+    public void updatePushEnabled(Long userId, boolean enabled) {
+        userMapper.updatePushEnabled(userId, enabled);
+        log.debug("알림 수신 설정 변경 userId={}, enabled={}", userId, enabled);
+    }
 }

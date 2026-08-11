@@ -15,4 +15,10 @@ public interface UserMapper {
 
     /** 로그아웃 시 호출 - 이 값을 올리면 그 이전에 발급된 모든 토큰(다른 탭·기기 포함)이 다음 요청부터 무효 처리됨 */
     int incrementTokenVersion(@Param("userId") Long userId);
+
+    /** 마이페이지 알림 설정 토글 초기값 */
+    boolean findPushEnabled(@Param("userId") Long userId);
+
+    /** 마이페이지 알림 설정 토글 - 푸시 수신 여부 변경 */
+    int updatePushEnabled(@Param("userId") Long userId, @Param("enabled") boolean enabled);
 }
