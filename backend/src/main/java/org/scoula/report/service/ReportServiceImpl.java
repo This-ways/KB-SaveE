@@ -77,6 +77,17 @@ public class ReportServiceImpl implements ReportService {
         );
     }
 
+    @Override
+    public String refreshAiSummary(Long userId, String yearMonth) {
+        // AI 요약에 쓰이는 재료(수입/지출/연령별비교)만 다시 계산해서 강제 재생성에 넘김
+        IncomeExpenseDTO incomeExpense = mapper.getMonthlyIncomeExpense(userId, yearMonth);
+        List<CategoryCompareDTO> topCategories = peerStatService.compareCategories(userId, yearMonth);
+
+        return aiSummaryService.regenerateSummary(
+                userId, yearMonth, incomeExpense.getIncome(), incomeExpense.getExpense(), topCategories
+        );
+    }
+
     // 세이브 금액 = Σ (목표금액 - 실제지출), 카테고리별 초과 지출은 마이너스로 그대로 반영
     // 이번 달 목표가 하나도 없으면 null (프론트에서 "-"로 표시)
     private Integer calculateSaveAmount(Long userId, String yearMonth) {

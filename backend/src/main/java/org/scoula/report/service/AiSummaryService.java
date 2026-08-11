@@ -14,4 +14,13 @@ public interface AiSummaryService {
             int expense,
             List<CategoryCompareDTO> topCategories
     );
+
+    // 캐시 무시하고 강제로 새로 생성 (10분에 1번 제한)
+    String regenerateSummary(
+            Long userId,
+            String yearMonth,
+            int income,
+            int expense,
+            List<CategoryCompareDTO> topCategories
+    );
 }

@@ -36,7 +36,7 @@ public class AiSummaryServiceImpl implements AiSummaryService {
 
     @Override
     public String getOrGenerateSummary(Long userId, String yearMonth, int income, int expense,
-                                        List<CategoryCompareDTO> topCategories) {
+                                       List<CategoryCompareDTO> topCategories) {
         // 1. 캐시 확인 - 이미 이 달 요약을 만든 적 있으면 OpenAI 호출 없이 그대로 반환
         AiSummaryVO cached = aiSummaryMapper.find(userId, yearMonth);
         if (cached != null) {
@@ -56,6 +56,28 @@ public class AiSummaryServiceImpl implements AiSummaryService {
         // 3. 성공하면 캐시에 저장 (다음부터는 DB에서 바로 꺼내 씀)
         aiSummaryMapper.insert(new AiSummaryVO(null, userId, yearMonth, summary, null));
 
+        return summary;
+    }
+
+    @Override
+    public String regenerateSummary(Long userId, String yearMonth, int income, int expense,
+                                    List<CategoryCompareDTO> topCategories) {
+        // 10분 이내에 이미 새로고침했으면 막음 (비용 관리)
+        if (aiSummaryMapper.isRecentlyGenerated(userId, yearMonth)) {
+            throw new IllegalStateException("10분 안에 이미 새로고침했어요. 잠시 후 다시 시도해주세요.");
+        }
+
+        aiSummaryMapper.deleteOne(userId, yearMonth); // 기존 캐시 무조건 삭제 (비교 없이 새로 생성)
+
+        String summary;
+        try {
+            summary = callOpenAi(buildPrompt(income, expense, topCategories));
+        } catch (Exception e) {
+            log.error("AI 요약 재생성 실패. userId={} yearMonth={}", userId, yearMonth, e);
+            return FALLBACK_SUMMARY; // 실패 시 캐시를 비운 채로 둠 -> 다음 정상조회 때 재시도됨
+        }
+
+        aiSummaryMapper.insert(new AiSummaryVO(null, userId, yearMonth, summary, null));
         return summary;
     }
 

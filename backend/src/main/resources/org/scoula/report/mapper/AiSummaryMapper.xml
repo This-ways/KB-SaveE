@@ -17,4 +17,19 @@
         VALUES (#{userId}, #{yearMonth}, #{summaryText})
     </insert>
 
+    <delete id="deleteOne">
+        DELETE FROM report_ai_summary
+        WHERE user_id = #{userId}
+          AND `year_month` = #{yearMonth}
+    </delete>
+
+    <select id="isRecentlyGenerated" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM report_ai_summary
+            WHERE user_id = #{userId}
+              AND `year_month` = #{yearMonth}
+              AND created_at > (NOW() - INTERVAL 10 MINUTE)
+        )
+    </select>
+
 </mapper>
