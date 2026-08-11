@@ -11,4 +11,11 @@ public interface UserService {
 
     /** 아이디 중복확인 버튼 - 사용 가능하면 true. 형식(4~20자) 검증도 여기서 같이 함 */
     boolean isLoginIdAvailable(String loginId);
+
+    /** 마이페이지 알림 설정 토글 초기값 */
+    boolean findPushEnabled(Long userId);
+
+    /** 마이페이지 알림 설정 토글 - 푸시 수신 여부 변경 */
+    void updatePushEnabled(Long userId, boolean enabled);
+
 }
