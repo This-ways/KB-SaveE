@@ -43,6 +43,8 @@ public class AutoTransferBatchService {
         HOLIDAYS.add(LocalDate.of(year, 12, 25));
     }
 
+
+    //@Scheduled(cron = "0 2/10 * * * *")
     @Scheduled(cron = "0 0 9 * * *")
     public void notifyUpcomingAutoTransfer() {
         if (!isBatchEnabled) return;
@@ -55,6 +57,8 @@ public class AutoTransferBatchService {
         log.info("[자동이체 예정 알림] {}건 발송", targetList.size());
     }
 
+
+    //@Scheduled(cron = "0 5/10 * * * *")
     @Scheduled(cron = "0 0 10 * * *")
     public void executeDailyAutoTransfer() {
 
