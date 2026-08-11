@@ -26,6 +26,24 @@ const yearMonth = ref(moment().format('YYYY-MM'))
 const report = ref(null) // 이번 달 리포트
 const prevSaveAmount = ref(null) // 전월 세이브 금액 (비교용)
 
+const aiRefreshing = ref(false) // 새로고침 진행 중 스피너용
+const aiRefreshError = ref('') // 10분 제한 등 실패 메시지 (몇 초 후 자동 사라짐)
+
+const refreshAiSummary = async () => {
+  if (aiRefreshing.value) return
+  aiRefreshing.value = true
+  aiRefreshError.value = ''
+  try {
+    const newSummary = await reportApi.refreshAiSummary({ userId: userId.value, yearMonth: yearMonth.value })
+    report.value.aiSummary = newSummary
+  } catch (e) {
+    aiRefreshError.value = '10분 안에 이미 새로고침했어요. 잠시 후 다시 시도해주세요.'
+    setTimeout(() => (aiRefreshError.value = ''), 3000)
+  } finally {
+    aiRefreshing.value = false
+  }
+}
+
 const loadReport = async () => {
   try {
     report.value = await reportApi.get({ userId: userId.value, yearMonth: yearMonth.value })
@@ -308,8 +326,24 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
       <!-- AI 요약 -->
       <div class="card mb-4 shadow-sm rounded-4" style="background-color: #fef7d8; border: none">
         <div class="card-body">
-          <h2 class="h6 mb-2"><i class="fa-solid fa-wand-magic-sparkles" style="color: #fc9558;"></i> 이달의 Tip</h2>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 mb-0"><i class="fa-solid fa-wand-magic-sparkles" style="color: #fc9558;"></i> 이달의 Tip</h2>
+            <button
+              type="button"
+              class="btn btn-sm p-0"
+              :disabled="aiRefreshing"
+              @click="refreshAiSummary"
+              aria-label="AI 요약 새로고침"
+            >
+              <i
+                class="fa-solid fa-rotate-right"
+                :class="{ 'fa-spin': aiRefreshing }"
+                style="color: #fc9558; font-size: 14px"
+              ></i>
+            </button>
+          </div>
           <p class="small mb-0">{{ report.aiSummary }}</p>
+          <p v-if="aiRefreshError" class="small text-danger mb-0 mt-1">{{ aiRefreshError }}</p>
         </div>
       </div>
     </template>
