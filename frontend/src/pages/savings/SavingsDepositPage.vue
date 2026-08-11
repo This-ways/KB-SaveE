@@ -107,7 +107,14 @@ const handleFinalDeposit = async () => {
 };
 
 const goToStatus = () => {
-  router.push(`/savings/${subscriptionId.value}`);
+  const targetId = resultData.value?.subscriptionId || subscriptionId.value;
+
+  if (targetId) {
+    router.push(`/savings/status/${targetId}`);
+  } else {
+    //alert('적금 정보(ID)를 찾을 수 없어 홈으로 이동합니다.');
+    router.push('/home');
+  }
 };
 
 const goToMain = () => {
@@ -170,9 +177,7 @@ onMounted(() => {
         <div>
           <!-- 상단 잔여 한도 안내 문구 -->
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <label class="form-label micro-text text-secondary mb-0"
-              >납입 금액 (원)</label
-            >
+            <label class="form-label micro-text text-secondary mb-0"></label>
             <span class="micro-text text-warning fw-bold">
               이달 잔여 한도: {{ remainingLimit.toLocaleString() }}원
             </span>
@@ -384,7 +389,7 @@ onMounted(() => {
         <button
           class="btn btn-warning w-100 py-3 fw-bold rounded-4 text-dark"
           style="background-color: #ffcc00; border: none"
-          @click="goToMain"
+          @click="goToStatus"
         >
           확인
         </button>
