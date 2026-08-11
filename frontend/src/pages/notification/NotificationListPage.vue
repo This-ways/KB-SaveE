@@ -5,8 +5,8 @@
 <template>
   <div class="push-list">
     <header class="push-list-header">
-      <!-- 푸시 클릭으로 바로 진입하면 이전 페이지가 없어 back() 이 동작하지 않는다 -->
-      <button class="push-list-back" @click="router.push('/home')" aria-label="홈으로">‹</button>
+      <!-- 히스토리가 있으면 직전 화면으로, 푸시 클릭 등 첫 진입이면 홈으로 -->
+      <button class="push-list-back" @click="goBack" aria-label="뒤로">‹</button>
       <h1 class="push-list-heading">알림</h1>
     </header>
 
@@ -39,6 +39,16 @@ import notificationApi from '@/api/notificationApi';
 import { getCategoryStyle, BRAND } from '@/constants/categories';
 
 const router = useRouter();
+
+// 알림 설정에서 들어오면 알림 설정으로 돌아가야 한다.
+// 다만 푸시/OS 알림 클릭으로 바로 진입하면 직전 기록이 없어 back() 이 먹히지 않으므로 홈으로 보낸다.
+const goBack = () => {
+  if (window.history.state?.back) {
+    router.back();
+  } else {
+    router.push('/home');
+  }
+};
 
 const items = ref([]);
 const isLoading = ref(true);
