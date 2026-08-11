@@ -44,13 +44,34 @@ onMounted(async () => {
       return acc;
     }, {});
 
+    // 수정 모드(기존 사용자, 1~7일)일 때만 지난달 목표를 미리 조회해서 보여준다.
+    // - 지난달에 이미 있던 카테고리 -> 그 금액 그대로 채워서, 안 건드리면 이월되는 것처럼 보이게
+    // - 이번에 새로 추가한 카테고리 -> 지난달엔 없었으니 0원부터
+    // 최초 온보딩(!isEditMode)은 지난달이라는 개념 자체가 없으니 전부 0원부터 시작.
+    // 주의: 반드시 "지난달"을 명시해서 조회해야 함 - 인자 없이 부르면 서버가 "이번 달"로 보고
+    // 이번 달이 비어있을 때 자동 이월(carry-over)을 실제로 실행해버려서, 사용자가 저장하기도
+    // 전에 DB에 값이 먼저 생겨버리는 부작용이 생긴다.
+    let prevMap = {};
+    if (isEditMode) {
+      try {
+        const prevYearMonth = moment().subtract(1, 'months').format('YYYY-MM');
+        const prevGoals = await goalApi.getMyGoals(prevYearMonth);
+        prevMap = prevGoals.reduce((acc, g) => {
+          acc[g.categoryId] = g.targetAmount;
+          return acc;
+        }, {});
+      } catch (e) {
+        console.error('지난달 목표 조회 실패 - 0원부터 시작으로 대체', e);
+      }
+    }
+
     items.value = selectedIds.map((id) => {
       const cat = cats.find((c) => c.categoryId === id);
       return {
         categoryId: id,
         name: cat ? cat.name : '알 수 없음',
         avgAmount: avgMap[id] ?? null,
-        targetAmount: avgMap[id] ?? 0,
+        targetAmount: isEditMode ? (prevMap[id] ?? 0) : 0,
       };
     });
   } catch (e) {
