@@ -31,4 +31,10 @@ export default [
     name: 'SavingsCancel',
     component: () => import('../pages/savings/SavingsCancelPage.vue'),
   },
+  {
+    path: '/savings/:subscriptionId/deposit',
+    name: 'SavingsDeposit',
+    component: () => import('../pages/savings/SavingsDepositPage.vue'),
+    meta: { requiresAuth: true },
+  },
 ];
