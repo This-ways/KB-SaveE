@@ -28,4 +28,8 @@ public class SavingsStatusResDTO {
 
     // 3. 하단 차트 (월별 납입 현황)
     private List<MonthlyPaymentDTO> monthlyPayments;
+
+    // 추가납입 한도계산
+    private Long maxMonthlyAmount;       // 상품의 총 월 납입 한도
+    private Long remainingMonthlyLimit;  // 이번달 추가 납입 가능한 금액
 }
