@@ -26,6 +26,24 @@ const yearMonth = ref(moment().format('YYYY-MM'))
 const report = ref(null) // 이번 달 리포트
 const prevSaveAmount = ref(null) // 전월 세이브 금액 (비교용)
 
+const aiRefreshing = ref(false) // 새로고침 진행 중 스피너용
+const aiRefreshError = ref('') // 10분 제한 등 실패 메시지 (몇 초 후 자동 사라짐)
+
+const refreshAiSummary = async () => {
+  if (aiRefreshing.value) return
+  aiRefreshing.value = true
+  aiRefreshError.value = ''
+  try {
+    const newSummary = await reportApi.refreshAiSummary({ userId: userId.value, yearMonth: yearMonth.value })
+    report.value.aiSummary = newSummary
+  } catch (e) {
+    aiRefreshError.value = '10분 안에 이미 새로고침했어요. 잠시 후 다시 시도해주세요.'
+    setTimeout(() => (aiRefreshError.value = ''), 3000)
+  } finally {
+    aiRefreshing.value = false
+  }
+}
+
 const loadReport = async () => {
   try {
     report.value = await reportApi.get({ userId: userId.value, yearMonth: yearMonth.value })
@@ -54,6 +72,7 @@ const MIN_YEAR_MONTH = '2026-01' // 서비스 데이터가 존재하는 가장 �
 const monthLabel = computed(() => moment(yearMonth.value, 'YYYY-MM').format('YYYY년 MM월'))
 const prevMonthLabel = computed(() => moment(yearMonth.value, 'YYYY-MM').subtract(1, 'months').format('MM월'))
 const isAtMinMonth = computed(() => yearMonth.value === MIN_YEAR_MONTH)
+const isAtMaxMonth = computed(() => yearMonth.value === moment().format('YYYY-MM')) // 이번 달보다 미래로는 못 감
 
 const changeMonth = (diff) => {
   yearMonth.value = moment(yearMonth.value, 'YYYY-MM').add(diff, 'months').format('YYYY-MM')
@@ -63,7 +82,10 @@ const prevMonth = () => {
   if (isAtMinMonth.value) return
   changeMonth(-1)
 }
-const nextMonth = () => changeMonth(1)
+const nextMonth = () => {
+  if (isAtMaxMonth.value) return
+  changeMonth(1)
+}
 
 const formatAmount = (amount) => {
   if (amount === null || amount === undefined) return '-'
@@ -150,8 +172,8 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
         <i class="fa-solid fa-chevron-left" :style="{ color: isAtMinMonth ? '#ced4da' : '#495057' }"></i>
       </button>
       <span class="fw-semibold">{{ monthLabel }}</span>
-      <button type="button" class="btn btn-sm btn-light" @click="nextMonth">
-        <i class="fa-solid fa-chevron-right" style="color: #495057;"></i>
+      <button type="button" class="btn btn-sm btn-light" :disabled="isAtMaxMonth" @click="nextMonth">
+        <i class="fa-solid fa-chevron-right" :style="{ color: isAtMaxMonth ? '#ced4da' : '#495057' }"></i>
       </button>
     </div>
 
@@ -304,8 +326,24 @@ const MY_COLOR = '#ffd239' // 브랜드 메인 노랑 (또래 평균의 회색�
       <!-- AI 요약 -->
       <div class="card mb-4 shadow-sm rounded-4" style="background-color: #fef7d8; border: none">
         <div class="card-body">
-          <h2 class="h6 mb-2"><i class="fa-solid fa-wand-magic-sparkles" style="color: #fc9558;"></i> 이달의 Tip</h2>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 mb-0"><i class="fa-solid fa-wand-magic-sparkles" style="color: #fc9558;"></i> 이달의 Tip</h2>
+            <button
+              type="button"
+              class="btn btn-sm p-0"
+              :disabled="aiRefreshing"
+              @click="refreshAiSummary"
+              aria-label="AI 요약 새로고침"
+            >
+              <i
+                class="fa-solid fa-rotate-right"
+                :class="{ 'fa-spin': aiRefreshing }"
+                style="color: #fc9558; font-size: 14px"
+              ></i>
+            </button>
+          </div>
           <p class="small mb-0">{{ report.aiSummary }}</p>
+          <p v-if="aiRefreshError" class="small text-danger mb-0 mt-1">{{ aiRefreshError }}</p>
         </div>
       </div>
     </template>

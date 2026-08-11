@@ -354,14 +354,15 @@ const menuOpen = ref(false);
     </div>
 
     <!-- 내 적금 -->
-    <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+    <div class="card mb-3 border-0 shadow-sm rounded-4" style="background-color: #ffd239">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-1">
-  <span class="text-secondary small">내 적금</span>
+  <span class="small fw-semibold" style="color: #6b5a00">내 적금</span>
   <button
     v-if="mySubscription"
     type="button"
     class="detail-link-btn"
+    style="color: #6b5a00"
     @click="goToSavings"
   >
     적금 상세
@@ -369,11 +370,11 @@ const menuOpen = ref(false);
 </div>
         <template v-if="mySubscription">
           <div class="fw-bold">{{ mySubscription.productName }}</div>
-          <div class="small text-secondary mt-1">
+          <div class="small mt-1" style="color: #6b5a00">
             누적 납입액 {{ formatAmount(mySubscription.totalPrincipal) }}
           </div>
         </template>
-        <p v-else class="text-secondary small mb-0">가입한 적금이 없습니다</p>
+        <p v-else class="small mb-0" style="color: #6b5a00">가입한 적금이 없습니다</p>
       </div>
     </div>
 

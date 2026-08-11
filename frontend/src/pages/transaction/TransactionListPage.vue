@@ -171,6 +171,7 @@ const MIN_YEAR_MONTH = '2026-01' // 서비스 데이터가 존재하는 가장 �
 
 const monthLabel = computed(() => moment(yearMonth.value, 'YYYY-MM').format('YYYY년 MM월'))
 const isAtMinMonth = computed(() => yearMonth.value === MIN_YEAR_MONTH)
+const isAtMaxMonth = computed(() => yearMonth.value === moment().format('YYYY-MM')) // 이번 달보다 미래로는 못 감
 
 const changeMonth = (diff) => {
   yearMonth.value = moment(yearMonth.value, 'YYYY-MM').add(diff, 'months').format('YYYY-MM')
@@ -180,7 +181,10 @@ const prevMonth = () => {
   if (isAtMinMonth.value) return
   changeMonth(-1)
 }
-const nextMonth = () => changeMonth(1)
+const nextMonth = () => {
+  if (isAtMaxMonth.value) return
+  changeMonth(1)
+}
 
 // ===== 필터칩 =====
 const chipCategories = computed(() => {
@@ -382,8 +386,8 @@ const chooseCategory = async (categoryId) => {
         <i class="fa-solid fa-chevron-left" :style="{ color: isAtMinMonth ? '#ced4da' : '#495057' }"></i>
       </button>
       <span class="fw-semibold">{{ monthLabel }}</span>
-      <button type="button" class="btn btn-sm btn-light" @click="nextMonth">
-        <i class="fa-solid fa-chevron-right" style="color: #495057;"></i>
+      <button type="button" class="btn btn-sm btn-light" :disabled="isAtMaxMonth" @click="nextMonth">
+        <i class="fa-solid fa-chevron-right" :style="{ color: isAtMaxMonth ? '#ced4da' : '#495057' }"></i>
       </button>
     </div>
 
