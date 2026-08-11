@@ -10,4 +10,10 @@ public interface AiSummaryMapper {
 
     // 새로 생성한 요약 저장
     int insert(AiSummaryVO vo);
+
+    // 강제 새로고침 전, 기존 캐시 삭제
+    int deleteOne(@Param("userId") Long userId, @Param("yearMonth") String yearMonth);
+
+    // 10분 이내에 생성된 캐시가 있는지 확인 (재생성 제한용)
+    boolean isRecentlyGenerated(@Param("userId") Long userId, @Param("yearMonth") String yearMonth);
 }
