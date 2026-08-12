@@ -8,6 +8,8 @@ const router = useRouter();
 
 const productId = ref(Number(route.params.productId));
 
+const isBottomSheetOpen = ref(false);
+
 // 백엔드에서 받아온 상품 정보 및 금리 리스트
 const product = ref(null);
 const rateList = ref([]); // [{ saveTerm: 6, minRate: 2.0, maxRate: 6.0 }, ...]
@@ -299,69 +301,139 @@ const onAmountChange = () => {
     <!-- STEP 1: 입력 폼 단계 (우대금리 & 가입조건) -->
     <!-- ========================================== -->
     <div v-else-if="currentStep === 1">
-      <div class="d-flex align-items-center mb-3">
-        <i
-          class="fa-solid fa-chevron-left fs-5 me-2"
-          style="cursor: pointer"
-          @click="router.back()"
-        ></i>
-        <h5 class="fw-bold mb-0">{{ product?.productName || '적금 신규' }}</h5>
+      <div class="header">
+        <button class="back-btn" @click="router.back()">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <h1 class="header-title text-truncate">
+          {{ product?.productName || '적금 신규' }}
+        </h1>
       </div>
 
       <!-- 우대금리 선택 카드 -->
-      <div class="card p-3 border-0 bg-light rounded-4 mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold mb-0 fs-6">
-            우대금리를 선택해 주세요
-            <span class="fw-normal text-secondary micro-text">(최대 6개)</span>
-          </h6>
-          <span class="micro-text text-secondary ms-2">
-            {{ primeRates.filter((p) => p.selected).length }} / 6개 선택
-          </span>
-        </div>
-
-        <!-- 체크박스 리스트 -->
-        <div class="d-flex flex-column gap-2">
-          <div
-            v-for="item in primeRates"
-            :key="item.id"
-            class="d-flex align-items-center justify-content-between p-2 px-3 rounded-3 bg-white border"
-            :class="{
-              'border-warning bg-warning bg-opacity-10': item.selected,
-            }"
-            style="cursor: pointer; transition: all 0.2s"
-            @click="togglePrimeRate(item)"
-          >
-            <div
-              class="d-flex align-items-center gap-2 flex-nowrap min-w-0 me-2"
-            >
-              <!-- 동그라미 체크 아이콘 -->
-              <i
-                class="fa-circle-check fs-5 flex-shrink-0"
-                :class="
-                  item.selected
-                    ? 'fa-solid text-warning'
-                    : 'fa-regular text-secondary opacity-50'
-                "
-              ></i>
-              <span
-                class="small text-nowrap"
-                :class="item.selected ? 'fw-bold text-dark' : 'text-secondary'"
-              >
-                {{ item.name }}
-              </span>
-            </div>
-
-            <!-- 오른쪽 이율 표기 -->
-            <span
-              class="small text-nowrap flex-shrink-0"
-              :class="item.selected ? 'fw-bold text-dark' : 'text-secondary'"
-            >
-              {{ item.rate }}%p
+      <div
+        class="card p-3 border-0 bg-light rounded-4 mb-3 d-flex flex-row justify-content-between align-items-center"
+        style="cursor: pointer"
+        @click="isBottomSheetOpen = true"
+      >
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-gift text-warning fs-5"></i>
+          <div>
+            <h6 class="fw-bold mb-0 fs-6">우대금리 선택</h6>
+            <span class="micro-text text-secondary">
+              {{ primeRates.filter((p) => p.selected).length }} / 6개 선택됨
             </span>
           </div>
         </div>
+        <div class="d-flex align-items-center gap-1 text-secondary small">
+          <span class="fw-bold text-dark me-1">
+            +{{
+              primeRates
+                .filter((p) => p.selected)
+                .reduce((sum, p) => sum + p.rate, 0)
+                .toFixed(2)
+            }}%p
+          </span>
+          <i class="fa-solid fa-chevron-right micro-text"></i>
+        </div>
       </div>
+
+      <!--  바텀시트 모달 (화면 하단에서 슬라이드 업) -->
+      <Teleport to="body">
+        <!-- 배경 오버레이 -->
+        <Transition name="fade">
+          <div
+            v-if="isBottomSheetOpen"
+            class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
+            style="z-index: 1050"
+            @click="isBottomSheetOpen = false"
+          ></div>
+        </Transition>
+
+        <!-- 바텀시트 컨텐츠 -->
+        <Transition name="slide-up">
+          <div
+            v-if="isBottomSheetOpen"
+            class="position-fixed bottom-0 start-50 translate-middle-x bg-white rounded-top-4 p-3 w-100 shadow-lg d-flex flex-column"
+            style="z-index: 1055; max-width: 430px; max-height: 80vh"
+          >
+            <!-- 손잡이 바 & 헤더 -->
+            <div
+              class="bg-secondary opacity-25 rounded-pill mx-auto mb-3"
+              style="width: 40px; height: 4px"
+            ></div>
+
+            <div
+              class="d-flex justify-content-between align-items-center mb-3 px-1"
+            >
+              <h6 class="fw-bold mb-0 fs-6">
+                우대금리를 선택해 주세요
+                <span class="fw-normal text-secondary micro-text"
+                  >(최대 6개)</span
+                >
+              </h6>
+              <button
+                type="button"
+                class="btn-close small"
+                @click="isBottomSheetOpen = false"
+              ></button>
+            </div>
+
+            <!-- 기존 체크박스 리스트 (스크롤 영역) -->
+            <div class="d-flex flex-column gap-2 overflow-auto pe-1 mb-3">
+              <div
+                v-for="item in primeRates"
+                :key="item.id"
+                class="d-flex align-items-center justify-content-between p-2 px-3 rounded-3 bg-white border"
+                :class="{
+                  'border-warning bg-warning bg-opacity-10': item.selected,
+                }"
+                style="cursor: pointer; transition: all 0.2s"
+                @click="togglePrimeRate(item)"
+              >
+                <div
+                  class="d-flex align-items-center gap-2 flex-nowrap min-w-0 me-2"
+                >
+                  <i
+                    class="fa-circle-check fs-5 flex-shrink-0"
+                    :class="
+                      item.selected
+                        ? 'fa-solid text-warning'
+                        : 'fa-regular text-secondary opacity-50'
+                    "
+                  ></i>
+                  <span
+                    class="small text-nowrap"
+                    :class="
+                      item.selected ? 'fw-bold text-dark' : 'text-secondary'
+                    "
+                  >
+                    {{ item.name }}
+                  </span>
+                </div>
+
+                <span
+                  class="small text-nowrap flex-shrink-0"
+                  :class="
+                    item.selected ? 'fw-bold text-dark' : 'text-secondary'
+                  "
+                >
+                  {{ item.rate }}%p
+                </span>
+              </div>
+            </div>
+
+            <!-- 하단 완료 버튼 -->
+            <button
+              type="button"
+              class="btn btn-warning w-100 fw-bold py-2 rounded-3"
+              @click="isBottomSheetOpen = false"
+            >
+              선택 완료
+            </button>
+          </div>
+        </Transition>
+      </Teleport>
 
       <!-- 금리 현황 요약 -->
       <div class="p-3 bg-warning bg-opacity-10 rounded-4 mb-4">
@@ -508,7 +580,6 @@ const onAmountChange = () => {
     <!-- STEP 2: 가입정보 확인 화면 (POST /confirm) -->
     <!-- ========================================== -->
     <div v-else-if="currentStep === 2" class="d-flex flex-column gap-3">
-      <!-- 헤더 -->
       <div class="d-flex justify-content-between align-items-center mb-1">
         <i
           class="fa-solid fa-chevron-left fs-5"
@@ -644,16 +715,23 @@ const onAmountChange = () => {
     <!-- STEP 3: 최종 가입 완료 화면 (POST /subscribe) -->
     <!-- ========================================== -->
     <div v-else-if="currentStep === 3" class="d-flex flex-column gap-3 py-2">
-      <!-- 상단 헤더 -->
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="fw-bold fs-5">적금 신규</span>
-        <div class="d-flex gap-3 text-secondary">
-          <i
-            class="fa-solid fa-house fs-5"
+      <!-- 헤더 -->
+      <div class="header d-flex justify-content-between align-items-center">
+        <h1 class="header-title">적금 신규</h1>
+        <div class="d-flex align-items-center gap-3 text-secondary">
+          <button
+            class="icon-btn border-0 bg-transparent p-0"
             style="cursor: pointer"
             @click="router.push('/home')"
-          ></i>
-          <i class="fa-solid fa-bars fs-5"></i>
+          >
+            <i class="fa-solid fa-house"></i>
+          </button>
+          <button
+            class="icon-btn border-0 bg-transparent p-0"
+            style="cursor: pointer"
+          >
+            <i class="fa-solid fa-bars"></i>
+          </button>
         </div>
       </div>
 
@@ -780,5 +858,24 @@ const onAmountChange = () => {
 <style scoped>
 .micro-text {
   font-size: 13px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 16px;
+}
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #111;
+  padding: 0;
+  cursor: pointer;
+}
+.header-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
 }
 </style>
