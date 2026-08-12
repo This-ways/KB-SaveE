@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
+import { useAlert } from '@/util/useAlert';
 
 const route = useRoute();
 const router = useRouter();
@@ -11,6 +12,10 @@ const subscriptionId = route.params.subscriptionId;
 const statusData = ref(null);
 const loading = ref(true);
 import { useAuthStore } from '@/stores/auth';
+
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue'; // 2. 공용 모달 임포트
+
+const { alertState, showAlert, hideAlert } = useAlert();
 
 const authStore = useAuthStore();
 
@@ -22,7 +27,7 @@ const fetchSavingsStatus = async () => {
     console.log('적금 현황 데이터:', data);
   } catch (error) {
     console.error('적금 현황 조회 실패:', error);
-    alert('적금 현황을 불러오지 못했습니다.');
+    showAlert('적금 현황을 불러오지 못했습니다.');
   } finally {
     loading.value = false;
   }
@@ -67,7 +72,7 @@ const goToDetail = () => {
       query: { from: 'status' },
     });
   } else {
-    alert('상품 상세 정보를 불러올 수 없습니다.');
+    showAlert('상품 상세 정보를 불러올 수 없습니다.');
   }
 };
 
@@ -80,7 +85,7 @@ const goToCancel = () => {
   if (sid) {
     router.push(`/savings/${sid}/cancel`);
   } else {
-    alert('적금 가입 정보(ID)를 찾을 수 없습니다.');
+    showAlert('적금 가입 정보를 찾을 수 없습니다.');
   }
 };
 </script>
@@ -372,6 +377,11 @@ const goToCancel = () => {
         </div>
       </div>
     </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
   </div>
 </template>
 
