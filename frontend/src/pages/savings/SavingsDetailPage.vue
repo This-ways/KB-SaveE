@@ -2,6 +2,11 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
+import { useAlert } from '@/util/useAlert';
+
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue'; // 2. 공용 모달 임포트
+
+const { alertState, showAlert, hideAlert } = useAlert();
 
 const route = useRoute();
 const router = useRouter();
@@ -15,7 +20,7 @@ const isFromStatus = computed(() => route.query.from === 'status');
 
 const fetchDetail = async () => {
   if (!productId || productId === 'undefined') {
-    alert('상품 정보를 찾을 수 없습니다.');
+    showAlert('상품 정보를 찾을 수 없습니다.');
     router.back();
     return;
   }
@@ -26,7 +31,7 @@ const fetchDetail = async () => {
     product.value = res;
   } catch (error) {
     console.error('적금 상세 정보 조회 실패:', error);
-    alert('상품 정보를 불러오는 중 오류가 발생했습니다.');
+    showAlert('상품 정보를 불러오는 중 오류가 발생했습니다.');
   } finally {
     loading.value = false;
   }
@@ -234,6 +239,11 @@ const handleSubscribe = () => {
         가입하기
       </button>
     </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
   </div>
 </template>
 
