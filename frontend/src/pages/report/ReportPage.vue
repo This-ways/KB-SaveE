@@ -26,9 +26,40 @@ const userId = computed(() => authStore.userId)
 const pdfContainerRef = ref(null)
 const pdfExporting = ref(false)
 
+// 커스텀 확인 모달 상태 (브라우저 기본 confirm 대신, 우리 디자인으로 직접 그림)
+const showPasswordNotice = ref(false)
+let resolvePasswordNotice = null
+
+const askPasswordNoticeConfirm = () => {
+  showPasswordNotice.value = true
+  return new Promise((resolve) => {
+    resolvePasswordNotice = resolve
+  })
+}
+
+const confirmPasswordNotice = () => {
+  showPasswordNotice.value = false
+  resolvePasswordNotice?.(true)
+}
+
+const cancelPasswordNotice = () => {
+  showPasswordNotice.value = false
+  resolvePasswordNotice?.(false)
+}
+
 const exportPdf = async () => {
   if (pdfExporting.value) return
   if (!pdfContainerRef.value) return
+
+  // 비밀번호 = 생년월일 6자리(YYMMDD). authStore에 없으면 비밀번호 없이 저장(기능이 안 죽게 방어)
+  const birthPassword = authStore.birthDate ? moment(authStore.birthDate).format('YYMMDD') : null
+
+  if (birthPassword) {
+    const proceed = await askPasswordNoticeConfirm()
+    if (!proceed) return
+  } else {
+    console.warn('생년월일 정보가 없어 PDF 비밀번호 없이 저장합니다.')
+  }
 
   pdfExporting.value = true
   try {
@@ -45,7 +76,19 @@ const exportPdf = async () => {
     // 임시 노출 원복
     el.style.display = 'none'
 
-    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pdf = birthPassword
+      ? new jsPDF({
+          orientation: 'p',
+          unit: 'mm',
+          format: 'a4',
+          encryption: {
+            userPassword: birthPassword,
+            ownerPassword: birthPassword,
+            userPermissions: ['print'],
+          },
+        })
+      : new jsPDF('p', 'mm', 'a4')
+
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
 
@@ -203,17 +246,17 @@ const MY_COLOR = '#ffd239'
         <h1 class="h5 mb-0 fw-bold flex-grow-1 text-center">소비 리포트</h1>
         <button
           type="button"
-          class="btn btn-sm p-0 no-print"
+          class="btn btn-sm p-0 no-print d-flex flex-column align-items-center"
           :disabled="pdfExporting"
           @click="exportPdf"
-          style="width: 24px"
-          aria-label="PDF로 저장"
+          aria-label="PDF 내보내기"
         >
           <i
             class="fa-solid"
             :class="pdfExporting ? 'fa-spinner fa-spin' : 'fa-file-arrow-down'"
             style="color: #495057; font-size: 18px"
           ></i>
+          <span class="text-secondary" style="font-size: 10px">PDF 내보내기</span>
         </button>
       </div>
 
@@ -558,6 +601,36 @@ const MY_COLOR = '#ffd239'
     </template>
 
     <p v-else class="text-secondary text-center mt-5">리포트를 불러오는 중이에요...</p>
+  </div>
+
+  <!-- PDF 비밀번호 안내 모달 (브라우저 기본 confirm 대신 우리 디자인으로) -->
+  <div
+    v-if="showPasswordNotice"
+    class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+    style="background-color: rgba(0, 0, 0, 0.4); z-index: 1000"
+    @click.self="cancelPasswordNotice"
+  >
+    <div class="bg-white rounded-4 shadow p-4" style="width: 300px">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="fa-solid fa-lock" style="color: #fc9558; font-size: 20px"></i>
+        <h2 class="h6 mb-0 fw-bold">PDF 보안 안내</h2>
+      </div>
+      <p class="small text-secondary mb-1">PDF 파일은 비밀번호로 보호돼요.</p>
+      <p class="small mb-4">
+        비밀번호는 <span class="fw-bold">생년월일 6자리</span>예요.
+      </p>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-light flex-fill" @click="cancelPasswordNotice">취소</button>
+        <button
+          type="button"
+          class="btn flex-fill fw-semibold"
+          style="background-color: #ffd239; color: #212529"
+          @click="confirmPasswordNotice"
+        >
+          계속 진행
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
