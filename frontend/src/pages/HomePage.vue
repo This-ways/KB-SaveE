@@ -297,7 +297,7 @@ const menuOpen = ref(false);
 
         <!-- 남은 돈: 위 리스트에서 이어져서 "그래서 얼마 남았는지"처럼 보이게 -->
         <div class="d-flex justify-content-between align-items-center mt-2">
-          <span class="text-secondary small">목표 대비 남은 금액</span>
+          <span class="text-secondary small">목표 대비 남은 예산</span>
           <span
             class="h5 fw-bold mb-0"
             :style="{

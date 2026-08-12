@@ -31,6 +31,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isTrial = computed(() => state.value.user.trial);
 
+  // PDF 비밀번호(생년월일 6자리) 등에 활용
+const birthDate = computed(() => state.value.user.birthDate);
+
   // 로그인 직후 라우팅 분기에 사용
   // true  -> 메인으로 바로
   // false -> "데이터를 연결해 주세요" 화면부터
@@ -86,18 +89,19 @@ export const useAuthStore = defineStore('auth', () => {
   load();
 
   return {
-    state,
-    isLogin,
-    userId,
-    loginId,
-    userName,
-    isTrial,
-    isMydataConnected,
-    hasGoals,
-    login,
-    logout,
-    getToken,
-    setMydataConnected,
-    setHasGoals,
-  };
+  state,
+  isLogin,
+  userId,
+  loginId,
+  userName,
+  isTrial,
+  birthDate,   // ← 추가
+  isMydataConnected,
+  hasGoals,
+  login,
+  logout,
+  getToken,
+  setMydataConnected,
+  setHasGoals,
+};
 });
