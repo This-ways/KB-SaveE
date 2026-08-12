@@ -90,16 +90,12 @@ const goToCancel = () => {
     class="container py-3"
     style="max-width: 480px; background-color: #f8f9fa; min-height: 100vh"
   >
-    <!-- 상단 헤더 -->
-    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
-      <div
-        class="d-flex align-items-center gap-2"
-        style="cursor: pointer"
-        @click="goBack"
-      >
-        <i class="fa-solid fa-chevron-left fs-5"></i>
-        <h5 class="fw-bold mb-0">적금 현황</h5>
-      </div>
+    <!-- 헤더 -->
+    <div class="header">
+      <button class="back-btn" @click="goBack">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <h1 class="header-title">적금 현황</h1>
     </div>
 
     <!-- 로딩 상태 -->
@@ -382,5 +378,24 @@ const goToCancel = () => {
 <style scoped>
 .micro-text {
   font-size: 11px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 16px;
+}
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #111;
+  padding: 0;
+  cursor: pointer;
+}
+.header-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
 }
 </style>

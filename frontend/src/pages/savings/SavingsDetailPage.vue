@@ -68,16 +68,14 @@ const handleSubscribe = () => {
       paddingBottom: isFromStatus ? '40px' : '160px',
     }"
   >
-    <!-- 상단 헤더 -->
-    <div class="d-flex align-items-center mb-3">
-      <i
-        class="fa-solid fa-chevron-left fs-6 me-3"
-        style="cursor: pointer"
-        @click="goBack"
-      ></i>
-      <h6 class="fw-bold mb-0 text-truncate">
+    <!-- 헤더 -->
+    <div class="header">
+      <button class="back-btn" @click="goBack">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <h1 class="header-title text-truncate">
         {{ product?.productName || '적금 상세' }}
-      </h6>
+      </h1>
     </div>
 
     <!-- 로딩 상태 -->
@@ -242,5 +240,24 @@ const handleSubscribe = () => {
 <style scoped>
 .micro-text {
   font-size: 12px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 16px;
+}
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #111;
+  padding: 0;
+  cursor: pointer;
+}
+.header-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
 }
 </style>

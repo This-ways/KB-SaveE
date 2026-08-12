@@ -141,13 +141,11 @@ onMounted(() => {
     <!-- ========================================== -->
     <div v-else-if="currentStep === 1" class="d-flex flex-column gap-3 mb-5">
       <!-- 헤더 -->
-      <div class="d-flex align-items-center mb-1">
-        <i
-          class="fa-solid fa-chevron-left fs-5 me-3"
-          style="cursor: pointer"
-          @click="router.back()"
-        ></i>
-        <h5 class="fw-bold mb-0">추가 납입</h5>
+      <div class="header">
+        <button class="back-btn" @click="router.back()">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <h1 class="header-title">추가 납입</h1>
       </div>
 
       <!-- 적금 계좌 요약 카드 -->
@@ -427,5 +425,24 @@ onMounted(() => {
   background-color: #ffffff;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
   z-index: 100;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 16px;
+}
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #111;
+  padding: 0;
+  cursor: pointer;
+}
+.header-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
 }
 </style>
