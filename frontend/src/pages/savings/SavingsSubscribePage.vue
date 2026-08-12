@@ -301,13 +301,13 @@ const onAmountChange = () => {
     <!-- STEP 1: 입력 폼 단계 (우대금리 & 가입조건) -->
     <!-- ========================================== -->
     <div v-else-if="currentStep === 1">
-      <div class="d-flex align-items-center mb-3">
-        <i
-          class="fa-solid fa-chevron-left fs-5 me-2"
-          style="cursor: pointer"
-          @click="router.back()"
-        ></i>
-        <h5 class="fw-bold mb-0">{{ product?.productName || '적금 신규' }}</h5>
+      <div class="header">
+        <button class="back-btn" @click="router.back()">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <h1 class="header-title text-truncate">
+          {{ product?.productName || '적금 신규' }}
+        </h1>
       </div>
 
       <!-- 우대금리 선택 카드 -->
@@ -580,7 +580,6 @@ const onAmountChange = () => {
     <!-- STEP 2: 가입정보 확인 화면 (POST /confirm) -->
     <!-- ========================================== -->
     <div v-else-if="currentStep === 2" class="d-flex flex-column gap-3">
-      <!-- 헤더 -->
       <div class="d-flex justify-content-between align-items-center mb-1">
         <i
           class="fa-solid fa-chevron-left fs-5"
@@ -716,16 +715,23 @@ const onAmountChange = () => {
     <!-- STEP 3: 최종 가입 완료 화면 (POST /subscribe) -->
     <!-- ========================================== -->
     <div v-else-if="currentStep === 3" class="d-flex flex-column gap-3 py-2">
-      <!-- 상단 헤더 -->
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="fw-bold fs-5">적금 신규</span>
-        <div class="d-flex gap-3 text-secondary">
-          <i
-            class="fa-solid fa-house fs-5"
+      <!-- 헤더 -->
+      <div class="header d-flex justify-content-between align-items-center">
+        <h1 class="header-title">적금 신규</h1>
+        <div class="d-flex align-items-center gap-3 text-secondary">
+          <button
+            class="icon-btn border-0 bg-transparent p-0"
             style="cursor: pointer"
             @click="router.push('/home')"
-          ></i>
-          <i class="fa-solid fa-bars fs-5"></i>
+          >
+            <i class="fa-solid fa-house"></i>
+          </button>
+          <button
+            class="icon-btn border-0 bg-transparent p-0"
+            style="cursor: pointer"
+          >
+            <i class="fa-solid fa-bars"></i>
+          </button>
         </div>
       </div>
 
@@ -853,35 +859,23 @@ const onAmountChange = () => {
 .micro-text {
   font-size: 13px;
 }
-/* 상단 헤더 영역 (다른 페이지와 동일하게 큼직한 표준 상단바 규격으로 통일) */
 .header {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 56px; /* 상단바 표준 높이 고정 */
-  padding: 12px 0; /* 상하 여백 확보 */
-  margin-bottom: 8px; /* 아래 프로필 카드와의 간격 */
+  padding: 4px 4px 16px;
 }
-
-/* 뒤로가기 버튼 및 꺾쇠 아이콘 크기 증대 */
 .back-btn {
   background: none;
   border: none;
-  font-size: 22px; /* 18px -> 22px로 확대 (다른 페이지 꺾쇠 크기와 통일) */
-  font-weight: 700;
+  font-size: 18px;
   color: #111;
-  padding: 4px 8px 4px 0; /* 터치 영역 확보 */
+  padding: 0;
   cursor: pointer;
-  display: flex;
-  align-items: center;
 }
-
-/* 헤더 제목 글자 크기 통일 */
 .header-title {
-  font-size: 19px; /* 17px -> 19px로 확대 (적금 추천/상세 제목 크기와 통일) */
+  font-size: 17px;
   font-weight: 700;
-  color: #111;
   margin: 0;
-  line-height: 1.2;
 }
 </style>
