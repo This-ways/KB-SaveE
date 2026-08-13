@@ -17,6 +17,7 @@ public class NotificationResponseDTO {
     private String typeCode;
     private String title;
     private String body;
+    private Integer thresholdRate; // 배너에서 소진율 최고 알림을 고를 때 사용 (예산 알림만 값이 있음)
     private String sentAt;
 
     public static NotificationResponseDTO of(NotificationVO vo) {
@@ -39,6 +40,7 @@ public class NotificationResponseDTO {
                 .typeCode(vo.getTypeCode())
                 .title(title)
                 .body(body)
+                .thresholdRate(vo.getThresholdRate())
                 .sentAt(vo.getSentAt())
                 .build();
     }
