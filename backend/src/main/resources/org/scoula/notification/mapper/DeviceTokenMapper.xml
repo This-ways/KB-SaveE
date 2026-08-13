@@ -18,9 +18,10 @@
         SELECT fcm_token FROM device_token WHERE user_id = #{userId}
     </select>
 
-    <!-- 로그아웃 시 토큰 삭제 -->
-    <delete id="deleteByToken">
-        DELETE FROM device_token WHERE fcm_token = #{fcmToken}
+    <!-- 로그아웃 시 해당 유저의 모든 기기토큰 삭제
+         token_version 증가로 다른 기기도 함께 로그아웃되므로 토큰도 user_id 기준으로 일괄 제거 -->
+    <delete id="deleteAllByUserId">
+        DELETE FROM device_token WHERE user_id = #{userId}
     </delete>
 
 </mapper>
