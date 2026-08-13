@@ -3,22 +3,44 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import goalApi from '@/api/goalApi';
 import { getCategoryStyle } from '@/constants/categories';
-import { useAuthStore } from '@/stores/auth';
+import { useAlert } from '@/util/useAlert';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 
 const route = useRoute();
 const router = useRouter();
-const auth = useAuthStore();
 
 // 메인(지출 현황)에서 수정하러 들어온 경우 - 저장 후 완료 축하 화면을 건너뜀
 const isEditMode = route.query.mode === 'edit';
 
-const categories = ref([]);   // [{ categoryId, name }]
+const categories = ref([]);   // [{ categoryId, name }] - 분석 화면과 동일하게 지출 많은 순으로 정렬해서 보여줌
 const selectedIds = ref([]);  // 선택한 categoryId 목록
 const loading = ref(true);
 
 onMounted(async () => {
   try {
-    categories.value = await goalApi.getCategories();
+    const [cats, averages] = await Promise.all([
+      goalApi.getCategories(),
+      goalApi.getCategoryAverages(3),
+    ]);
+
+    // 정렬 규칙:
+    // 1) 지출 데이터가 있는 카테고리 - 지출 많은 순 (분석 화면에 top7로 안 보였어도, 지출만 있으면 여기 포함)
+    // 2) 지출 데이터가 없는 카테고리 - 순서를 가릴 기준이 없으니 한글(가나다) 순
+    // 3) "기타"는 위 두 그룹 어디에 속하든 상관없이 무조건 맨 마지막
+    const avgMap = {};
+    averages.forEach((a) => {
+      avgMap[a.categoryId] = a.avgAmount;
+    });
+
+    const isEtc = (c) => c.name === '기타';
+    const withSpending = cats.filter((c) => !isEtc(c) && (avgMap[c.categoryId] ?? 0) > 0);
+    const noSpending = cats.filter((c) => !isEtc(c) && !((avgMap[c.categoryId] ?? 0) > 0));
+    const etc = cats.filter(isEtc);
+
+    withSpending.sort((a, b) => avgMap[b.categoryId] - avgMap[a.categoryId]);
+    noSpending.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+    categories.value = [...withSpending, ...noSpending, ...etc];
 
     // 수정 모드면 이미 설정해둔 카테고리를 미리 체크해둠
     if (isEditMode) {
@@ -26,7 +48,7 @@ onMounted(async () => {
       selectedIds.value = myGoals.map((g) => g.categoryId);
     }
   } catch (e) {
-    alert('카테고리를 불러오지 못했어요.');
+    showAlert('카테고리를 불러오지 못했어요.');
   } finally {
     loading.value = false;
   }
@@ -50,10 +72,12 @@ const canProceed = computed(() => selectedIds.value.length > 0);
 // 수정 모드면 홈으로, 최초 설정(온보딩 중)이면 자산 연결 화면으로
 // 단, isEditMode가 아니면(=진짜 최초 온보딩 흐름) 뒤로가기를 눌렀을 때
 // 어중간하게 앱 안에 남기지 않고 로그아웃 후 로그인 화면으로 완전히 빠져나가게 한다.
+// 수정 모드면 홈으로, 최초 설정(온보딩 중)이면 바로 이전 단계(분석 결과 화면)로.
+// 최초 설정 흐름에서 "여기서 로그아웃"이라는 개념은 이제 그 앞단계인 AnalysisResultPage로 옮겼다
+// (계좌연결 -> 분석결과 -> 카테고리선택 순서로 화면이 하나 늘어났기 때문).
 const goBack = () => {
   if (!isEditMode) {
-    auth.logout();
-    router.push('/auth/login');
+    router.push('/goal/analysis');
     return;
   }
   router.push('/home');
@@ -69,6 +93,8 @@ const goNext = () => {
     },
   });
 };
+const { alertState, showAlert, hideAlert } = useAlert();
+
 </script>
 
 <template>
@@ -116,20 +142,34 @@ const goNext = () => {
       </button>
     </div>
   </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
 </template>
 
 <style scoped>
 .category-page {
-  padding: 20px 20px 100px;
+  padding: 76px 20px 100px;
   min-height: 100vh;
   background: #fff;
 }
 .back-btn {
-  background: none;
+  background: #fff;
   border: none;
   font-size: 20px;
-  padding: 8px 0;
+  padding: 20px 20px 12px;
   color: #111;
+  /* 스크롤해도 화면에 그대로 남아있게 - 다른 화면들과 동일한 방식 */
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
+  text-align: left;
 }
 .title {
   font-size: 24px;

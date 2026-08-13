@@ -45,16 +45,12 @@ const formatMoney = (n) => Number(n).toLocaleString();
           <template v-if="loading">계산 중...</template>
           <template v-else>{{ formatMoney(expectedSaving) }}원</template>
         </strong>
-        <p class="desc">
-          소비를 분석해서,<br />
-          절약할 금액을 미리 계산해 봤어요
-        </p>
       </div>
       <div class="money-icon">💰</div>
     </div>
 
     <div class="bottom">
-      <button class="next-btn" @click="goMain">소비 분석 시작하기</button>
+      <button class="next-btn" @click="goMain">SaveE 시작하기 →</button>
     </div>
   </div>
 </template>
@@ -98,14 +94,16 @@ const formatMoney = (n) => Number(n).toLocaleString();
   border-radius: 16px;
   padding: 24px 20px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  text-align: center;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 .card-text {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
 }
 .label {
@@ -121,12 +119,6 @@ const formatMoney = (n) => Number(n).toLocaleString();
   font-size: 28px;
   font-weight: 700;
   color: #16a34a;
-  margin-bottom: 10px;
-}
-.desc {
-  font-size: 12px;
-  color: #9ca3af;
-  line-height: 1.5;
 }
 .money-icon {
   font-size: 56px;

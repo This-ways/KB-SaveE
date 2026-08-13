@@ -99,7 +99,7 @@ const fetchStatus = async () => {
     }
   } catch (error) {
     console.error('적금 정보 조회 실패:', error);
-    showAlert('적금 정보를 불러오는데 실패했습니다.');
+    await showAlert('적금 정보를 불러오는데 실패했습니다.');
     router.back();
   } finally {
     loading.value = false;

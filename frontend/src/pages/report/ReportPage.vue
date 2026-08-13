@@ -6,6 +6,8 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
+import { useAlert } from '@/util/useAlert';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -101,7 +103,7 @@ const exportPdf = async () => {
     pdf.save(`소비리포트_${yearMonth.value}.pdf`)
   } catch (e) {
     console.error('PDF 저장 실패', e)
-    alert('PDF 저장에 실패했어요. 잠시 후 다시 시도해주세요.')
+    showAlert('PDF 저장에 실패했어요. 잠시 후 다시 시도해주세요.')
   } finally {
     pdfExporting.value = false
   }
@@ -233,6 +235,8 @@ const maxCompare = computed(() => {
 })
 
 const MY_COLOR = '#ffd239'
+const { alertState, showAlert, hideAlert } = useAlert();
+
 </script>
 
 <template>
@@ -646,6 +650,11 @@ const MY_COLOR = '#ffd239'
       </div>
     </div>
   </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
 </template>
 
 <style scoped>

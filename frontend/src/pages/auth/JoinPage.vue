@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import userApi from '@/api/userApi';
+import { useAlert } from '@/util/useAlert';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 
 const router = useRouter();
 
@@ -89,7 +91,7 @@ const doJoin = async () => {
       userName: form.value.userName,
       birthDate: form.value.birthDate,
     });
-    alert('회원가입이 완료되었습니다. 로그인해 주세요.');
+    await showAlert('회원가입이 완료되었습니다. 로그인해 주세요.');
     router.push('/auth/login');
   } catch (e) {
     // 백엔드: 아이디 중복 시 400 (IllegalStateException 핸들러)
@@ -100,6 +102,8 @@ const doJoin = async () => {
 };
 
 const goLogin = () => router.push('/auth/login');
+const { alertState, showAlert, hideAlert } = useAlert();
+
 </script>
 
 <template>
@@ -170,6 +174,11 @@ const goLogin = () => router.push('/auth/login');
       </button>
     </div>
   </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
 </template>
 
 <style scoped>

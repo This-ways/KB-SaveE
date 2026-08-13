@@ -34,7 +34,7 @@ const isMaturityCancel = computed(() => {
 const fetchCancelPreview = async () => {
   // subscriptionId가 유효하지 않으면 이전 페이지로 복귀
   if (!subscriptionId.value) {
-    showAlert('올바르지 않은 접근입니다.');
+    await showAlert('올바르지 않은 접근입니다.');
     router.back();
     return;
   }
