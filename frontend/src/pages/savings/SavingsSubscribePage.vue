@@ -146,6 +146,18 @@ const amountError = computed(() => {
   return '';
 });
 
+const autoTransferAmountError = computed(() => {
+  if (autoTransferAmount.value < minDepositAmount.value) {
+    return `최소 자동이체금액은 ${minDepositAmount.value.toLocaleString()}원입니다.`;
+  }
+
+  if (autoTransferAmount.value > maxDepositAmount.value) {
+    return `최대 자동이체금액은 ${maxDepositAmount.value.toLocaleString()}원입니다.`;
+  }
+
+  return '';
+});
+
 // 가입금액 세 자릿수 콤마 처리
 const formattedDepositAmount = computed({
   get() {
@@ -201,6 +213,11 @@ const isConfirming = ref(false);
 const handleConfirm = async () => {
   if (amountError.value) {
     showAlert(amountError.value);
+    return;
+  }
+
+  if (autoTransferAmountError.value) {
+    showAlert(autoTransferAmountError.value);
     return;
   }
 
@@ -633,6 +650,7 @@ const onAmountChange = () => {
               type="text"
               inputmode="numeric"
               class="form-control fw-bold text-end pe-3"
+              :class="{ 'border-danger text-danger': autoTransferAmountError }"
               @input="handleAutoTransferInput"
             />
 
@@ -640,12 +658,18 @@ const onAmountChange = () => {
               원
             </span>
           </div>
+          <div
+            v-if="autoTransferAmountError"
+            class="text-danger micro-text mt-1 text-end"
+          >
+            {{ autoTransferAmountError }}
+          </div>
         </div>
       </div>
 
       <button
         class="btn btn-warning w-100 py-3 fw-bold rounded-4 text-dark"
-        :disabled="!!amountError"
+        :disabled="!!amountError || !!autoTransferAmountError"
         @click="handleConfirm"
       >
         다음 (가입정보 확인)
