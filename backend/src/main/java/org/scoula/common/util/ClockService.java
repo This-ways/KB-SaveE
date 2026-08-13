@@ -32,6 +32,6 @@ public class ClockService {
 
     /** 이번 달 카테고리 목표는 1~7일에만 수정 가능 */
     public boolean isWithinGoalEditWindow() {
-        return today().getDayOfMonth() <= 7;
+        return today().getDayOfMonth() <= 30;
     }
 }
