@@ -14,6 +14,7 @@ const router = useRouter();
 const productId = ref(Number(route.params.productId));
 
 const isBottomSheetOpen = ref(false);
+const isPaymentDaySheetOpen = ref(false);
 
 // 백엔드에서 받아온 상품 정보 및 금리 리스트
 const product = ref(null);
@@ -445,6 +446,66 @@ const onAmountChange = () => {
         </Transition>
       </Teleport>
 
+      <Teleport to="body">
+        <!-- 오버레이 -->
+        <Transition name="fade">
+          <div
+            v-if="isPaymentDaySheetOpen"
+            class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
+            style="z-index: 1050"
+            @click="isPaymentDaySheetOpen = false"
+          ></div>
+        </Transition>
+
+        <!-- 바텀시트 -->
+        <Transition name="slide-up">
+          <div
+            v-if="isPaymentDaySheetOpen"
+            class="position-fixed bottom-0 start-50 translate-middle-x bg-white rounded-top-4 shadow-lg"
+            style="
+              z-index: 1055;
+              max-width: 420px;
+              width: 100%;
+              max-height: 70vh;
+            "
+          >
+            <div class="p-3 border-bottom">
+              <div
+                class="bg-secondary opacity-25 rounded-pill mx-auto mb-3"
+                style="width: 40px; height: 4px"
+              ></div>
+
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0">자동이체일 선택</h6>
+
+                <button
+                  class="btn-close"
+                  @click="isPaymentDaySheetOpen = false"
+                ></button>
+              </div>
+            </div>
+
+            <div class="overflow-auto" style="max-height: 50vh">
+              <button
+                v-for="day in 28"
+                :key="day"
+                type="button"
+                class="btn w-100 text-start px-4 py-3 border-bottom rounded-0"
+                :class="{
+                  'bg-warning bg-opacity-25 fw-bold': paymentDay === day,
+                }"
+                @click="
+                  paymentDay = day;
+                  isPaymentDaySheetOpen = false;
+                "
+              >
+                {{ day }}일
+              </button>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+
       <!-- 금리 현황 요약 -->
       <div class="p-3 bg-warning bg-opacity-10 rounded-4 mb-4">
         <div class="d-flex justify-content-between small text-secondary mb-1">
@@ -548,21 +609,25 @@ const onAmountChange = () => {
         <!-- 4. 자동이체 설정 -->
         <div>
           <label class="form-label small text-secondary">자동이체 설정</label>
+
           <div class="input-group">
-            <span class="input-group-text bg-light text-secondary micro-text"
-              >매월</span
+            <span class="input-group-text bg-light text-secondary micro-text">
+              매월
+            </span>
+
+            <button
+              type="button"
+              class="form-control text-center fw-bold bg-white"
+              @click="isPaymentDaySheetOpen = true"
             >
-            <input
-              v-model.number="paymentDay"
-              type="number"
-              class="form-control fw-bold text-center"
-              placeholder="28"
-              min="1"
-              max="31"
-            />
-            <span class="input-group-text bg-light text-secondary micro-text"
-              >일 /</span
-            >
+              {{ paymentDay }}일
+              <i class="fa-solid fa-chevron-down ms-1"></i>
+            </button>
+
+            <span class="input-group-text bg-light text-secondary micro-text">
+              /
+            </span>
+
             <input
               :value="formattedAutoTransferAmount"
               type="text"
@@ -570,9 +635,10 @@ const onAmountChange = () => {
               class="form-control fw-bold text-end pe-3"
               @input="handleAutoTransferInput"
             />
-            <span class="input-group-text bg-light text-secondary micro-text"
-              >원</span
-            >
+
+            <span class="input-group-text bg-light text-secondary micro-text">
+              원
+            </span>
           </div>
         </div>
       </div>
@@ -897,5 +963,27 @@ const onAmountChange = () => {
   font-size: 17px;
   font-weight: 700;
   margin: 0;
+}
+
+/* ===== 자동이체일 바텀시트 ===== */
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.25s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translate(-50%, 100%);
 }
 </style>
