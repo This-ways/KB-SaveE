@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAlert } from '@/util/useAlert';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
@@ -15,7 +17,9 @@ const logout = () => {
 };
 
 // 아직 화면이 없는 항목은 자리만 잡아둠
-const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
+const notReady = (label) => showAlert(`${label} 화면은 준비 중이에요.`);
+const { alertState, showAlert, hideAlert } = useAlert();
+
 </script>
 
 <template>
@@ -90,6 +94,11 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
 
     <p class="version">KB SaveE v1.0.0</p>
   </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
 </template>
 
 <style scoped>
