@@ -295,7 +295,12 @@ const onAmountChange = () => {
 <template>
   <div
     class="container py-3"
-    style="max-width: 420px; background-color: #fff; min-height: 100vh; padding-top: 76px !important"
+    style="
+      max-width: 420px;
+      background-color: #fff;
+      min-height: 100vh;
+      padding-top: 76px !important;
+    "
   >
     <!-- 로딩 화면 -->
     <div v-if="loading" class="text-center py-5 text-secondary">
@@ -585,19 +590,22 @@ const onAmountChange = () => {
     <!-- STEP 2: 가입정보 확인 화면 (POST /confirm) -->
     <!-- ========================================== -->
     <div v-else-if="currentStep === 2" class="d-flex flex-column gap-3">
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <i
-          class="fa-solid fa-chevron-left fs-5"
-          style="cursor: pointer"
-          @click="currentStep = 1"
-        ></i>
-        <span class="fw-bold fs-5">적금 신규</span>
-        <span
-          class="text-secondary small"
-          style="cursor: pointer"
+      <div class="header justify-content-between">
+        <!-- 1. 뒤로가기 버튼 -->
+        <button class="back-btn" @click="currentStep = 1">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <!-- 2. 좌측으로 붙는 제목 (flex-grow-1, ms-2 적용) -->
+        <h1 class="header-title text-truncate flex-grow-1 ms-2">적금 신규</h1>
+
+        <!-- 3. 우측 취소 버튼 -->
+        <button
+          class="btn border-0 p-0 text-secondary small"
           @click="router.back()"
-          >취소</span
         >
+          취소
+        </button>
       </div>
 
       <!-- 프로그래스 바 (3/4) -->
@@ -730,12 +738,6 @@ const onAmountChange = () => {
             @click="router.push('/home')"
           >
             <i class="fa-solid fa-house"></i>
-          </button>
-          <button
-            class="icon-btn border-0 bg-transparent p-0"
-            style="cursor: pointer"
-          >
-            <i class="fa-solid fa-bars"></i>
           </button>
         </div>
       </div>
