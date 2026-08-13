@@ -88,6 +88,16 @@ const goToCancel = () => {
     showAlert('적금 가입 정보를 찾을 수 없습니다.');
   }
 };
+
+// 정액 적립식 여부 판단 및 추가 납입 클릭 핸들러
+const handleDepositClick = () => {
+  const saveType = statusData.value?.saveType || '';
+  if (saveType.includes('정액')) {
+    showAlert('정액 적립식 상품은 추가 납입이 불가능합니다.');
+    return;
+  }
+  router.push(`/savings/${subscriptionId}/deposit`);
+};
 </script>
 
 <template>
@@ -367,12 +377,28 @@ const goToCancel = () => {
           </button>
         </div>
         <div class="col-12">
+          <!-- 정액 적립식인 경우 비활성화 스타일 및 처리 적용 -->
           <button
-            class="btn btn-warning w-100 py-3 fw-bold rounded-4 text-dark shadow-sm"
-            style="background-color: #ffcc00; border: none"
-            @click="router.push(`/savings/${subscriptionId}/deposit`)"
+            class="btn w-100 py-3 fw-bold rounded-4 shadow-sm"
+            :class="
+              statusData.saveType?.includes('정액')
+                ? 'btn-secondary text-white opacity-50'
+                : 'btn-warning text-dark'
+            "
+            :style="
+              statusData.saveType?.includes('정액')
+                ? 'background-color: #e9ecef; border: none; color: #6c757d !important;'
+                : 'background-color: #ffcc00; border: none;'
+            "
+            @click="handleDepositClick"
           >
             <i class="fa-solid fa-plus me-1"></i> 추가 납입하기
+            <span
+              v-if="statusData.saveType?.includes('정액')"
+              class="small fw-normal ms-1"
+              style="font-size: 11px"
+              >(정액적립식 불가)</span
+            >
           </button>
         </div>
       </div>
