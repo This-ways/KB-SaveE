@@ -32,15 +32,15 @@ onMounted(async () => {
       avgMap[a.categoryId] = a.avgAmount;
     });
 
-    const isEtc = (c) => c.name === '기타';
-    const withSpending = cats.filter((c) => !isEtc(c) && (avgMap[c.categoryId] ?? 0) > 0);
-    const noSpending = cats.filter((c) => !isEtc(c) && !((avgMap[c.categoryId] ?? 0) > 0));
-    const etc = cats.filter(isEtc);
+    // 정렬 규칙: 지출 있는 카테고리는 지출 많은 순, 없는 카테고리는 한글(가나다) 순.
+    // "기타"도 특별 취급 없이 이 규칙에 똑같이 참여함 (예전엔 무조건 맨 마지막으로 뺐었는데 롤백).
+    const withSpending = cats.filter((c) => (avgMap[c.categoryId] ?? 0) > 0);
+    const noSpending = cats.filter((c) => !((avgMap[c.categoryId] ?? 0) > 0));
 
     withSpending.sort((a, b) => avgMap[b.categoryId] - avgMap[a.categoryId]);
     noSpending.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
-    categories.value = [...withSpending, ...noSpending, ...etc];
+    categories.value = [...withSpending, ...noSpending];
 
     // 수정 모드면 이미 설정해둔 카테고리를 미리 체크해둠
     if (isEditMode) {
