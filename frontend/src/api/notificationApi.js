@@ -8,16 +8,9 @@ export default {
   // 기기토큰 등록
   // 같은 토큰을 다시 보내면 서버에서 ON DUPLICATE KEY UPDATE 로 처리됨
   // 한 사용자가 여러 기기를 등록할 수 있음 (멀티 디바이스 발송)
+  // 삭제는 별도 API 없이 로그아웃 시 서버에서 user_id 기준으로 일괄 처리한다
   async registerDeviceToken(fcmToken) {
     const { data } = await api.post(`${BASE_URL}/device-token`, { fcmToken });
-    return data;
-  },
-
-  // 기기토큰 삭제 (로그아웃 / 알림 끄기 시)
-  async deleteDeviceToken(fcmToken) {
-    const { data } = await api.delete(`${BASE_URL}/device-token`, {
-      params: { fcmToken },
-    });
     return data;
   },
 
@@ -51,7 +44,7 @@ export default {
     return data;
   },
 
-    // 푸시 수신 여부 조회 (user.push_enabled)
+  // 푸시 수신 여부 조회 (user.push_enabled)
   async getPushEnabled() {
     const { data } = await api.get('/api/users/push-enabled');
     return data;

@@ -23,9 +23,4 @@ public class DeviceTokenController {
         deviceTokenService.saveDeviceToken(user.getUserId(), dto.getFcmToken());
     }
 
-    // 기기토큰 삭제 (로그아웃 시)
-    @DeleteMapping("/device-token")
-    public void deleteDeviceToken(@RequestParam String fcmToken) {
-        deviceTokenService.deleteDeviceToken(fcmToken);
-    }
 }
