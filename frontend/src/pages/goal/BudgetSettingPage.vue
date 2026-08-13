@@ -86,6 +86,10 @@ onMounted(async () => {
 const isOver = (item) =>
   item.avgAmount != null && Number(item.targetAmount) > item.avgAmount;
 
+// 최초 온보딩(신규가입)만 이걸로 저장을 막는다 - 아직 아무 맥락 없는 사용자한테는
+// 평균 안에서 시작하게 가이드하는 게 맞다고 판단.
+// 반면 나중에(수정 모드) 예산을 고칠 때는, 3개월 평균 안에 있던 큰 변동 하나가 지나가버리면
+// 평균 자체가 왜곡돼서 오히려 사용자를 방해할 수 있어 제한을 안 건다 (빨간 테두리 표시만 유지).
 const hasOver = computed(() => items.value.some(isOver));
 
 const totalBudget = computed(() =>
@@ -97,7 +101,7 @@ const canSave = computed(
     canEdit &&
     items.value.length > 0 &&
     items.value.every((it) => Number(it.targetAmount) > 0) &&
-    !hasOver.value
+    (isEditMode || !hasOver.value) // 최초 온보딩일 때만 평균 초과 시 저장 막음
 );
 
 // 카테고리 선택 화면으로 (수정 모드 유지)
@@ -152,7 +156,13 @@ const { alertState, showAlert, hideAlert } = useAlert();
       <span class="highlight">이번 달 쓸 금액</span>을<br />
       설정해주세요
     </h1>
-    <p class="subtitle">현실적인 금액이 절약의 시작이에요!</p>
+    <p class="subtitle">
+      {{
+        isEditMode
+          ? '원하시는 예산을 자유롭게 입력해주세요!'
+          : '평균 지출을 참고해서 예산을 설정해보세요!'
+      }}
+    </p>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
 
@@ -188,11 +198,6 @@ const { alertState, showAlert, hideAlert } = useAlert();
             <span class="won">원</span>
           </div>
         </div>
-
-        <p v-if="isOver(item)" class="warn">
-          <i class="fa-solid fa-circle-exclamation"></i>
-          평균 지출을 초과하였습니다
-        </p>
       </div>
 
       <!-- 목록과 이어지도록 구분선 없이 배치 -->
@@ -206,8 +211,8 @@ const { alertState, showAlert, hideAlert } = useAlert();
       <p v-if="!canEdit" class="bottom-warn">
         쓸 금액은 매달 1일 ~ 7일에만 설정할 수 있어요
       </p>
-      <p v-else-if="hasOver" class="bottom-warn">
-        평균 지출을 초과한 항목이 있어요
+      <p v-else-if="!isEditMode && hasOver" class="bottom-warn">
+        평균 지출을 초과한 항목이 있어요. 평균 이하로 입력해 주세요
       </p>
       <button class="next-btn" :disabled="!canSave || saving" @click="save">
         {{ saving ? '저장 중...' : '다음' }}
@@ -346,15 +351,6 @@ const { alertState, showAlert, hideAlert } = useAlert();
 .item.over .input-box input,
 .item.over .input-box .won {
   color: #ef4444;
-}
-
-.warn {
-  margin: 8px 0 0 46px;
-  font-size: 11px;
-  color: #ef4444;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 /* 구분선 없이 목록에 이어지도록 */
