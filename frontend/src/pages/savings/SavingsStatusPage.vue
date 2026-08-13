@@ -103,7 +103,12 @@ const handleDepositClick = () => {
 <template>
   <div
     class="container py-3"
-    style="max-width: 420px; background-color: #f8f9fa; min-height: 100vh; padding-top: 76px !important"
+    style="
+      max-width: 420px;
+      background-color: #f8f9fa;
+      min-height: 100vh;
+      padding-top: 76px !important;
+    "
   >
     <!-- 헤더 -->
     <div class="header">
