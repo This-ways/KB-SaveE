@@ -325,21 +325,14 @@ onMounted(() => {
     <!-- ========================================== -->
     <div v-else-if="currentStep === 2" class="d-flex flex-column gap-3 mb-5">
       <!-- 헤더 -->
-      <div
-        class="header d-flex justify-content-between align-items-center mb-1"
-      >
-        <i
-          class="fa-solid fa-chevron-left fs-5"
-          style="cursor: pointer"
-          @click="currentStep = 1"
-        ></i>
-        <span class="header-title fw-bold fs-5">추가 납입 확인</span>
-        <span
-          class="text-secondary small"
-          style="cursor: pointer"
-          @click="router.back()"
-          >취소</span
-        >
+      <div class="header">
+        <button class="back-btn" @click="currentStep = 1">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <h1 class="header-title">추가 납입 확인</h1>
+
+        <button class="cancel-btn" @click="router.back()">취소</button>
       </div>
 
       <h5 class="fw-bold my-1">납입 정보를 확인해 주세요</h5>
@@ -533,5 +526,22 @@ onMounted(() => {
   font-size: 17px;
   font-weight: 700;
   margin: 0;
+}
+.confirm-header {
+  justify-content: space-between;
+}
+
+.cancel-btn {
+  margin-left: auto; /* 취소만 오른쪽 끝으로 */
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 16px;
+  padding: 0;
+}
+
+.confirm-header {
+  position: absolute;
+  transform: translateX(-50%);
 }
 </style>
