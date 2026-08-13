@@ -20,7 +20,7 @@ const isFromStatus = computed(() => route.query.from === 'status');
 
 const fetchDetail = async () => {
   if (!productId || productId === 'undefined') {
-    showAlert('상품 정보를 찾을 수 없습니다.');
+    await showAlert('상품 정보를 찾을 수 없습니다.');
     router.back();
     return;
   }
