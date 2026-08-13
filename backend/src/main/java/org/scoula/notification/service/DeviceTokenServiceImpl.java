@@ -30,9 +30,11 @@ public class DeviceTokenServiceImpl implements DeviceTokenService {
         return deviceTokenMapper.selectTokensByUserId(userId);
     }
 
+    // 로그아웃 시 해당 유저의 모든 기기토큰을 지운다 - 남아 있으면 로그아웃 후에도 푸시가 계속 간다
     @Override
-    public void deleteDeviceToken(String fcmToken) {
-        deviceTokenMapper.deleteByToken(fcmToken);
-        log.info("기기토큰 삭제");
+    public void deleteAllByUserId(Long userId) {
+        deviceTokenMapper.deleteAllByUserId(userId);
+        log.info("기기토큰 전체 삭제 - userId: {}", userId);
     }
+
 }
