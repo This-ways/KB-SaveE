@@ -10,6 +10,8 @@ import { useAuthStore } from '@/stores/auth';
 import { getCategoryStyle } from '@/constants/categories';
 import logoImg from '@/assets/SaveE_logo.png';
 import SideMenu from '@/components/SideMenu.vue';
+import { useAlert } from '@/util/useAlert';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 import NotificationBanner from '@/components/notification/NotificationBanner.vue';
 
 const router = useRouter();
@@ -145,12 +147,12 @@ const goToSavings = async () => {
       // 적금 번호를 뒤에 붙여 적금 현황 페이지로 이동
       router.push(`/savings/status/${subId}`);
     } else {
-      //alert('가입된 적금이 없습니다.');
+      //showAlert('가입된 적금이 없습니다.');
       router.push('/savings/recommend');
     }
   } catch (error) {
     console.error('적금 가입 정보 조회 실패:', error);
-    alert('적금 정보를 불러오지 못했습니다.');
+    showAlert('적금 정보를 불러오지 못했습니다.');
   }
 };
 
@@ -182,6 +184,8 @@ const goToMyPage = () => router.push({ name: 'mypage' });
 
 // 햄버거 메뉴(서랍) 열림 상태
 const menuOpen = ref(false);
+const { alertState, showAlert, hideAlert } = useAlert();
+
 </script>
 
 <template>
@@ -459,6 +463,11 @@ const menuOpen = ref(false);
     <!-- 햄버거 메뉴 (서랍) -->
     <SideMenu :open="menuOpen" @close="menuOpen = false" />
   </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
 </template>
 
 <style scoped>

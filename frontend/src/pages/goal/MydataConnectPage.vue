@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import userApi from '@/api/userApi';
+import { useAlert } from '@/util/useAlert';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
@@ -27,15 +29,17 @@ const connect = async () => {
 
     setTimeout(() => {
       loading.value = false;
-      router.push('/goal/category');
+      router.push('/goal/analysis');
     }, 2400);
   } catch (e) {
     loading.value = false;
-    alert('연결에 실패했어요. 잠시 후 다시 시도해 주세요.');
+    showAlert('연결에 실패했어요. 잠시 후 다시 시도해 주세요.');
   }
 };
 
 const skip = () => router.push('/home'); // 연결 없이 넘어가면 메인으로
+const { alertState, showAlert, hideAlert } = useAlert();
+
 </script>
 
 <template>
@@ -83,20 +87,34 @@ const skip = () => router.push('/home'); // 연결 없이 넘어가면 메인으
       <p class="loading-sub">잠시만 기다려 주세요</p>
     </div>
   </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
 </template>
 
 <style scoped>
 .connect-page {
-  padding: 20px;
+  padding: 76px 20px 20px;
   min-height: 100vh;
   background: #fff;
 }
 .back-btn {
-  background: none;
+  background: #fff;
   border: none;
   font-size: 20px;
-  padding: 8px 0;
+  padding: 20px 20px 12px;
   color: #111;
+  /* 스크롤해도 화면에 그대로 남아있게 - 다른 화면들과 동일한 방식 */
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
+  text-align: left;
 }
 .title {
   font-size: 24px;

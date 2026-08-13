@@ -5,6 +5,8 @@ import moment from 'moment';
 import goalApi from '@/api/goalApi';
 import { getCategoryStyle } from '@/constants/categories';
 import { useAuthStore } from '@/stores/auth';
+import { useAlert } from '@/util/useAlert';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -75,7 +77,7 @@ onMounted(async () => {
       };
     });
   } catch (e) {
-    alert('정보를 불러오지 못했어요.');
+    showAlert('정보를 불러오지 못했어요.');
   } finally {
     loading.value = false;
   }
@@ -121,7 +123,7 @@ const save = async () => {
     router.push(isEditMode ? '/home' : '/goal/complete');
   } catch (e) {
     const msg = e?.response?.data || '저장에 실패했어요.';
-    alert(msg);
+    showAlert(msg);
   } finally {
     saving.value = false;
   }
@@ -135,6 +137,8 @@ const onAmountInput = (item, event) => {
   item.targetAmount = digitsOnly ? Number(digitsOnly) : 0;
   event.target.value = formatMoney(item.targetAmount);
 };
+const { alertState, showAlert, hideAlert } = useAlert();
+
 </script>
 
 <template>
@@ -170,7 +174,7 @@ const onAmountInput = (item, event) => {
           <div class="info">
             <strong>{{ item.name }}</strong>
             <span class="avg">
-              나의 평균 지출 : {{ formatMoney(item.avgAmount) }}원
+              3개월 평균 지출 : {{ formatMoney(item.avgAmount) }}원
             </span>
           </div>
 
@@ -210,20 +214,34 @@ const onAmountInput = (item, event) => {
       </button>
     </div>
   </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
 </template>
 
 <style scoped>
 .budget-page {
-  padding: 20px 20px 140px;
+  padding: 76px 20px 140px;
   min-height: 100vh;
   background: #fff;
 }
 .back-btn {
-  background: none;
+  background: #fff;
   border: none;
   font-size: 20px;
-  padding: 8px 0;
+  padding: 20px 20px 12px;
   color: #111;
+  /* 스크롤해도 화면에 그대로 남아있게 - 다른 화면들과 동일한 방식 */
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
+  text-align: left;
 }
 .title {
   font-size: 24px;

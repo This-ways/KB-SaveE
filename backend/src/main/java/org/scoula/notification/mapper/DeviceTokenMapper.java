@@ -8,5 +8,5 @@ import java.util.List;
 public interface DeviceTokenMapper {
     void insertOrUpdate(DeviceTokenVO deviceTokenVO);
     List<String> selectTokensByUserId(@Param("userId") Long userId);
-    void deleteByToken(@Param("fcmToken") String fcmToken);
+    void deleteAllByUserId(@Param("userId") Long userId);
 }

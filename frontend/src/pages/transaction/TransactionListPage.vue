@@ -6,6 +6,8 @@ import categoryApi from '@/api/categoryApi'
 import goalApi from '@/api/goalApi'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useAlert } from '@/util/useAlert';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 
 const router = useRouter()
 const goHome = () => router.push({ name: 'home' })
@@ -365,9 +367,11 @@ const chooseCategory = async (categoryId) => {
     await Promise.all([loadSummary(), loadList()]) // 카테고리 바뀌었으니 요약/목록 다시 불러옴 (전체합계는 loadList 안에서 같이 처리됨)
   } catch (e) {
     console.error('카테고리 수정 실패', e)
-    alert('카테고리 수정에 실패했어요. (수입/고정비 거래는 수정할 수 없어요)')
+    showAlert('카테고리 수정에 실패했어요. (수입/고정비 거래는 수정할 수 없어요)')
   }
 }
+const { alertState, showAlert, hideAlert } = useAlert();
+
 </script>
 
 <template>
@@ -615,6 +619,11 @@ const chooseCategory = async (categoryId) => {
       </div>
     </div>
   </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
 </template>
 
 <style scoped>

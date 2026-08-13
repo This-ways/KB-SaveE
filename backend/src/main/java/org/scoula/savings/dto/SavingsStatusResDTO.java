@@ -20,6 +20,8 @@ public class SavingsStatusResDTO {
 
     // 2. 중단 카드 (상세 현황)
     private LocalDate startDate;     // 가입일
+    private LocalDate endDate;       // 만기일
+
     private Long monthlyAmount;      // 월 납입액 (설정금액)
     private Long expectedAmount;     // 만기 시 예상 수령액 (원금 + 이자)
     private Long totalPrincipal;     // 총 납입 원금 (실제 납입한 금액 합산)

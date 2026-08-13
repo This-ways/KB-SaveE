@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAlert } from '@/util/useAlert';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const props = defineProps({
@@ -35,7 +37,7 @@ const goToMySavings = async () => {
     if (subId) {
       router.push(`/savings/status/${subId}`);
     } else {
-      alert('가입된 적금이 없습니다. 적금 추천에서 먼저 가입해보세요.');
+      showAlert('가입된 적금이 없습니다. 적금 추천에서 먼저 가입해보세요.');
     }
   } catch (error) {
     console.error('적금 가입 정보 조회 실패:', error);
@@ -58,6 +60,8 @@ const onMenuClick = (m) => {
     go(m.to);
   }
 };
+const { alertState, showAlert, hideAlert } = useAlert();
+
 </script>
 
 <template>
@@ -109,6 +113,11 @@ const onMenuClick = (m) => {
       </div>
     </aside>
   </Teleport>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
 </template>
 
 <style scoped>

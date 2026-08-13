@@ -1,13 +1,11 @@
 // src/util/usePushSetup.js
 // 권한 요청 -> 토큰 발급 -> 서버 등록 을 묶은 컴포저블
 // 로그인 직후나 알림 설정 화면에서 호출
+// 로그아웃 시 기기토큰 삭제는 서버(AuthController)에서 user_id 기준으로 일괄 처리한다
 
 import { ref } from 'vue';
 import { requestFcmToken } from '@/util/firebase';
 import notificationApi from '@/api/notificationApi';
-
-// 토큰 삭제 요청에 쓰기 위해 로컬에도 보관
-const FCM_TOKEN_KEY = 'fcmToken';
 
 export function usePushSetup() {
   const isLoading = ref(false);
@@ -53,7 +51,6 @@ export function usePushSetup() {
       }
 
       await notificationApi.registerDeviceToken(token);
-      localStorage.setItem(FCM_TOKEN_KEY, token);
 
       isEnabled.value = true;
       return true;
@@ -67,23 +64,5 @@ export function usePushSetup() {
     }
   }
 
-  // 로그아웃 시 호출 - 이 기기로 더 이상 푸시가 가지 않도록 서버에서 토큰 제거
-  async function removePush() {
-    const token = localStorage.getItem(FCM_TOKEN_KEY);
-    if (!token) {
-      return;
-    }
-
-    try {
-      await notificationApi.deleteDeviceToken(token);
-    } catch (e) {
-      // 삭제 실패해도 로그아웃 자체는 진행되어야 하므로 로그만 남김
-      console.warn('[FCM] 토큰 삭제 실패', e);
-    } finally {
-      localStorage.removeItem(FCM_TOKEN_KEY);
-      isEnabled.value = false;
-    }
-  }
-
-  return { isLoading, isEnabled, errorMessage, setupPush, removePush, checkBudgetUsage };
+  return { isLoading, isEnabled, errorMessage, setupPush, checkBudgetUsage };
 }

@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
 import { useAlert } from '@/util/useAlert';
 
-import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue'; // 2. 공용 모달 임포트
 
 const { alertState, showAlert, hideAlert } = useAlert();
 
@@ -20,7 +20,7 @@ const isFromStatus = computed(() => route.query.from === 'status');
 
 const fetchDetail = async () => {
   if (!productId || productId === 'undefined') {
-    showAlert('상품 정보를 찾을 수 없습니다.');
+    await showAlert('상품 정보를 찾을 수 없습니다.');
     router.back();
     return;
   }
@@ -46,6 +46,7 @@ const goBack = () => {
 };
 
 const handleSubscribe = () => {
+  // route.query에서 값을 가져오고 없으면 안전하게 0 / 12로 기본값 설정
   const mAmount = route.query.monthlyAmount
     ? Number(route.query.monthlyAmount)
     : 0;
@@ -63,13 +64,13 @@ const handleSubscribe = () => {
 </script>
 
 <template>
-  <!-- 상단 패딩을 80px로 여유있게 지정하여 헤더에 가려지지 않도록 수정 -->
+  <!-- 적금 현황에서 왔을 때는 하단 패딩을 줄이고 일반 상태일 땐 160px 적용 -->
   <div
     class="container py-3 position-relative"
     :style="{
       maxWidth: '480px',
       backgroundColor: '#fff',
-      paddingTop: '80px !important',
+      paddingTop: '76px',
       paddingBottom: isFromStatus ? '40px' : '160px',
     }"
   >
@@ -82,6 +83,8 @@ const handleSubscribe = () => {
         {{ product?.productName || '적금 상세' }}
       </h1>
     </div>
+
+    <div class="header-spacer"></div>
 
     <!-- 로딩 상태 -->
     <div v-if="loading" class="text-center py-5 text-secondary small">
@@ -226,11 +229,11 @@ const handleSubscribe = () => {
       <div v-if="!isFromStatus" style="height: 120px" aria-hidden="true"></div>
     </div>
 
-    <!-- 하단 가입하기 버튼 (max-width를 container와 동일하게 480px로 일치) -->
+    <!-- 적금 추천에서 들어왔을 때만 하단 고정 가입하기 버튼 노출 -->
     <div
       v-if="product && !isFromStatus"
       class="position-fixed bottom-0 start-50 translate-middle-x w-100 p-3 bg-white border-top"
-      style="max-width: 480px; z-index: 100"
+      style="max-width: 420px; z-index: 100"
     >
       <button
         class="btn btn-warning w-100 py-2 fw-bold rounded-4 text-dark"
@@ -261,10 +264,9 @@ const handleSubscribe = () => {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 480px; /* 최상위 container 규격과 수치 통일 */
+  max-width: 420px;
   z-index: 100;
   background: #fff;
-  border-bottom: 1px solid #f1f3f5; /* 경계선 구분을 위한 구분선 추가 */
 }
 .back-btn {
   background: none;
@@ -278,5 +280,8 @@ const handleSubscribe = () => {
   font-size: 17px;
   font-weight: 700;
   margin: 0;
+}
+.header-spacer {
+  height: 60px;
 }
 </style>

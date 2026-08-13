@@ -7,6 +7,11 @@ export default [
     component: () => import('../pages/goal/MydataConnectPage.vue'),
   },
   {
+    path: '/goal/analysis',
+    name: 'goalAnalysis',
+    component: () => import('../pages/goal/AnalysisResultPage.vue'),
+  },
+  {
     path: '/goal/category',
     name: 'categorySelect',
     component: () => import('../pages/goal/CategorySelectPage.vue'),
