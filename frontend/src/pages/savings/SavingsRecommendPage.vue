@@ -240,7 +240,7 @@ const goToDetail = (productId) => {
 <template>
   <div
     class="container py-3"
-    style="max-width: 480px; background-color: #fff; min-height: 100vh"
+    style="max-width: 420px; background-color: #fff; min-height: 100vh; padding-top: 76px !important"
   >
     <!-- 헤더 -->
     <div class="header">
@@ -604,7 +604,15 @@ const goToDetail = (productId) => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 4px 16px;
+  padding: 16px 20px;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
+  background: #fff;
 }
 .back-btn {
   background: none;

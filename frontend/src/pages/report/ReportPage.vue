@@ -236,17 +236,31 @@ const MY_COLOR = '#ffd239'
 </script>
 
 <template>
-  <div style="padding: 20px 20px 100px; background-color: #f8f9fa; min-height: 100vh">
+  <div style="padding: 76px 20px 100px; background-color: #f8f9fa; min-height: 100vh">
     <template v-if="report">
       <!-- 네비게이션 헤더 -->
-      <div class="d-flex align-items-center mb-3">
+      <div
+        class="d-flex align-items-center"
+        style="
+          gap: 12px;
+          position: fixed;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 100%;
+          max-width: 420px;
+          z-index: 100;
+          background-color: #f8f9fa;
+          padding: 16px 20px;
+        "
+      >
         <button type="button" class="btn btn-sm p-0 no-print" @click="goHome" style="width: 24px">
           <i class="fa-solid fa-chevron-left" style="color: #495057; font-size: 18px"></i>
         </button>
-        <h1 class="h5 mb-0 fw-bold flex-grow-1 text-center">소비 리포트</h1>
+        <h1 style="font-size: 17px; font-weight: 700; margin: 0">소비 리포트</h1>
         <button
           type="button"
-          class="btn btn-sm p-0 no-print d-flex flex-column align-items-center"
+          class="btn btn-sm p-0 no-print d-flex flex-column align-items-center ms-auto"
           :disabled="pdfExporting"
           @click="exportPdf"
           aria-label="PDF 내보내기"
@@ -617,7 +631,7 @@ const MY_COLOR = '#ffd239'
       </div>
       <p class="small text-secondary mb-1">PDF 파일은 비밀번호로 보호돼요.</p>
       <p class="small mb-4">
-        비밀번호는 <span class="fw-bold">생년월일 6자리</span>예요.
+        비밀번호 : <span class="fw-bold">생년월일 6자리</span>
       </p>
       <div class="d-flex gap-2">
         <button type="button" class="btn btn-light flex-fill" @click="cancelPasswordNotice">취소</button>
@@ -627,7 +641,7 @@ const MY_COLOR = '#ffd239'
           style="background-color: #ffd239; color: #212529"
           @click="confirmPasswordNotice"
         >
-          계속 진행
+          PDF 다운로드
         </button>
       </div>
     </div>

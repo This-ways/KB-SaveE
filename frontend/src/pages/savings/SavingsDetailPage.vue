@@ -70,6 +70,7 @@ const handleSubscribe = () => {
     :style="{
       maxWidth: '480px',
       backgroundColor: '#fff',
+      paddingTop: '76px',
       paddingBottom: isFromStatus ? '40px' : '160px',
     }"
   >
@@ -230,7 +231,7 @@ const handleSubscribe = () => {
     <div
       v-if="product && !isFromStatus"
       class="position-fixed bottom-0 start-50 translate-middle-x w-100 p-3 bg-white border-top"
-      style="max-width: 480px; z-index: 100"
+      style="max-width: 420px; z-index: 100"
     >
       <button
         class="btn btn-warning w-100 py-2 fw-bold rounded-4 text-dark"
@@ -255,7 +256,15 @@ const handleSubscribe = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 4px 16px;
+  padding: 16px 20px;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
+  background: #fff;
 }
 .back-btn {
   background: none;

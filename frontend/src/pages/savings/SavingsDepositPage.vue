@@ -134,7 +134,7 @@ onMounted(() => {
 <template>
   <div
     class="container py-3 pb-5 position-relative"
-    style="max-width: 480px; background-color: #fff; min-height: 100vh"
+    style="max-width: 420px; background-color: #fff; min-height: 100vh; padding-top: 76px !important"
   >
     <!-- 로딩 화면 -->
     <div v-if="loading" class="text-center py-5 text-secondary micro-text">
@@ -430,7 +430,7 @@ onMounted(() => {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 480px;
+  max-width: 420px;
   padding: 16px 20px;
   background-color: #ffffff;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
@@ -440,7 +440,15 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 4px 16px;
+  padding: 16px 20px;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
+  background: #fff;
 }
 .back-btn {
   background: none;

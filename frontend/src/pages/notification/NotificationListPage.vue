@@ -118,6 +118,7 @@ function formatTime(sentAt) {
   min-height: 100vh;
   background: #f5f6f8;
   padding-bottom: 40px;
+  padding-top: 76px;
 }
 
 .push-list-header {
@@ -126,6 +127,13 @@ function formatTime(sentAt) {
   gap: 6px;
   padding: 16px 12px;
   background: #fff;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
 }
 
 .push-list-back {
