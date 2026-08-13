@@ -44,10 +44,21 @@ public class SavingsAdditionalPaymentService {
             throw new IllegalArgumentException("해당 적금 계좌에 대한 접근 권한이 없습니다.");
         }
 
-        if (sub.getStatus() != 10) { // status 10: 가입 중
-            throw new IllegalStateException("해지되었거나 만기된 적금 계좌에는 추가 납입할 수 없습니다.");
+        int todayInt = Integer.parseInt(
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        );
+
+        if (sub.getEndDate() != null && todayInt > sub.getEndDate()) {
+            throw new IllegalStateException(
+                    "만기된 적금은 추가 납입할 수 없습니다. 상품을 해지하여 원금과 이자를 수령해 주세요."
+            );
         }
 
+        if (sub.getStatus() != 10) {
+            throw new IllegalStateException(
+                    "해지된 적금 계좌에는 추가 납입할 수 없습니다."
+            );
+        }
 
 
         //출금 전 월 최대 납입 한도 계산
@@ -93,8 +104,6 @@ public class SavingsAdditionalPaymentService {
         Integer maxRound = savingsMapper.selectMaxRoundNo(subscriptionId);
         int nextTurn = (maxRound == null) ? 1 : maxRound + 1;
 
-        // 5. Payment VO 생성 및 DB 저장 (PaymentVO 필드명 및 타입에 맞게 수정)
-        int todayInt = Integer.parseInt(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
 
         PaymentVO payment = PaymentVO.builder()
                 .subscriptionId(subscriptionId)
