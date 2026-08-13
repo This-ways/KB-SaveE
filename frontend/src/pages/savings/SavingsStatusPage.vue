@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
+import { useAlert } from '@/util/useAlert';
 
 const route = useRoute();
 const router = useRouter();
@@ -11,6 +12,10 @@ const subscriptionId = route.params.subscriptionId;
 const statusData = ref(null);
 const loading = ref(true);
 import { useAuthStore } from '@/stores/auth';
+
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue'; // 2. 공용 모달 임포트
+
+const { alertState, showAlert, hideAlert } = useAlert();
 
 const authStore = useAuthStore();
 
@@ -22,7 +27,7 @@ const fetchSavingsStatus = async () => {
     console.log('적금 현황 데이터:', data);
   } catch (error) {
     console.error('적금 현황 조회 실패:', error);
-    alert('적금 현황을 불러오지 못했습니다.');
+    showAlert('적금 현황을 불러오지 못했습니다.');
   } finally {
     loading.value = false;
   }
@@ -67,7 +72,7 @@ const goToDetail = () => {
       query: { from: 'status' },
     });
   } else {
-    alert('상품 상세 정보를 불러올 수 없습니다.');
+    showAlert('상품 상세 정보를 불러올 수 없습니다.');
   }
 };
 
@@ -80,8 +85,18 @@ const goToCancel = () => {
   if (sid) {
     router.push(`/savings/${sid}/cancel`);
   } else {
-    alert('적금 가입 정보(ID)를 찾을 수 없습니다.');
+    showAlert('적금 가입 정보를 찾을 수 없습니다.');
   }
+};
+
+// 정액 적립식 여부 판단 및 추가 납입 클릭 핸들러
+const handleDepositClick = () => {
+  const saveType = statusData.value?.saveType || '';
+  if (saveType.includes('정액')) {
+    showAlert('정액 적립식 상품은 추가 납입이 불가능합니다.');
+    return;
+  }
+  router.push(`/savings/${subscriptionId}/deposit`);
 };
 </script>
 
@@ -362,16 +377,37 @@ const goToCancel = () => {
           </button>
         </div>
         <div class="col-12">
+          <!-- 정액 적립식인 경우 비활성화 스타일 및 처리 적용 -->
           <button
-            class="btn btn-warning w-100 py-3 fw-bold rounded-4 text-dark shadow-sm"
-            style="background-color: #ffcc00; border: none"
-            @click="router.push(`/savings/${subscriptionId}/deposit`)"
+            class="btn w-100 py-3 fw-bold rounded-4 shadow-sm"
+            :class="
+              statusData.saveType?.includes('정액')
+                ? 'btn-secondary text-white opacity-50'
+                : 'btn-warning text-dark'
+            "
+            :style="
+              statusData.saveType?.includes('정액')
+                ? 'background-color: #e9ecef; border: none; color: #6c757d !important;'
+                : 'background-color: #ffcc00; border: none;'
+            "
+            @click="handleDepositClick"
           >
             <i class="fa-solid fa-plus me-1"></i> 추가 납입하기
+            <span
+              v-if="statusData.saveType?.includes('정액')"
+              class="small fw-normal ms-1"
+              style="font-size: 11px"
+              >(정액적립식 불가)</span
+            >
           </button>
         </div>
       </div>
     </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
   </div>
 </template>
 

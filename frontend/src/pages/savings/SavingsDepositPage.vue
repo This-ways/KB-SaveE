@@ -2,6 +2,11 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
+import { useAlert } from '@/util/useAlert';
+
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue'; // 2. 공용 모달 임포트
+
+const { alertState, showAlert, hideAlert } = useAlert();
 
 const route = useRoute();
 const router = useRouter();
@@ -79,7 +84,7 @@ const fetchStatus = async () => {
     statusData.value = res;
   } catch (error) {
     console.error('적금 정보 조회 실패:', error);
-    alert('적금 정보를 불러오는데 실패했습니다.');
+    showAlert('적금 정보를 불러오는데 실패했습니다.');
     router.back();
   } finally {
     loading.value = false;
@@ -98,7 +103,7 @@ const handleFinalDeposit = async () => {
     currentStep.value = 3; // 완료 단계로 이동
   } catch (error) {
     console.error('추가 납입 처리 실패:', error);
-    alert(
+    showAlert(
       error.response?.data?.message || '추가 납입 처리 중 오류가 발생했습니다.',
     );
   } finally {
@@ -393,6 +398,11 @@ onMounted(() => {
         </button>
       </div>
     </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
   </div>
 </template>
 

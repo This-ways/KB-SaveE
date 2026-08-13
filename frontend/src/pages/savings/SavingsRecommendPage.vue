@@ -5,6 +5,11 @@ import savingsApi from '@/api/savingsApi';
 import reportApi from '@/api/reportApi';
 import moment from 'moment';
 import { useAuthStore } from '@/stores/auth';
+import { useAlert } from '@/util/useAlert';
+
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue'; // 2. 공용 모달 임포트
+
+const { alertState, showAlert, hideAlert } = useAlert();
 
 const route = useRoute();
 const router = useRouter();
@@ -72,7 +77,7 @@ const fetchRecommendations = async (isUserClick = false) => {
   // 1. 유효성 검사 (0원 이하)
   if (!monthlyAmount.value || monthlyAmount.value <= 0) {
     if (isUserClick) {
-      alert('월 납입액은 1원 이상 입력해 주세요.');
+      showAlert('월 납입액은 1원 이상 입력해 주세요.');
     }
     step.value = 2;
     return;
@@ -80,7 +85,7 @@ const fetchRecommendations = async (isUserClick = false) => {
 
   // 2. 버튼 직접 클릭시에만 초과 검사 및 경고창 출력
   if (isUserClick && isExceeded.value) {
-    alert('현재 납입 가능 금액을 초과하여 설정할 수 없습니다.');
+    showAlert('현재 납입 가능 금액을 초과하여 설정할 수 없습니다.');
     return;
   }
 
@@ -214,7 +219,7 @@ const selectFilter = async (filterType) => {
       }
     } catch (error) {
       console.error('전체 적금 목록 조회 실패:', error);
-      alert('적금 목록을 불러오는 중 오류가 발생했습니다.');
+      showAlert('적금 목록을 불러오는 중 오류가 발생했습니다.');
     } finally {
       loading.value = false;
     }
@@ -583,6 +588,11 @@ const goToDetail = (productId) => {
         </div>
       </div>
     </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
   </div>
 </template>
 

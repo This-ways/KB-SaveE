@@ -2,9 +2,14 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
+import { useAlert } from '@/util/useAlert';
+
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue'; // 2. 공용 모달 임포트
 
 const route = useRoute();
 const router = useRouter();
+
+const { alertState, showAlert, hideAlert } = useAlert();
 
 const subscriptionId = ref(Number(route.params.subscriptionId) || null);
 
@@ -29,7 +34,7 @@ const isMaturityCancel = computed(() => {
 const fetchCancelPreview = async () => {
   // subscriptionId가 유효하지 않으면 이전 페이지로 복귀
   if (!subscriptionId.value) {
-    alert('올바르지 않은 접근입니다.');
+    showAlert('올바르지 않은 접근입니다.');
     router.back();
     return;
   }
@@ -40,7 +45,7 @@ const fetchCancelPreview = async () => {
     previewData.value = res;
   } catch (error) {
     console.error('해지 명세서 조회 실패:', error);
-    alert(
+    showAlert(
       error.response?.data?.message ||
         '해지 정보를 불러오는데 실패했거나 이미 해지된 계좌입니다.',
     );
@@ -60,7 +65,7 @@ const handleCancel = async () => {
     step.value = 2; // 해지 완료 화면(STEP 2)으로 전환
   } catch (error) {
     console.error('해지 처리 실패:', error);
-    alert(
+    showAlert(
       error.response?.data?.message ||
         error.response?.data ||
         '해지 처리 중 오류가 발생했습니다.',
@@ -271,6 +276,11 @@ onMounted(() => {
         </button>
       </div>
     </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
   </div>
 </template>
 

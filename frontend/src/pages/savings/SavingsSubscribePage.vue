@@ -2,6 +2,11 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
+import { useAlert } from '@/util/useAlert';
+
+import CustomAlertModal from '@/components/common/CustomAlertModal.vue'; // 2. 공용 모달 임포트
+
+const { alertState, showAlert, hideAlert } = useAlert();
 
 const route = useRoute();
 const router = useRouter();
@@ -41,7 +46,7 @@ const togglePrimeRate = (item) => {
   if (!item.selected) {
     const selectedCount = primeRates.value.filter((p) => p.selected).length;
     if (selectedCount >= 6) {
-      alert('우대금리는 최대 6개까지 선택 가능합니다.');
+      showAlert('우대금리는 최대 6개까지 선택 가능합니다.');
       return;
     }
   }
@@ -194,7 +199,7 @@ const isConfirming = ref(false);
 // [STEP 1 -> STEP 2] 가입정보 확인 API 호출
 const handleConfirm = async () => {
   if (amountError.value) {
-    alert(amountError.value);
+    showAlert(amountError.value);
     return;
   }
 
@@ -217,7 +222,7 @@ const handleConfirm = async () => {
     currentStep.value = 2; // 가입 정보 확인 화면으로 이동
   } catch (error) {
     console.error('가입 정보 확인 실패:', error);
-    alert(
+    showAlert(
       error.response?.data?.message ||
         error.response?.data ||
         '가입 정보를 확인하는 중 오류가 발생했습니다.',
@@ -249,7 +254,7 @@ const handleFinalSubscribe = async () => {
     currentStep.value = 3; // 가입 완료 화면으로 전환
   } catch (error) {
     console.error('적금 가입 처리 실패:', error);
-    alert(
+    showAlert(
       error.response?.data?.message ||
         error.response?.data ||
         '적금 가입 중 오류가 발생했습니다.',
@@ -852,6 +857,11 @@ const onAmountChange = () => {
         확인
       </button>
     </div>
+    <CustomAlertModal
+      :show="alertState.show"
+      :message="alertState.message"
+      @close="hideAlert"
+    />
   </div>
 </template>
 
