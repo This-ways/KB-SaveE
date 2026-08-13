@@ -371,13 +371,26 @@ const chooseCategory = async (categoryId) => {
 </script>
 
 <template>
-  <div style="padding: 20px 20px 100px; background-color: #f8f9fa; min-height: 100vh">
-    <div class="d-flex align-items-center mb-3">
+  <div style="padding: 76px 20px 100px; background-color: #f8f9fa; min-height: 100vh">
+    <div
+      class="d-flex align-items-center"
+      style="
+        gap: 12px;
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 420px;
+        z-index: 100;
+        background-color: #f8f9fa;
+        padding: 16px 20px;
+      "
+    >
   <button type="button" class="btn btn-sm p-0" @click="goHome" style="width: 24px">
     <i class="fa-solid fa-chevron-left" style="color: #495057; font-size: 18px"></i>
   </button>
-  <h1 class="h5 mb-0 fw-bold flex-grow-1 text-center">지출 상세 내역</h1>
-  <div style="width: 24px"></div>
+  <h1 style="font-size: 17px; font-weight: 700; margin: 0">지출 상세 내역</h1>
 </div>
 
     <!-- 날짜 이동 -->

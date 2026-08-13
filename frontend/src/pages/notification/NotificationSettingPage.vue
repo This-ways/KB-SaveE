@@ -121,6 +121,7 @@ async function onToggle() {
   min-height: 100vh;
   background: #f7f8fa;
   padding-bottom: 40px;
+  padding-top: 76px;
 }
 
 .push-setting-header {
@@ -129,6 +130,13 @@ async function onToggle() {
   gap: 8px;
   padding: 16px 14px;
   background: #fff;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
 }
 
 .push-setting-back {

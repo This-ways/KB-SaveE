@@ -96,13 +96,21 @@ const notReady = (label) => alert(`${label} 화면은 준비 중이에요.`);
 .mypage {
   min-height: 100vh;
   background: #f7f8fa;
-  padding: 16px 16px 40px;
+  padding: 76px 16px 40px;
 }
 .header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 4px 16px;
+  padding: 16px 20px;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
+  background: #f7f8fa;
 }
 .back-btn {
   background: none;
