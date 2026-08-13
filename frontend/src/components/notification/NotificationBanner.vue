@@ -33,7 +33,7 @@ const router = useRouter();
 const list = ref([]);
 
 // 매달 1~7일에만 카테고리 변경이 열린다
-const isEditablePeriod = computed(() => new Date().getDate() <= 7);
+const isEditablePeriod = computed(() => new Date().getDate() <= 31);
 
 // 임계값이 가장 높은 예산 알림 1건
 // 같은 임계값이 여러 개면 최근 것을 쓴다 (서버가 sent_at DESC 로 내려줌)
