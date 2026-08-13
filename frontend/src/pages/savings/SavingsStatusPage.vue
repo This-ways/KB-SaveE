@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import savingsApi from '@/api/savingsApi';
 import { useAlert } from '@/util/useAlert';
@@ -32,6 +32,17 @@ const fetchSavingsStatus = async () => {
     loading.value = false;
   }
 };
+const isMatured = computed(() => {
+  if (!statusData.value?.endDate) return false;
+
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+
+  const maturityDate = new Date(statusData.value.endDate);
+
+  return today >= maturityDate;
+});
 
 onMounted(async () => {
   // 새로고침 시 토큰이 세션/로컬스토리지에서 복구될 때까지 미세 대기
@@ -92,10 +103,19 @@ const goToCancel = () => {
 // 정액 적립식 여부 판단 및 추가 납입 클릭 핸들러
 const handleDepositClick = () => {
   const saveType = statusData.value?.saveType || '';
+
+  if (isMatured.value) {
+    showAlert(
+      '만기된 적금은 추가 납입이 불가능합니다.\n상품 해지를 통해 원금과 이자를 수령해주세요.',
+    );
+    return;
+  }
+
   if (saveType.includes('정액')) {
     showAlert('정액 적립식 상품은 추가 납입이 불가능합니다.');
     return;
   }
+
   router.push(`/savings/${subscriptionId}/deposit`);
 };
 </script>
@@ -386,12 +406,12 @@ const handleDepositClick = () => {
           <button
             class="btn w-100 py-3 fw-bold rounded-4 shadow-sm"
             :class="
-              statusData.saveType?.includes('정액')
+              statusData.saveType?.includes('정액') || isMatured
                 ? 'btn-secondary text-white opacity-50'
                 : 'btn-warning text-dark'
             "
             :style="
-              statusData.saveType?.includes('정액')
+              statusData.saveType?.includes('정액') || isMatured
                 ? 'background-color: #e9ecef; border: none; color: #6c757d !important;'
                 : 'background-color: #ffcc00; border: none;'
             "
@@ -399,11 +419,20 @@ const handleDepositClick = () => {
           >
             <i class="fa-solid fa-plus me-1"></i> 추가 납입하기
             <span
-              v-if="statusData.saveType?.includes('정액')"
+              v-if="isMatured"
               class="small fw-normal ms-1"
               style="font-size: 11px"
-              >(정액적립식 불가)</span
             >
+              (만기)
+            </span>
+
+            <span
+              v-else-if="statusData.saveType?.includes('정액')"
+              class="small fw-normal ms-1"
+              style="font-size: 11px"
+            >
+              (정액적립식 불가)
+            </span>
           </button>
         </div>
       </div>

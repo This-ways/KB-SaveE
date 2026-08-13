@@ -82,6 +82,21 @@ const fetchStatus = async () => {
     loading.value = true;
     const res = await savingsApi.getSavingsStatus(subscriptionId.value);
     statusData.value = res;
+
+    if (res.endDate) {
+      const today = new Date();
+      const endDate = new Date(res.endDate);
+
+      if (today > endDate) {
+        showAlert(
+          '만기된 적금은 추가 납입할 수 없습니다.\n\n상품을 해지하여 원금과 이자를 수령해 주세요.',
+        );
+
+        setTimeout(() => {
+          router.push(`/savings/status/${subscriptionId.value}`);
+        }, 500);
+      }
+    }
   } catch (error) {
     console.error('적금 정보 조회 실패:', error);
     showAlert('적금 정보를 불러오는데 실패했습니다.');
@@ -90,6 +105,16 @@ const fetchStatus = async () => {
     loading.value = false;
   }
 };
+
+// 만기 여부
+const isMatured = computed(() => {
+  if (!statusData.value?.endDate) return false;
+
+  const today = new Date();
+  const endDate = new Date(statusData.value.endDate);
+
+  return today > endDate;
+});
 
 // 최종 추가 납입 요청
 const handleFinalDeposit = async () => {
@@ -106,6 +131,17 @@ const handleFinalDeposit = async () => {
     showAlert(
       error.response?.data?.message || '추가 납입 처리 중 오류가 발생했습니다.',
     );
+    if (message.includes('만기된 적금')) {
+      showAlert(
+        '만기된 적금은 추가 납입할 수 없습니다.\n\n상품을 해지하여 원금과 이자를 수령해 주세요.',
+      );
+
+      setTimeout(() => {
+        router.push(`/savings/status/${subscriptionId.value}`);
+      }, 500);
+
+      return;
+    }
   } finally {
     isSubmitting.value = false;
   }
@@ -126,6 +162,16 @@ const goToMain = () => {
   router.push('/home');
 };
 
+const handleAlertClose = () => {
+  const msg = alertState.message || '';
+
+  hideAlert();
+
+  if (msg.includes('만기된 적금')) {
+    router.push(`/savings/status/${subscriptionId.value}`);
+  }
+};
+
 onMounted(() => {
   fetchStatus();
 });
@@ -134,7 +180,12 @@ onMounted(() => {
 <template>
   <div
     class="container py-3 pb-5 position-relative"
-    style="max-width: 420px; background-color: #fff; min-height: 100vh; padding-top: 76px !important"
+    style="
+      max-width: 420px;
+      background-color: #fff;
+      min-height: 100vh;
+      padding-top: 76px !important;
+    "
   >
     <!-- 로딩 화면 -->
     <div v-if="loading" class="text-center py-5 text-secondary micro-text">
@@ -243,6 +294,19 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- 하단 안내 문구 (💡 유의사항 강조 추가) -->
+      <div
+        class="p-3 bg-light rounded-3 micro-text text-secondary lh-base d-flex flex-column gap-2"
+      >
+        <p class="mb-0">
+          * 입력하신 추가 납입 금액은 연결된 출금 계좌에서 즉시 출금되어 해당
+          적금 계좌로 이체됩니다.
+        </p>
+        <p class="mb-0 text-danger fw-bold">
+          * 주의: 추가 납입 처리 시 이후 이번 달 자동이체는 실행되지 않습니다.
+        </p>
+      </div>
+
       <!-- 하단 고정 다음 버튼 -->
       <div class="fixed-bottom-wrapper">
         <button
@@ -261,19 +325,14 @@ onMounted(() => {
     <!-- ========================================== -->
     <div v-else-if="currentStep === 2" class="d-flex flex-column gap-3 mb-5">
       <!-- 헤더 -->
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <i
-          class="fa-solid fa-chevron-left fs-5"
-          style="cursor: pointer"
-          @click="currentStep = 1"
-        ></i>
-        <span class="fw-bold fs-5">추가 납입 확인</span>
-        <span
-          class="text-secondary small"
-          style="cursor: pointer"
-          @click="router.back()"
-          >취소</span
-        >
+      <div class="header">
+        <button class="back-btn" @click="currentStep = 1">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <h1 class="header-title">추가 납입 확인</h1>
+
+        <button class="cancel-btn" @click="router.back()">취소</button>
       </div>
 
       <h5 class="fw-bold my-1">납입 정보를 확인해 주세요</h5>
@@ -315,11 +374,16 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- 하단 안내 문구 -->
-      <div class="p-3 bg-light rounded-3 micro-text text-secondary lh-base">
+      <!-- 하단 안내 문구 (💡 유의사항 강조 추가) -->
+      <div
+        class="p-3 bg-light rounded-3 micro-text text-secondary lh-base d-flex flex-column gap-2"
+      >
         <p class="mb-0">
           * 입력하신 추가 납입 금액은 연결된 출금 계좌에서 즉시 출금되어 해당
           적금 계좌로 이체됩니다.
+        </p>
+        <p class="mb-0 text-danger fw-bold">
+          * 주의: 추가 납입 처리 시 이후 이번 달 자동이체는 실행되지 않습니다.
         </p>
       </div>
 
@@ -401,7 +465,7 @@ onMounted(() => {
     <CustomAlertModal
       :show="alertState.show"
       :message="alertState.message"
-      @close="hideAlert"
+      @close="handleAlertClose"
     />
   </div>
 </template>
@@ -462,5 +526,22 @@ onMounted(() => {
   font-size: 17px;
   font-weight: 700;
   margin: 0;
+}
+.confirm-header {
+  justify-content: space-between;
+}
+
+.cancel-btn {
+  margin-left: auto; /* 취소만 오른쪽 끝으로 */
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 16px;
+  padding: 0;
+}
+
+.confirm-header {
+  position: absolute;
+  transform: translateX(-50%);
 }
 </style>

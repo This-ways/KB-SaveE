@@ -127,6 +127,7 @@ public class SavingsStatusService {
                 .appliedRate(sub.getAppliedRate().doubleValue())
                 .saveTerm(sub.getUserSaveTerm())
                 .startDate(startDate)
+                .endDate(endDate)
                 .monthlyAmount(Long.valueOf(sub.getMonthlyAmount()))
                 .expectedAmount(expectedAmount)
                 .totalPrincipal(totalPrincipal)
