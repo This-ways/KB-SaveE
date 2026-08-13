@@ -148,3 +148,9 @@ Content-Type: application/json
   "userName": "테스트",
   "birthDate": "2000-01-01"
 }
+
+### 자동이체 예정 알림 배치 수동 실행 (원래 오전 9시)
+POST http://localhost:8080/api/test/batch/notify
+
+### 자동이체 실제 출금 배치 수동 실행 (원래 오전 10시)
+POST http://localhost:8080/api/test/batch/execute
