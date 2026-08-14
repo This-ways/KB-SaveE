@@ -59,21 +59,8 @@ const { alertState, showAlert, hideAlert } = useAlert();
         <i class="fa-solid fa-building-columns"></i>
       </div>
       <div class="card-text">
-        <strong>계좌 연결</strong>
-        <span>은행 계좌를 연결하여 지출 내역을 분석해요</span>
-      </div>
-      <i class="fa-solid fa-chevron-right arrow"></i>
-    </button>
-
-    <div class="divider"><span>또는</span></div>
-
-    <button class="connect-card" @click="connect">
-      <div class="card-icon">
-        <i class="fa-solid fa-credit-card"></i>
-      </div>
-      <div class="card-text">
-        <strong>카드 연결</strong>
-        <span>카드 사용 내역을 연결하여 소비를 분석해요</span>
+        <strong>계좌·카드 연결</strong>
+        <span>은행 계좌와 카드 사용 내역을 함께 연결해서 소비를 분석해요</span>
       </div>
       <i class="fa-solid fa-chevron-right arrow"></i>
     </button>
@@ -168,23 +155,6 @@ const { alertState, showAlert, hideAlert } = useAlert();
 .arrow {
   color: #d1d5db;
   font-size: 14px;
-}
-.divider {
-  display: flex;
-  align-items: center;
-  margin: 20px 0;
-  color: #d1d5db;
-  font-size: 13px;
-}
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #f3f4f6;
-}
-.divider span {
-  padding: 0 12px;
 }
 .skip-btn {
   display: block;
