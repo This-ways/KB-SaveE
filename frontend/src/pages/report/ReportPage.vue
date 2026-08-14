@@ -111,7 +111,6 @@ const exportPdf = async () => {
 
 const yearMonth = ref(moment().format('YYYY-MM'))
 const report = ref(null) // 이번 달 리포트
-const prevSaveAmount = ref(null) // 전월 세이브 금액
 
 const aiRefreshing = ref(false)
 const aiRefreshError = ref('')
@@ -136,16 +135,6 @@ const loadReport = async () => {
     report.value = await reportApi.get({ userId: userId.value, yearMonth: yearMonth.value })
   } catch (e) {
     console.error('리포트 조회 실패', e)
-    return
-  }
-
-  const prevYearMonth = moment(yearMonth.value, 'YYYY-MM').subtract(1, 'months').format('YYYY-MM')
-  try {
-    const prevReport = await reportApi.get({ userId: userId.value, yearMonth: prevYearMonth })
-    prevSaveAmount.value = prevReport.saveAmount
-  } catch (e) {
-    console.warn('전월 리포트 조회 실패 - 전월 대비 비교 생략', e)
-    prevSaveAmount.value = null
   }
 }
 loadReport()
@@ -154,7 +143,6 @@ loadReport()
 const MIN_YEAR_MONTH = '2026-01'
 
 const monthLabel = computed(() => moment(yearMonth.value, 'YYYY-MM').format('YYYY년 MM월'))
-const prevMonthLabel = computed(() => moment(yearMonth.value, 'YYYY-MM').subtract(1, 'months').format('MM월'))
 const isAtMinMonth = computed(() => yearMonth.value === MIN_YEAR_MONTH)
 const isAtMaxMonth = computed(() => yearMonth.value === moment().format('YYYY-MM'))
 
@@ -187,12 +175,6 @@ const formatCompact = (amount) => {
 }
 
 // ===== 세이브 금액 전월 대비 =====
-const saveDiff = computed(() => {
-  if (!report.value) return null
-  if (report.value.saveAmount === null || prevSaveAmount.value === null) return null
-  return report.value.saveAmount - prevSaveAmount.value
-})
-
 // ===== 주차별 소비 막대그래프 =====
 const maxWeekly = computed(() => {
   if (!report.value) return 1
@@ -326,13 +308,6 @@ const { alertState, showAlert, hideAlert } = useAlert();
                   :style="{ color: report.saveAmount > 0 ? '#127f5f' : report.saveAmount < 0 ? '#e8512b' : '' }"
                 >
                   {{ formatSigned(report.saveAmount) }}
-                </div>
-                <div
-                  v-if="saveDiff !== null"
-                  class="small mt-1"
-                  :style="{ color: saveDiff >= 0 ? '#127f5f' : '#e8512b' }"
-                >
-                  {{ prevMonthLabel }} 대비 {{ formatSigned(saveDiff) }}
                 </div>
               </div>
             </div>
