@@ -120,6 +120,18 @@ const loadGoalBudget = async () => {
   }
 };
 
+// 카테고리별 지출 박스 새로고침 버튼용
+const goalBudgetRefreshing = ref(false);
+const refreshGoalBudget = async () => {
+  if (goalBudgetRefreshing.value) return;
+  goalBudgetRefreshing.value = true;
+  try {
+    await loadGoalBudget();
+  } finally {
+    goalBudgetRefreshing.value = false;
+  }
+};
+
 // ===== 내 적금 =====
 const loadMySubscription = async () => {
   try {
@@ -240,6 +252,19 @@ const { alertState, showAlert, hideAlert } = useAlert();
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <span class="fw-semibold">카테고리별 지출</span>
+          <button
+            type="button"
+            class="btn btn-sm p-0"
+            :disabled="goalBudgetRefreshing"
+            @click="refreshGoalBudget"
+            aria-label="카테고리별 지출 새로고침"
+          >
+            <i
+              class="fa-solid"
+              :class="goalBudgetRefreshing ? 'fa-spinner fa-spin' : 'fa-rotate-right'"
+              style="color: #adb5bd; font-size: 14px"
+            ></i>
+          </button>
         </div>
         <div
           v-for="cat in goalBudgets"
