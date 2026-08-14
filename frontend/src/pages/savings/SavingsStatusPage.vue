@@ -71,6 +71,26 @@ const getMaxPaymentAmount = () => {
   return max > 0 ? max : 100000;
 };
 
+// 목표달성 계산
+const principalAchievementRate = computed(() => {
+  if (!statusData.value) return 0;
+
+  const targetPrincipal =
+    statusData.value.monthlyAmount * statusData.value.saveTerm;
+
+  if (!targetPrincipal) return 0;
+
+  return Math.round((statusData.value.totalPrincipal / targetPrincipal) * 100);
+});
+
+const amountAchievementRate = computed(() => {
+  if (!statusData.value?.expectedAmount) return 0;
+
+  return Math.floor(
+    (statusData.value.totalPrincipal / statusData.value.expectedAmount) * 100,
+  );
+});
+
 // 상품 상세 / 해지 페이지 이동
 
 const goToDetail = () => {
@@ -219,22 +239,25 @@ const handleDepositClick = () => {
               {{ formatMoney(statusData.totalPrincipal) }}
             </div>
           </div>
+
           <div class="col-4 px-1 border-start border-end">
             <div class="text-secondary micro-text mb-1 text-nowrap">
               목표 달성률
             </div>
             <div class="fw-bold text-nowrap" style="font-size: 14px">
-              {{ statusData.achievementRate }}%
+              {{ principalAchievementRate }}%
             </div>
+
             <div class="progress mt-1 mx-auto" style="height: 4px; width: 75%">
               <div
                 class="progress-bar bg-warning"
                 :style="{
-                  width: Math.min(statusData.achievementRate, 100) + '%',
+                  width: Math.min(principalAchievementRate, 100) + '%',
                 }"
               ></div>
             </div>
           </div>
+
           <div class="col-4 px-1">
             <div class="text-secondary micro-text mb-1 text-nowrap">
               다음 납입 예정일
