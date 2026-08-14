@@ -19,6 +19,7 @@ const step = ref(1);
 const loading = ref(true);
 const cancelling = ref(false);
 const previewData = ref(null);
+const showCancelConfirm = ref(false);
 
 const isMaturityCancel = computed(() => {
   if (!previewData.value) return false;
@@ -88,7 +89,12 @@ onMounted(() => {
 <template>
   <div
     class="container py-3 pb-5 position-relative"
-    style="max-width: 420px; background-color: #fff; min-height: 100vh; padding-top: 76px !important"
+    style="
+      max-width: 420px;
+      background-color: #fff;
+      min-height: 100vh;
+      padding-top: 76px !important;
+    "
   >
     <!-- 로딩 상태 -->
     <div v-if="loading" class="text-center py-5 text-secondary micro-text">
@@ -216,7 +222,7 @@ onMounted(() => {
           class="btn btn-warning w-100 py-3 fw-bold rounded-4 text-dark"
           style="background-color: #ffcc00; border: none"
           :disabled="cancelling"
-          @click="handleCancel"
+          @click="showCancelConfirm = true"
         >
           <span
             v-if="cancelling"
@@ -224,6 +230,41 @@ onMounted(() => {
           ></span>
           {{ cancelling ? '해지 처리 중...' : '해지' }}
         </button>
+      </div>
+    </div>
+
+    <!-- 해지 확인 모달 -->
+    <div
+      v-if="showCancelConfirm"
+      class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+      style="background: rgba(0, 0, 0, 0.5); z-index: 2000"
+    >
+      <div
+        class="bg-white rounded-4 p-4 shadow"
+        style="width: 90%; max-width: 340px"
+      >
+        <h6 class="fw-bold mb-3">적금을 해지하시겠습니까?</h6>
+
+        <p class="text-secondary small mb-4">해지 후에는 되돌릴 수 없습니다.</p>
+
+        <div class="d-flex gap-2">
+          <button
+            class="btn btn-light flex-fill"
+            @click="showCancelConfirm = false"
+          >
+            취소
+          </button>
+
+          <button
+            class="btn btn-warning flex-fill fw-bold"
+            @click="
+              showCancelConfirm = false;
+              handleCancel();
+            "
+          >
+            해지
+          </button>
+        </div>
       </div>
     </div>
 
