@@ -8,6 +8,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAlert } from '@/util/useAlert';
 import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
+import { getCategoryStyle } from '@/constants/categories'
 
 const router = useRouter()
 const goHome = () => router.push({ name: 'home' })
@@ -279,20 +280,14 @@ const goalMap = computed(() =>
   }, {}),
 )
 
-const barColor = (rate) => {
-  if (rate == null) return '#e5e7eb'
-  if (rate >= 90) return '#ef4444'
-  if (rate >= 70) return '#f97316'
-  return '#ffbc00'
-}
+const barColor = (categoryId) => getCategoryStyle(categoryId).color
 
 // ===== 소비 구성 (가로 스택 바) =====
 // 요약 API가 이미 상위 5개 + 나머지로 정리해서 주기 때문에 그대로 사용
-const CHART_COLORS = ['#127f5f', '#fc9558', '#ffd239', '#e8512b', '#8ecae6']
 const REMAINDER_COLOR = '#ced4da'
 
 const donutSegments = computed(() => {
-  const slices = summary.categories.map((cat, i) => {
+  const slices = summary.categories.map((cat) => {
     const target = goalMap.value[cat.categoryId] ?? null
     const rate =
       target && target > 0 ? Math.min(Math.round((cat.amount / target) * 100), 100) : null
@@ -300,7 +295,7 @@ const donutSegments = computed(() => {
       categoryId: cat.categoryId,
       label: cat.categoryName,
       amount: cat.amount,
-      color: CHART_COLORS[i % CHART_COLORS.length],
+      color: getCategoryStyle(cat.categoryId).color,
       target,
       rate,
     }
@@ -325,7 +320,7 @@ const donutSegments = computed(() => {
 
 // 목표만 보기: 상위5 제한 없는 allMonthAmountByCategory 기준이라 순위 밖 카테고리도 정확히 나옴
 const goalOnlySegments = computed(() => {
-  return goals.value.map((g, i) => {
+  return goals.value.map((g) => {
     const amount = allMonthAmountByCategory.value[g.categoryId] || 0
     const rate =
       g.targetAmount > 0 ? Math.min(Math.round((amount / g.targetAmount) * 100), 100) : null
@@ -334,7 +329,7 @@ const goalOnlySegments = computed(() => {
       categoryId: g.categoryId,
       label: catInfo?.name || '카테고리',
       amount,
-      color: CHART_COLORS[i % CHART_COLORS.length],
+      color: getCategoryStyle(g.categoryId).color,
       target: g.targetAmount,
       rate,
       ratio: summary.totalAmount > 0 ? amount / summary.totalAmount : 0,
@@ -463,13 +458,13 @@ const { alertState, showAlert, hideAlert } = useAlert();
                 <span class="fw-semibold">{{ formatAmount(seg.amount) }}</span>
               </div>
 
-              <!-- 목표가 실제로 설정된 카테고리만 진행률 바 표시. 없으면 문구만, 빈 바 트랙 안 그림 -->
-              <template v-if="seg.categoryId">
+              <!-- 목표만 보기 상태일 때만 진행률 바/문구 표시. 기본(Top5) 뷰에서는 색점+이름+금액만 -->
+              <template v-if="showGoalOnly && seg.categoryId">
                 <template v-if="seg.target">
                   <div class="legend-bar-bg mt-1">
                     <div
                       class="legend-bar"
-                      :style="{ width: (seg.rate ?? 0) + '%', backgroundColor: barColor(seg.rate) }"
+                      :style="{ width: (seg.rate ?? 0) + '%', backgroundColor: barColor(seg.categoryId) }"
                     ></div>
                   </div>
                   <span class="legend-target">
