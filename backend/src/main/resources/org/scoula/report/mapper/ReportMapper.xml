@@ -6,29 +6,43 @@
 <mapper namespace="org.scoula.report.mapper.ReportMapper">
 
     <!-- 계좌 연결 시점의 기준 시작잔액 -->
-    <select id="getInitialBalance" resultType="int">
+    <!-- 실시간 동기화된 현재 잔액 (트리거가 항상 최신 상태로 유지) -->
+    <select id="getCurrentBalance" resultType="int">
         SELECT balance
         FROM deposit_account
         WHERE user_id = #{userId}
     </select>
 
-    <!-- 기준 시작잔액 이후 ~ 해당 월 시작 전까지의 순증감액 (수입 +, 지출 -) -->
-    <select id="getBalanceDeltaBefore" resultType="int">
+    <!-- 조회 대상 월(yearMonth) 말일 이후 ~ 지금까지의 순증감 (과거 달 조회 시, 실시간잔액을 그 시점으로 되돌리기 위함) -->
+    <select id="getNetChangeAfterMonth" resultType="int">
         SELECT COALESCE(SUM(CASE WHEN txn_type = 1 THEN amount ELSE -amount END), 0)
         FROM transaction
         WHERE user_id = #{userId}
-          AND txn_date &lt; STR_TO_DATE(CONCAT(#{yearMonth}, '-01'), '%Y-%m-%d')
+          AND txn_date &gt; LAST_DAY(STR_TO_DATE(CONCAT(#{yearMonth}, '-01'), '%Y-%m-%d'))
     </select>
 
-    <!-- 이번 달 수입/지출 합계 -->
+    <!-- 이번 달 수입 / 소비성 지출(적금이체 제외) 합계 -->
     <select id="getMonthlyIncomeExpense" resultType="IncomeExpenseDTO">
         SELECT
             COALESCE(SUM(CASE WHEN txn_type = 1 THEN amount ELSE 0 END), 0) AS income,
-            COALESCE(SUM(CASE WHEN txn_type = 0 THEN amount ELSE 0 END), 0) AS expense
+            COALESCE(SUM(CASE WHEN txn_type = 0 AND merchant_name != '정기적금이체' THEN amount ELSE 0 END), 0) AS expense
         FROM transaction
         WHERE user_id = #{userId}
           AND DATE_FORMAT(txn_date, '%Y-%m') = #{yearMonth}
     </select>
+
+    <!-- 과거 달 마감잔액 캐시 조회 (없으면 null) -->
+    <select id="findBalanceSnapshot" resultType="int">
+        SELECT closing_balance
+        FROM report_balance_snapshot
+        WHERE user_id = #{userId} AND `year_month` = #{yearMonth}
+    </select>
+
+    <!-- 과거 달 마감잔액 캐시 저장 (딱 1번만 계산해서 저장, 이후로는 재계산 안 함) -->
+    <insert id="insertBalanceSnapshot">
+        INSERT INTO report_balance_snapshot (user_id, `year_month`, closing_balance)
+        VALUES (#{userId}, #{yearMonth}, #{closingBalance})
+    </insert>
 
     <!-- 주차별 소비 (지출만, 일요일 기준 달력 주차 계산) -->
     <select id="getWeeklySpending" resultType="WeeklyAmountDTO">

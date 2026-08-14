@@ -2,6 +2,7 @@ package org.scoula.report.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.scoula.common.util.ClockService;
 import org.scoula.peerstat.dto.CategoryCompareDTO;
 import org.scoula.peerstat.service.PeerStatService;
 import org.scoula.report.dto.IncomeExpenseDTO;
@@ -29,21 +30,39 @@ public class ReportServiceImpl implements ReportService {
     private final GoalService goalService;
     private final TransactionMapper transactionMapper;
     private final AiSummaryService aiSummaryService;
+    private final ClockService clockService;
 
     @Override
     public ReportDTO getReport(Long userId, String yearMonth) {
-        // 1. 전월잔액 = 기준 시작잔액(deposit_account) + 그 이전까지의 순증감액
-        int initialBalance = mapper.getInitialBalance(userId);
-        int deltaBefore = mapper.getBalanceDeltaBefore(userId, yearMonth);
-        int prevBalance = initialBalance + deltaBefore;
-
-        // 2. 이번 달 수입/지출
+        // 1. 이번 달 수입 / 소비성 지출(적금이체 제외) / 적금납입액 - 잔액 계산에 다 필요해서 먼저 구함
         IncomeExpenseDTO incomeExpense = mapper.getMonthlyIncomeExpense(userId, yearMonth);
         int income = incomeExpense.getIncome();
-        int expense = incomeExpense.getExpense();
+        int expense = incomeExpense.getExpense(); // 소비성 지출만 (적금이체 제외)
+        int savingPayment = mapper.getMonthlyPaymentAmount(userId, yearMonth);
 
-        // 3. 이달잔액 = 전월잔액 + 이번달 수입 - 이번달 지출
-        int currentBalance = prevBalance + income - expense;
+        // 2. 이달잔액(=조회 대상 월 말일 기준 마감잔액) 계산
+        //    - 이번 달(진행 중)이면: 항상 실시간(deposit_account.balance 그대로)
+        //    - 과거 달이면: 캐시에 있으면 그대로 재사용, 없으면 이번 한 번만 계산해서 캐시에 저장
+        boolean isCurrentMonth = yearMonth.equals(clockService.currentYearMonth().toString());
+        int currentBalance;
+
+        if (isCurrentMonth) {
+            currentBalance = mapper.getCurrentBalance(userId);
+        } else {
+            Integer cached = mapper.findBalanceSnapshot(userId, yearMonth);
+            if (cached != null) {
+                currentBalance = cached;
+            } else {
+                int liveBalance = mapper.getCurrentBalance(userId);
+                int netAfter = mapper.getNetChangeAfterMonth(userId, yearMonth);
+                currentBalance = liveBalance - netAfter;
+                mapper.insertBalanceSnapshot(userId, yearMonth, currentBalance);
+            }
+        }
+
+        // 3. 전월잔액 = 이달잔액 - 수입 + 지출(소비성만) + 적금납입액
+        //    ("지출"엔 안 잡히지만 실제로 나간 적금납입액을 따로 더해줘야 잔액이 정확히 맞음)
+        int prevBalance = currentBalance - income + expense + savingPayment;
 
         ReportDTO.CashFlow cashFlow = new ReportDTO.CashFlow(prevBalance, income, expense, currentBalance);
 
@@ -55,9 +74,6 @@ public class ReportServiceImpl implements ReportService {
 
         // GOAL(A팀) 연동 - 세이브 금액 실제 계산
         Integer saveAmount = calculateSaveAmount(userId, yearMonth);
-
-        // SUBSCRIPTION/PAYMENT(C팀 담당 테이블, Service는 아직 없어서 테이블 직접 조회) - 이번 달 납입액 실제 계산
-        int savingPayment = mapper.getMonthlyPaymentAmount(userId, yearMonth);
 
         // AI 요약 - 캐시 확인 후 없으면 OpenAI로 생성 (더 이상 목업 아님)
         String aiSummary = aiSummaryService.getOrGenerateSummary(userId, yearMonth, income, expense, topCategories);
