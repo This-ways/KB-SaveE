@@ -8,6 +8,9 @@ import java.util.List;
 
 public interface TransactionMapper {
 
+    // 새 거래 등록 (자동이체 등 시스템이 직접 만드는 거래용 - INSERT 시 트리거가 balance 자동 반영)
+    int insert(TransactionVO vo);
+
     // 월별 거래내역 목록 (categoryId가 null이면 전체 카테고리 조회, 지출만)
     List<TransactionVO> getList(
             @Param("userId") Long userId,
