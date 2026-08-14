@@ -6,14 +6,21 @@ import reportApi from '@/api/reportApi';
 import moment from 'moment';
 import { useAuthStore } from '@/stores/auth';
 import { useAlert } from '@/util/useAlert';
+import transactionApi from '@/api/transactionApi';
+import categoryApi from '@/api/categoryApi';
 
 import CustomAlertModal from '@/components/common/CustomAlertModal.vue'; // 2. 공용 모달 임포트
+
+import goalApi from '@/api/goalApi';
 
 const { alertState, showAlert, hideAlert } = useAlert();
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+
+const expectedSaving = ref(0);
+const goalBudgets = ref([]);
 
 // 쿼리 파라미터 숫자 형변환 보장
 const step = ref(Number(route.query.step) || 1);
@@ -24,6 +31,60 @@ const saveTerm = ref(Number(route.query.saveTerm) || 12);
 const yearMonth = ref(moment().format('YYYY-MM'));
 const userId = computed(() => authStore.userId);
 const loadingSaveAmount = ref(true);
+
+const adjustedExpectedSaving = computed(() =>
+  Math.max(expectedSaving.value - overageThisMonth.value, 0),
+);
+
+const overageThisMonth = computed(() =>
+  goalBudgets.value.reduce(
+    (sum, g) => sum + Math.max(g.actualAmount - g.targetAmount, 0),
+    0,
+  ),
+);
+const loadExpectedSaving = async () => {
+  try {
+    const data = await goalApi.getExpectedSaving();
+    expectedSaving.value = data.expectedSaving ?? 0;
+  } catch (e) {
+    console.error('예상 절약 가능 금액 조회 실패', e);
+    expectedSaving.value = 0;
+  }
+};
+const loadGoalBudget = async () => {
+  try {
+    const [goals, txns, categories] = await Promise.all([
+      goalApi.getMyGoals(yearMonth.value),
+      transactionApi.getList({
+        userId: userId.value,
+        yearMonth: yearMonth.value,
+      }),
+      categoryApi.getList(),
+    ]);
+
+    const nameMap = {};
+    categories.forEach((c) => {
+      nameMap[c.categoryId] = c.name;
+    });
+
+    const spendMap = {};
+
+    txns.forEach((t) => {
+      if (t.categoryId) {
+        spendMap[t.categoryId] = (spendMap[t.categoryId] || 0) + t.amount;
+      }
+    });
+
+    goalBudgets.value = goals.map((g) => ({
+      categoryId: g.categoryId,
+      categoryName: nameMap[g.categoryId] || '',
+      targetAmount: g.targetAmount,
+      actualAmount: spendMap[g.categoryId] || 0,
+    }));
+  } catch (e) {
+    console.error('목표 예산 조회 실패', e);
+  }
+};
 
 // URL 쿼리 동기화 함수
 const updateQueryParams = (newStep) => {
@@ -134,12 +195,13 @@ watch(
 );
 
 onMounted(async () => {
-  // 예금 잔액 조회 완료를 먼저 기다린 후
-  await fetchSaveAmount(); // step 3 상태라면 추천 목록 조회
+  await Promise.all([
+    fetchSaveAmount(),
+    loadExpectedSaving(),
+    loadGoalBudget(),
+  ]);
 
   if (step.value === 3) {
-    // 메뉴에서 조건 없이 step=3으로 바로 넘어온 경우, 이번 달 실제 남은 돈을 쓰면
-    // 금액이 너무 커서 조건에 맞는 상품이 안 나올 수 있어 최소 기준액(만원)으로 조회
     if (route.query.monthlyAmount === undefined) {
       monthlyAmount.value = 10000;
     }
@@ -240,7 +302,12 @@ const goToDetail = (productId) => {
 <template>
   <div
     class="container py-3"
-    style="max-width: 420px; background-color: #fff; min-height: 100vh; padding-top: 76px !important"
+    style="
+      max-width: 420px;
+      background-color: #fff;
+      min-height: 100vh;
+      padding-top: 76px !important;
+    "
   >
     <!-- 헤더 -->
     <div class="header">
@@ -283,7 +350,7 @@ const goToDetail = (productId) => {
       >
         <span class="badge bg-warning rounded-circle p-1"> </span>
         <span v-if="loadingSaveAmount" class="small text-secondary">
-          세이브 금액을 계산하는 중입니다...
+          남아있는 금액을 계산하는 중입니다...
         </span>
         <span v-else class="small text-dark fw-semibold">
           현재 남아있는 {{ saveAmount.toLocaleString() }}원으로 시작할 수 있는
@@ -294,17 +361,25 @@ const goToDetail = (productId) => {
 
     <!-- STEP 2 -->
     <div v-else-if="step === 2" class="d-flex flex-column gap-4">
-      <div
-        class="bg-warning bg-opacity-10 p-3 rounded-4 d-flex justify-content-between align-items-center"
-      >
+      <div class="card border-0 rounded-4 p-3 shadow-sm">
+        <div class="micro-text text-secondary mb-1">현재 내 통장 잔액</div>
+        <div class="fw-bold text-warning h5 mb-0">
+          {{ saveAmount.toLocaleString() }}원
+        </div>
+
+        <hr class="my-3" />
+
         <div>
-          <div class="micro-text text-secondary mb-1">현재 납입 가능 금액</div>
-          <div class="fw-bold text-warning h5 mb-0">
-            {{ saveAmount.toLocaleString() }}원
+          <div class="micro-text text-secondary mb-1">
+            이번 달 예상 절약 가능 금액
+          </div>
+          <div class="fw-bold text-success h5 mb-0">
+            {{ adjustedExpectedSaving.toLocaleString() }}원
           </div>
         </div>
       </div>
 
+      <!-- 금액 입력 -->
       <div>
         <label class="form-label text-secondary small">월 납입액</label>
         <div class="position-relative mb-3">
@@ -335,43 +410,41 @@ const goToDetail = (productId) => {
         <div class="row g-2">
           <div class="col-3">
             <button
-              class="btn btn-light bg-warning bg-opacity-10 w-100 fw-bold text-nowrap d-flex align-items-center justify-content-center rounded-3"
-              style="
-                height: 44px;
-                font-size: 13px;
-                letter-spacing: -0.5px;
-                padding: 0 2px;
-              "
-              @click="addAmount('ALL')"
-            >
-              잔액 전액
-            </button>
-          </div>
-          <div class="col-3">
-            <button
-              class="btn btn-light w-100 fw-bold text-nowrap d-flex align-items-center justify-content-center rounded-3"
+              class="btn btn-light w-100 fw-bold rounded-3"
               style="height: 44px; font-size: 14px"
               @click="addAmount(10000)"
             >
               +1만
             </button>
           </div>
+
           <div class="col-3">
             <button
-              class="btn btn-light w-100 fw-bold text-nowrap d-flex align-items-center justify-content-center rounded-3"
+              class="btn btn-light w-100 fw-bold rounded-3"
               style="height: 44px; font-size: 14px"
               @click="addAmount(50000)"
             >
               +5만
             </button>
           </div>
+
           <div class="col-3">
             <button
-              class="btn btn-light w-100 fw-bold text-nowrap d-flex align-items-center justify-content-center rounded-3"
+              class="btn btn-light w-100 fw-bold rounded-3"
               style="height: 44px; font-size: 14px"
               @click="addAmount(100000)"
             >
               +10만
+            </button>
+          </div>
+
+          <div class="col-3">
+            <button
+              class="btn btn-outline-secondary w-100 fw-bold rounded-3"
+              style="height: 44px; font-size: 14px"
+              @click="monthlyAmount = 0"
+            >
+              초기화
             </button>
           </div>
         </div>
