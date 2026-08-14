@@ -19,7 +19,7 @@ const goBack = () => {
 };
 
 const loading = ref(true);
-const items = ref([]); // [{ categoryId, name, avgAmount }] - 지출 많은 순, 화면 꽉 차게 최대 7개
+const items = ref([]); // [{ categoryId, name, avgAmount }] - 지출 많은 순, 상위 5개
 
 onMounted(async () => {
   try {
@@ -41,7 +41,7 @@ onMounted(async () => {
         avgAmount: a.avgAmount,
       }))
       .sort((a, b) => b.avgAmount - a.avgAmount)
-      .slice(0, 7);
+      .slice(0, 5);
   } catch (e) {
     console.error('소비 분석 조회 실패', e);
   } finally {
