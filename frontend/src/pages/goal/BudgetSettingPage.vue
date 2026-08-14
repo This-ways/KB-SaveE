@@ -184,7 +184,7 @@ const { alertState, showAlert, hideAlert } = useAlert();
           <div class="info">
             <strong>{{ item.name }}</strong>
             <span class="avg">
-              3개월 평균 지출 : {{ formatMoney(item.avgAmount) }}원
+              평소 지출 : {{ formatMoney(item.avgAmount) }}원
             </span>
           </div>
 

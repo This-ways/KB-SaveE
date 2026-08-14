@@ -7,6 +7,11 @@ import { useAuthStore } from '@/stores/auth';
 const router = useRouter();
 const auth = useAuthStore();
 
+// 카테고리를 다시 조정하고 싶을 수 있어서 뒤로가기 추가.
+// mode=edit 없이 그냥 카테고리 선택 화면으로 보낸다 - 그래야 "수정 모드"가 아니라
+// "최초 온보딩 흐름"으로 계속 인식되어서, 8일 이후여도 날짜 제한 없이 바로 재조정 가능.
+const goBack = () => router.push('/goal/category');
+
 const expectedSaving = ref(0);
 const loading = ref(true);
 
@@ -28,6 +33,10 @@ const formatMoney = (n) => Number(n).toLocaleString();
 
 <template>
   <div class="complete-page">
+    <button class="back-btn" @click="goBack">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
     <div class="hero">
       <div class="bubble">설정완료</div>
       <div class="bee">🐝</div>
@@ -49,6 +58,11 @@ const formatMoney = (n) => Number(n).toLocaleString();
       <div class="money-icon">💰</div>
     </div>
 
+    <div class="recheck">
+      <p class="recheck-main">카테고리와 예산, 원하시는 대로 설정하셨나요?</p>
+      <p class="recheck-sub">왼쪽 위 뒤로가기로 언제든 다시 확인하고 조정할 수 있어요</p>
+    </div>
+
     <div class="bottom">
       <button class="next-btn" @click="goMain">SaveE 시작하기 →</button>
     </div>
@@ -59,9 +73,25 @@ const formatMoney = (n) => Number(n).toLocaleString();
 .complete-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #fff8e7 0%, #fff 60%);
-  padding: 20px 20px 120px;
+  padding: 76px 20px 120px;
   display: flex;
   flex-direction: column;
+}
+.back-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  padding: 20px 20px 12px;
+  color: #111;
+  /* 스크롤해도 화면에 그대로 남아있게 - 다른 온보딩 화면들과 동일한 방식 */
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 420px;
+  z-index: 100;
+  text-align: left;
 }
 .hero {
   text-align: center;
@@ -129,6 +159,25 @@ const formatMoney = (n) => Number(n).toLocaleString();
   right: 0;
   bottom: 0;
   padding: 16px 20px 24px;
+}
+.recheck {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  padding: 20px 24px;
+}
+.recheck-main {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+.recheck-sub {
+  font-size: 12px;
+  color: #9ca3af;
 }
 .next-btn {
   width: 100%;
