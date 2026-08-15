@@ -71,6 +71,41 @@ const getMaxPaymentAmount = () => {
   return max > 0 ? max : 100000;
 };
 
+// 목표달성 계산
+const principalAchievementRate = computed(() => {
+  if (!statusData.value) return 0;
+
+  const targetPrincipal =
+    statusData.value.monthlyAmount * statusData.value.saveTerm;
+
+  if (!targetPrincipal) return 0;
+
+  return Math.round((statusData.value.totalPrincipal / targetPrincipal) * 100);
+});
+
+const amountAchievementRate = computed(() => {
+  if (!statusData.value?.expectedAmount) return 0;
+
+  return Math.floor(
+    (statusData.value.totalPrincipal / statusData.value.expectedAmount) * 100,
+  );
+});
+
+const showExpectedAmountInfo = () => {
+  showAlert(
+    '만기 예상 수령액은 적금 만기 시 받을 것으로 예상되는 금액입니다.\n\n원금 + 세후 이자를 포함한 금액이에요.',
+  );
+};
+
+const showAchievementInfo = () => {
+  const targetPrincipal =
+    statusData.value.monthlyAmount * statusData.value.saveTerm;
+
+  showAlert(
+    `목표 달성률은 현재까지 납입한 금액이 목표 원금 대비 얼마나 모였는지 보여줍니다.\n\n${formatMoney(statusData.value.totalPrincipal)} / ${formatMoney(targetPrincipal)}`,
+  );
+};
+
 // 상품 상세 / 해지 페이지 이동
 
 const goToDetail = () => {
@@ -190,15 +225,22 @@ const handleDepositClick = () => {
           </div>
           <div class="col-4 px-1 border-start border-end">
             <div class="text-secondary micro-text mb-1 text-nowrap">
-              월 납입액
+              매달 모으는 금액
             </div>
             <div class="fw-bold text-nowrap" style="font-size: 13px">
               {{ formatMoney(statusData.monthlyAmount) }}
             </div>
           </div>
           <div class="col-4 px-1">
-            <div class="text-secondary micro-text mb-1 text-nowrap">
+            <div
+              class="text-secondary micro-text mb-1 text-nowrap d-flex align-items-center justify-content-center gap-1"
+            >
               만기 예상 수령액
+              <i
+                class="fa-solid fa-circle-info text-muted"
+                style="font-size: 11px; cursor: pointer"
+                @click="showExpectedAmountInfo"
+              ></i>
             </div>
             <div
               class="fw-bold text-warning text-nowrap"
@@ -213,28 +255,38 @@ const handleDepositClick = () => {
         <div class="row text-center align-items-center g-0">
           <div class="col-4 px-1">
             <div class="text-secondary micro-text mb-1 text-nowrap">
-              총 납입 원금
+              지금까지 모은 금액
             </div>
             <div class="fw-bold text-nowrap" style="font-size: 13px">
               {{ formatMoney(statusData.totalPrincipal) }}
             </div>
           </div>
+
           <div class="col-4 px-1 border-start border-end">
-            <div class="text-secondary micro-text mb-1 text-nowrap">
+            <div
+              class="text-secondary micro-text mb-1 text-nowrap d-flex align-items-center justify-content-center gap-1"
+            >
               목표 달성률
+              <i
+                class="fa-solid fa-circle-info text-muted"
+                style="font-size: 11px; cursor: pointer"
+                @click="showAchievementInfo"
+              ></i>
             </div>
             <div class="fw-bold text-nowrap" style="font-size: 14px">
-              {{ statusData.achievementRate }}%
+              {{ principalAchievementRate }}%
             </div>
+
             <div class="progress mt-1 mx-auto" style="height: 4px; width: 75%">
               <div
                 class="progress-bar bg-warning"
                 :style="{
-                  width: Math.min(statusData.achievementRate, 100) + '%',
+                  width: Math.min(principalAchievementRate, 100) + '%',
                 }"
               ></div>
             </div>
           </div>
+
           <div class="col-4 px-1">
             <div class="text-secondary micro-text mb-1 text-nowrap">
               다음 납입 예정일

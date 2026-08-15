@@ -672,7 +672,7 @@ const onAmountChange = () => {
         :disabled="!!amountError || !!autoTransferAmountError"
         @click="handleConfirm"
       >
-        다음 (가입정보 확인)
+        가입정보 미리보기
       </button>
     </div>
 
@@ -810,7 +810,7 @@ const onAmountChange = () => {
         :disabled="loading"
         @click="handleFinalSubscribe"
       >
-        {{ loading ? '가입 처리 중...' : '다음 (가입 완료)' }}
+        {{ loading ? '가입 처리 중...' : '가입 확정' }}
       </button>
     </div>
 

@@ -315,7 +315,7 @@ onMounted(() => {
           :disabled="!depositAmount || depositAmount < 1000 || !!amountError"
           @click="currentStep = 2"
         >
-          다음 (납입 정보 확인)
+          {{ depositAmount.toLocaleString() }}원 더 넣으러 가기
         </button>
       </div>
     </div>
