@@ -225,7 +225,7 @@ const handleDepositClick = () => {
           </div>
           <div class="col-4 px-1 border-start border-end">
             <div class="text-secondary micro-text mb-1 text-nowrap">
-              월 납입액
+              매달 모으는 금액
             </div>
             <div class="fw-bold text-nowrap" style="font-size: 13px">
               {{ formatMoney(statusData.monthlyAmount) }}
@@ -255,7 +255,7 @@ const handleDepositClick = () => {
         <div class="row text-center align-items-center g-0">
           <div class="col-4 px-1">
             <div class="text-secondary micro-text mb-1 text-nowrap">
-              총 납입 원금
+              지금까지 모은 금액
             </div>
             <div class="fw-bold text-nowrap" style="font-size: 13px">
               {{ formatMoney(statusData.totalPrincipal) }}
