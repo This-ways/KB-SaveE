@@ -91,6 +91,21 @@ const amountAchievementRate = computed(() => {
   );
 });
 
+const showExpectedAmountInfo = () => {
+  showAlert(
+    '만기 예상 수령액은 적금 만기 시 받을 것으로 예상되는 금액입니다.\n\n원금 + 세후 이자를 포함한 금액이에요.',
+  );
+};
+
+const showAchievementInfo = () => {
+  const targetPrincipal =
+    statusData.value.monthlyAmount * statusData.value.saveTerm;
+
+  showAlert(
+    `목표 달성률은 현재까지 납입한 금액이 목표 원금 대비 얼마나 모였는지 보여줍니다.\n\n${formatMoney(statusData.value.totalPrincipal)} / ${formatMoney(targetPrincipal)}`,
+  );
+};
+
 // 상품 상세 / 해지 페이지 이동
 
 const goToDetail = () => {
@@ -217,8 +232,15 @@ const handleDepositClick = () => {
             </div>
           </div>
           <div class="col-4 px-1">
-            <div class="text-secondary micro-text mb-1 text-nowrap">
+            <div
+              class="text-secondary micro-text mb-1 text-nowrap d-flex align-items-center justify-content-center gap-1"
+            >
               만기 예상 수령액
+              <i
+                class="fa-solid fa-circle-info text-muted"
+                style="font-size: 11px; cursor: pointer"
+                @click="showExpectedAmountInfo"
+              ></i>
             </div>
             <div
               class="fw-bold text-warning text-nowrap"
@@ -241,8 +263,15 @@ const handleDepositClick = () => {
           </div>
 
           <div class="col-4 px-1 border-start border-end">
-            <div class="text-secondary micro-text mb-1 text-nowrap">
+            <div
+              class="text-secondary micro-text mb-1 text-nowrap d-flex align-items-center justify-content-center gap-1"
+            >
               목표 달성률
+              <i
+                class="fa-solid fa-circle-info text-muted"
+                style="font-size: 11px; cursor: pointer"
+                @click="showAchievementInfo"
+              ></i>
             </div>
             <div class="fw-bold text-nowrap" style="font-size: 14px">
               {{ principalAchievementRate }}%
