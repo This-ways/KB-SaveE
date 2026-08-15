@@ -102,7 +102,13 @@ function onClick() {
 let unsubscribe = null;
 
 onMounted(() => {
-  unsubscribe = onForegroundMessage(show);
+  unsubscribe = onForegroundMessage((payload) => {
+    show(payload);
+
+    // 새 알림이 도착했으므로 배너도 최신 상태로 다시 그리게 한다
+    // 토스트만 갱신되고 배너는 이전 소진율에 머물러 있던 문제 방지
+    window.dispatchEvent(new CustomEvent('notification:received'));
+  });
 });
 
 onUnmounted(() => {

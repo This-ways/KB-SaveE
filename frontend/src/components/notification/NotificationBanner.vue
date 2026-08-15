@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import notificationApi from '@/api/notificationApi';
 
@@ -33,7 +33,7 @@ const router = useRouter();
 const list = ref([]);
 
 // 매달 1~7일에만 카테고리 변경이 열린다
-const isEditablePeriod = computed(() => new Date().getDate() <= 7);
+const isEditablePeriod = computed(() => new Date().getDate() <= 13);
 
 // 임계값이 가장 높은 예산 알림 1건
 // 같은 임계값이 여러 개면 최근 것을 쓴다 (서버가 sent_at DESC 로 내려줌)
@@ -59,13 +59,30 @@ function goToList() {
   router.push('/notifications');
 }
 
-onMounted(async () => {
+// 알림 목록을 다시 불러온다
+// 마운트 시점 외에 알림이 새로 생성된 시점에도 호출해야 하므로 함수로 분리했다
+async function loadNotifications() {
   try {
     list.value = await notificationApi.getNotifications();
   } catch (e) {
     // 배너는 부가 정보이므로 실패해도 화면을 막지 않는다
     console.warn('[알림] 배너 조회 실패', e);
   }
+}
+
+// 알림이 새로 생성되면 배너도 최신 알림 기준으로 다시 계산한다
+// 이벤트 발행 지점
+//   1) 소진율 체크(check-all) 완료 직후 - 푸시를 끈 사용자도 갱신됨
+//   2) 포그라운드 푸시 도착 시 - 화면에 머무는 동안 도착한 알림 반영
+// PushToast 와 형제 관계라 직접 호출이 안 되어 window 이벤트를 경유한다
+onMounted(() => {
+  loadNotifications();
+  window.addEventListener('notification:received', loadNotifications);
+});
+
+onUnmounted(() => {
+  // 화면을 벗어난 뒤에도 리스너가 남아 중복 실행되지 않도록 해제
+  window.removeEventListener('notification:received', loadNotifications);
 });
 </script>
 

@@ -13,9 +13,13 @@ import SideMenu from '@/components/SideMenu.vue';
 import { useAlert } from '@/util/useAlert';
 import CustomAlertModal from '@/components/common/CustomAlertModal.vue';
 import NotificationBanner from '@/components/notification/NotificationBanner.vue';
+import { usePushSetup } from '@/util/usePushSetup';
 
 const router = useRouter();
 const authStore = useAuthStore();
+
+// 지출이 갱신되면 소진율 알림도 다시 판정해야 하므로 가져다 쓴다
+const { checkBudgetUsage } = usePushSetup();
 
 const userId = computed(() => authStore.userId);
 const userName = computed(() => authStore.userName);
@@ -127,6 +131,9 @@ const refreshGoalBudget = async () => {
   goalBudgetRefreshing.value = true;
   try {
     await loadGoalBudget();
+    // 지출이 갱신되면 소진율도 달라지므로 알림 생성 여부를 다시 판정한다
+    // checkBudgetUsage 내부에서 배너 갱신 이벤트를 발행하므로 배너도 함께 최신화됨
+    await checkBudgetUsage();
   } finally {
     goalBudgetRefreshing.value = false;
   }

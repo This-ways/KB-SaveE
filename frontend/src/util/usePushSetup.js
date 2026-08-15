@@ -21,7 +21,7 @@ export function usePushSetup() {
   // 재호출해도 안전하다 : notification 테이블에
   // UNIQUE(user_id, category_id, target_month, threshold_rate) 가 걸려 있어
   // 이미 기록된 알림은 INSERT 단계에서 걸러지고 푸시도 나가지 않는다.
-  // 그래서 아래 두 진입점에서 각각 부담 없이 호출한다.
+  // 그래서 아래 진입점들에서 각각 부담 없이 호출한다.
   // ---------------------------------------------------------------
   async function checkBudgetUsage() {
     const now = new Date();
@@ -29,6 +29,10 @@ export function usePushSetup() {
 
     try {
       await notificationApi.checkAllCategories(targetMonth);
+
+      // 알림이 새로 생성됐을 수 있으므로 배너를 다시 그리게 한다
+      // 푸시 수신 여부와 무관하게 호출되는 지점이라, 푸시를 끈 사용자도 배너가 갱신된다
+      window.dispatchEvent(new CustomEvent('notification:received'));
     } catch (e) {
       // 체크가 실패해도 앱 사용에는 지장이 없으므로 로그만 남긴다
       console.warn('[알림] 소진율 체크 실패', e);
