@@ -93,7 +93,7 @@ const isOver = (item) =>
 const hasOver = computed(() => items.value.some(isOver));
 
 const totalBudget = computed(() =>
-  items.value.reduce((sum, it) => sum + (Number(it.targetAmount) || 0), 0)
+  items.value.reduce((sum, it) => sum + (Number(it.targetAmount) || 0), 0),
 );
 
 const canSave = computed(
@@ -101,7 +101,7 @@ const canSave = computed(
     canEdit &&
     items.value.length > 0 &&
     items.value.every((it) => Number(it.targetAmount) > 0) &&
-    (isEditMode || !hasOver.value) // 최초 온보딩일 때만 평균 초과 시 저장 막음
+    (isEditMode || !hasOver.value), // 최초 온보딩일 때만 평균 초과 시 저장 막음
 );
 
 // 카테고리 선택 화면으로 (수정 모드 유지)
@@ -120,7 +120,7 @@ const save = async () => {
       items.value.map((it) => ({
         categoryId: it.categoryId,
         targetAmount: Number(it.targetAmount),
-      }))
+      })),
     );
     auth.setHasGoals(); // 온보딩 완료(목표 설정 끝) - 다음 로그인부터 /home으로 바로 가게
     // 최초 설정이면 완료 축하 화면, 수정이면 홈으로
@@ -142,7 +142,6 @@ const onAmountInput = (item, event) => {
   event.target.value = formatMoney(item.targetAmount);
 };
 const { alertState, showAlert, hideAlert } = useAlert();
-
 </script>
 
 <template>
@@ -176,7 +175,9 @@ const { alertState, showAlert, hideAlert } = useAlert();
         <div class="item-row">
           <span
             class="cat-icon"
-            :style="{ backgroundColor: getCategoryStyle(item.categoryId).color }"
+            :style="{
+              backgroundColor: getCategoryStyle(item.categoryId).color,
+            }"
           >
             <i :class="getCategoryStyle(item.categoryId).icon"></i>
           </span>
@@ -184,7 +185,7 @@ const { alertState, showAlert, hideAlert } = useAlert();
           <div class="info">
             <strong>{{ item.name }}</strong>
             <span class="avg">
-              평소 지출 : {{ formatMoney(item.avgAmount) }}원
+              3개월 평균 : {{ formatMoney(item.avgAmount) }}원
             </span>
           </div>
 
@@ -219,11 +220,11 @@ const { alertState, showAlert, hideAlert } = useAlert();
       </button>
     </div>
   </div>
-    <CustomAlertModal
-      :show="alertState.show"
-      :message="alertState.message"
-      @close="hideAlert"
-    />
+  <CustomAlertModal
+    :show="alertState.show"
+    :message="alertState.message"
+    @close="hideAlert"
+  />
 </template>
 
 <style scoped>

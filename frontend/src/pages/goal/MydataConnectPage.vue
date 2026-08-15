@@ -39,7 +39,6 @@ const connect = async () => {
 
 const skip = () => router.push('/home'); // 연결 없이 넘어가면 메인으로
 const { alertState, showAlert, hideAlert } = useAlert();
-
 </script>
 
 <template>
@@ -54,18 +53,22 @@ const { alertState, showAlert, hideAlert } = useAlert();
     </h1>
     <p class="subtitle">더 정확한 분석을 제공할 수 있어요</p>
 
-    <button class="connect-card" @click="connect">
-      <div class="card-icon">
-        <i class="fa-solid fa-building-columns"></i>
-      </div>
-      <div class="card-text">
-        <strong>계좌·카드 연결</strong>
-        <span>은행 계좌와 카드 사용 내역을 함께 연결해서 소비를 분석해요</span>
-      </div>
-      <i class="fa-solid fa-chevron-right arrow"></i>
-    </button>
+    <div class="center-group">
+      <button class="connect-card" @click="connect">
+        <div class="card-icon">
+          <i class="fa-solid fa-building-columns"></i>
+        </div>
+        <div class="card-text">
+          <strong>계좌·카드 연결</strong>
+          <span
+            >은행 계좌와 카드 사용 내역을 함께 연결해서 소비를 분석해요</span
+          >
+        </div>
+        <i class="fa-solid fa-chevron-right arrow"></i>
+      </button>
 
-    <button class="skip-btn" @click="skip">나중에 하기</button>
+      <button class="skip-btn" @click="skip">나중에 하기</button>
+    </div>
 
     <!-- 로딩 연출 오버레이 -->
     <div v-if="loading" class="overlay">
@@ -74,11 +77,11 @@ const { alertState, showAlert, hideAlert } = useAlert();
       <p class="loading-sub">잠시만 기다려 주세요</p>
     </div>
   </div>
-    <CustomAlertModal
-      :show="alertState.show"
-      :message="alertState.message"
-      @close="hideAlert"
-    />
+  <CustomAlertModal
+    :show="alertState.show"
+    :message="alertState.message"
+    @close="hideAlert"
+  />
 </template>
 
 <style scoped>
@@ -86,6 +89,8 @@ const { alertState, showAlert, hideAlert } = useAlert();
   padding: 76px 20px 20px;
   min-height: 100vh;
   background: #fff;
+  display: flex;
+  flex-direction: column;
 }
 .back-btn {
   background: #fff;
@@ -102,6 +107,13 @@ const { alertState, showAlert, hideAlert } = useAlert();
   max-width: 420px;
   z-index: 100;
   text-align: left;
+}
+.center-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transform: translateY(-120px);
 }
 .title {
   font-size: 24px;
@@ -158,7 +170,7 @@ const { alertState, showAlert, hideAlert } = useAlert();
 }
 .skip-btn {
   display: block;
-  margin: 40px auto 0;
+  margin: 24px auto 0;
   background: none;
   border: none;
   color: #9ca3af;
