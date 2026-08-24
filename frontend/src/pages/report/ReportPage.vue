@@ -285,9 +285,13 @@ const { alertState, showAlert, hideAlert } = useAlert();
               <span class="text-secondary">수입</span>
               <span class="text-primary fw-semibold">+{{ formatAmount(report.cashFlow.income) }}</span>
             </div>
-            <div class="d-flex justify-content-between mb-2">
+            <div class="d-flex justify-content-between mb-1">
               <span class="text-secondary">지출</span>
               <span class="text-danger fw-semibold">-{{ formatAmount(report.cashFlow.expense) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-secondary">적금 납입액</span>
+              <span class="text-danger fw-semibold">-{{ formatAmount(report.savingPayment) }}</span>
             </div>
             <hr />
             <div class="d-flex justify-content-between fw-bold">
@@ -297,27 +301,15 @@ const { alertState, showAlert, hideAlert } = useAlert();
           </div>
         </div>
 
-        <!-- 세이브 금액 / 납입 적금 -->
-        <div class="row g-3 mb-3">
-          <div class="col-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 bg-white">
-              <div class="card-body text-center">
-                <div class="text-secondary small mb-1"><i class="fa-solid fa-piggy-bank" style="color: #fc9558;"></i> 목표 대비 절약액</div>
-                <div
-                  class="fw-bold"
-                  :style="{ color: report.saveAmount > 0 ? '#127f5f' : report.saveAmount < 0 ? '#e8512b' : '' }"
-                >
-                  {{ formatSigned(report.saveAmount) }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 bg-white">
-              <div class="card-body text-center">
-                <div class="text-secondary small mb-1"><i class="fa-solid fa-coins" style="color: #fc9558;"></i> 이번 달 적금 납입액</div>
-                <div class="fw-bold">{{ formatAmount(report.savingPayment) }}</div>
-              </div>
+        <!-- 목표 대비 절약액 -->
+        <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div class="text-secondary"><i class="fa-solid fa-piggy-bank" style="color: #fc9558;"></i> 목표 대비 절약액</div>
+            <div
+              class="fw-bold fs-5"
+              :style="{ color: report.saveAmount > 0 ? '#127f5f' : report.saveAmount < 0 ? '#e8512b' : '' }"
+            >
+              {{ formatSigned(report.saveAmount) }}
             </div>
           </div>
         </div>
@@ -459,9 +451,13 @@ const { alertState, showAlert, hideAlert } = useAlert();
                   <span class="text-secondary">수입</span>
                   <span class="text-primary fw-semibold">+{{ formatAmount(report.cashFlow.income) }}</span>
                 </div>
-                <div class="d-flex justify-content-between mb-2">
+                <div class="d-flex justify-content-between mb-1">
                   <span class="text-secondary">지출</span>
                   <span class="text-danger fw-semibold">-{{ formatAmount(report.cashFlow.expense) }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="text-secondary">적금 납입액</span>
+                  <span class="text-danger fw-semibold">-{{ formatAmount(report.savingPayment) }}</span>
                 </div>
                 <hr />
                 <div class="d-flex justify-content-between fw-bold">
@@ -471,27 +467,15 @@ const { alertState, showAlert, hideAlert } = useAlert();
               </div>
             </div>
 
-            <!-- 목표대비/적금납입 -->
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 bg-white">
-                  <div class="card-body text-center p-2">
-                    <div class="text-secondary small mb-1" style="font-size: 11px;"><i class="fa-solid fa-piggy-bank" style="color: #fc9558;"></i> 목표 대비 절약액</div>
-                    <div
-                      class="fw-bold small"
-                      :style="{ color: report.saveAmount > 0 ? '#127f5f' : report.saveAmount < 0 ? '#e8512b' : '' }"
-                    >
-                      {{ formatSigned(report.saveAmount) }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 bg-white">
-                  <div class="card-body text-center p-2">
-                    <div class="text-secondary small mb-1" style="font-size: 11px;"><i class="fa-solid fa-coins" style="color: #fc9558;"></i> 이번 달 적금 납입액</div>
-                    <div class="fw-bold small">{{ formatAmount(report.savingPayment) }}</div>
-                  </div>
+            <!-- 목표대비 절약액 -->
+            <div class="card mb-3 border-0 shadow-sm rounded-4 bg-white">
+              <div class="card-body d-flex justify-content-between align-items-center p-2">
+                <div class="text-secondary small" style="font-size: 11px;"><i class="fa-solid fa-piggy-bank" style="color: #fc9558;"></i> 목표 대비 절약액</div>
+                <div
+                  class="fw-bold small"
+                  :style="{ color: report.saveAmount > 0 ? '#127f5f' : report.saveAmount < 0 ? '#e8512b' : '' }"
+                >
+                  {{ formatSigned(report.saveAmount) }}
                 </div>
               </div>
             </div>
