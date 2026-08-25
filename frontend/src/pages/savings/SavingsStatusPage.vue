@@ -392,8 +392,14 @@ const handleDepositClick = () => {
 
           <!-- 실제 막대 그래픽 레이어 -->
           <div
-            class="d-flex align-items-end justify-content-around h-100 position-relative"
-            style="margin-left: 48px; z-index: 1"
+            class="d-flex align-items-end justify-content-around position-relative"
+            style="
+              margin-left: 48px;
+              z-index: 1;
+              height: 120px;
+              margin-top: 25px;
+              top: 1px;
+            "
           >
             <div
               v-for="(item, idx) in statusData.monthlyPayments"
